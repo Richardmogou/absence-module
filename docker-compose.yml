@@ -1,0 +1,151 @@
+version: "3.9"
+
+# ─────────────────────────────────────────────────────────────────────────────
+# DC-ABSENCES v5.0 — Stack complète
+# Services : PostgreSQL · Keycloak · MinIO · Spring Boot API · Next.js Front
+# ─────────────────────────────────────────────────────────────────────────────
+# Commandes utiles :
+#   docker compose up -d          → démarrer tous les services
+#   docker compose logs -f api    → suivre les logs du backend
+#   docker compose down -v        → arrêter et supprimer les volumes
+# ─────────────────────────────────────────────────────────────────────────────
+
+networks:
+  absences-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  keycloak-data:
+  minio-data:
+
+services:
+
+  # ── 1. PostgreSQL ────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: absences-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       absences
+      POSTGRES_USER:     absences_user
+      POSTGRES_PASSWORD: absences_pass
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - absences-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U absences_user -d absences"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── 2. Keycloak ──────────────────────────────────────────────────────────
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: absences-keycloak
+    restart: unless-stopped
+    command: start-dev
+    environment:
+      # Compte admin Keycloak
+      KEYCLOAK_ADMIN:          admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      # Base de données dédiée Keycloak (utilise le même PostgreSQL)
+      KC_DB:                   postgres
+      KC_DB_URL:               jdbc:postgresql://postgres:5432/absences
+      KC_DB_USERNAME:          absences_user
+      KC_DB_PASSWORD:          absences_pass
+      KC_DB_SCHEMA:            keycloak
+      # Hostname
+      KC_HOSTNAME_STRICT:      "false"
+      KC_HTTP_ENABLED:         "true"
+    ports:
+      - "8180:8080"
+    networks:
+      - absences-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/realms/master || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
+  # ── 3. MinIO ─────────────────────────────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    container_name: absences-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER:     minio_access_key
+      MINIO_ROOT_PASSWORD: minio_secret_key
+    volumes:
+      - minio-data:/data
+    ports:
+      - "9000:9000"   # API S3
+      - "9001:9001"   # Console web MinIO
+    networks:
+      - absences-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9000/minio/health/live || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── 4. Spring Boot API ───────────────────────────────────────────────────
+  api:
+    build:
+      context: ./absences-api
+      dockerfile: Dockerfile
+    container_name: absences-api
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      # PostgreSQL
+      DATABASE_URL: jdbc:postgresql://postgres:5432/absences
+      DB_USER:      absences_user
+      DB_PASS:      absences_pass
+      # Keycloak
+      KEYCLOAK_JWKS_URI:            http://keycloak:8080/realms/absences/protocol/openid-connect/certs
+      KEYCLOAK_ADMIN_API_BASE_URL:  http://keycloak:8080/admin/realms/absences
+      KEYCLOAK_ADMIN_CLIENT_ID:     absences-api
+      KEYCLOAK_ADMIN_CLIENT_SECRET: absences-api-secret-dev
+      # MinIO
+      MINIO_ENDPOINT:   http://minio:9000
+      MINIO_ACCESS_KEY: minio_access_key
+      MINIO_SECRET_KEY: minio_secret_key
+      MINIO_BUCKET:     justificatifs
+    ports:
+      - "8080:8080"
+    networks:
+      - absences-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+  # ── 5. Next.js Frontend ──────────────────────────────────────────────────
+  front:
+    build:
+      context: ./absences-front
+      dockerfile: Dockerfile
+    container_name: absences-front
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL:       http://api:8080
+      NEXT_PUBLIC_SSO_LOGIN_URL: http://localhost:8180/realms/absences/protocol/openid-connect/auth
+      NEXT_PUBLIC_MINIO_URL:     http://localhost:9000
+    ports:
+      - "3000:3000"
+    networks:
+      - absences-net
+    depends_on:
+      - api

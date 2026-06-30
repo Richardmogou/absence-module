@@ -7,15 +7,20 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
- * US-SEC-005 — Résolution de la chaîne hiérarchique d'un employé
- * via l'API d'administration Keycloak.
+ * Résolution de la chaîne hiérarchique via l'API Admin Keycloak standard.
  *
- * Utilise le {@link RestClient} du compte de service configuré dans
- * {@link com.banque.absences.config.KeycloakAdminClientConfig}.
- * Aucune chaîne littérale Keycloak n'apparaît ici.
+ * <p>Toutes les méthodes utilisent l'API REST Admin Keycloak :
+ * <ul>
+ *   <li>Recherche par attribut : {@code GET /users?q=grade:X+reseau:Y}</li>
+ *   <li>Lecture d'un utilisateur : {@code GET /users/{id}} → {@code UserRepresentation}</li>
+ *   <li>Les attributs {@code grade}, {@code reseau}, {@code manager} sont lus
+ *       depuis {@code UserRepresentation.attributes}</li>
+ * </ul>
  */
 @Service
 public class HierarchicalChainResolver {
@@ -27,44 +32,61 @@ public class HierarchicalChainResolver {
         this.keycloakAdminRestClient = keycloakAdminRestClient;
     }
 
+    // ── Lecture attributs ─────────────────────────────────────────────────────
+
     /**
-     * Résout le manager direct d'un employé (profondeur 1).
-     *
-     * @param employeIdentifiantExterne identifiant Keycloak de l'employé
-     * @return identifiant du manager, ou {@link Optional#empty()} si l'employé
-     *         n'a pas de manager ou est introuvable (404)
+     * Lit un attribut mono-valué depuis la {@code UserRepresentation} Keycloak.
+     * Keycloak stocke tous les attributs custom sous la forme
+     * {@code "attributes": {"grade": ["AGENT"], "reseau": ["AGENCE_01"]}}.
      */
-    public Optional<String> resoudreManagerDirect(String employeIdentifiantExterne) {
+    @SuppressWarnings("unchecked")
+    private Optional<String> lireAttribut(Map<String, Object> user, String nomAttribut) {
+        Object attrs = user.get("attributes");
+        if (!(attrs instanceof Map<?, ?> attrMap)) return Optional.empty();
+        Object valeurs = attrMap.get(nomAttribut);
+        if (!(valeurs instanceof List<?> liste) || liste.isEmpty()) return Optional.empty();
+        Object val = liste.get(0);
+        return val != null && !val.toString().isBlank()
+                ? Optional.of(val.toString())
+                : Optional.empty();
+    }
+
+    /** Récupère la {@code UserRepresentation} complète pour un identifiant Keycloak. */
+    private Optional<Map<String, Object>> fetchUser(String identifiantExterne) {
         try {
-            String manager = keycloakAdminRestClient
+            Map<String, Object> user = keycloakAdminRestClient
                     .get()
-                    .uri("/users/{id}/manager", employeIdentifiantExterne)
+                    .uri("/users/{id}", identifiantExterne)
                     .retrieve()
                     .onStatus(HttpStatusCode::is4xxClientError, (req, resp) -> {
-                        // 404 = pas de manager, toute autre 4xx remonte
                         if (resp.getStatusCode().value() != 404) {
                             throw new KeycloakAdminException(
                                     "Erreur API Admin Keycloak : " + resp.getStatusCode());
                         }
-                        // 404 → on ne lève rien, body() retournera null
                     })
-                    .body(String.class);
-            return Optional.ofNullable(manager);
+                    .body(new ParameterizedTypeReference<>() {});
+            return Optional.ofNullable(user);
         } catch (KeycloakAdminException e) {
             throw e;
         } catch (Exception e) {
-            // Toute autre erreur réseau inattendue remonte explicitement
-            throw new KeycloakAdminException("Erreur lors de la résolution du manager", e);
+            throw new KeycloakAdminException("Erreur lors de la lecture de l'utilisateur", e);
         }
     }
 
+    // ── Résolution hiérarchique ───────────────────────────────────────────────
+
     /**
-     * Résout le responsable hiérarchique à {@code profondeur} niveaux au-dessus
-     * de l'employé donné.
-     *
-     * @param employeIdentifiantExterne identifiant Keycloak de départ
-     * @param profondeur                nombre de niveaux à remonter (≥ 1)
-     * @return identifiant du responsable, ou vide si la chaîne est rompue
+     * Résout le manager direct d'un employé.
+     * Lit l'attribut {@code manager} de la {@code UserRepresentation} Keycloak,
+     * qui contient l'identifiant externe du manager direct.
+     */
+    public Optional<String> resoudreManagerDirect(String employeIdentifiantExterne) {
+        return fetchUser(employeIdentifiantExterne)
+                .flatMap(u -> lireAttribut(u, "manager"));
+    }
+
+    /**
+     * Résout le responsable hiérarchique à {@code profondeur} niveaux au-dessus.
      */
     public Optional<String> resoudreHierarchique(
             String employeIdentifiantExterne, int profondeur) {
@@ -79,12 +101,7 @@ public class HierarchicalChainResolver {
 
     /**
      * Vérifie qu'un validateur se trouve exactement à {@code profondeur} niveaux
-     * au-dessus du demandeur dans la hiérarchie Keycloak.
-     *
-     * @param validateurId identifiant Keycloak du validateur
-     * @param demandeurId  identifiant Keycloak du demandeur
-     * @param profondeur   niveaux hiérarchiques à remonter
-     * @return {@code true} si le responsable trouvé correspond au validateur
+     * au-dessus du demandeur.
      */
     public boolean verifierLienHierarchique(
             String validateurId, String demandeurId, int profondeur) {
@@ -93,94 +110,72 @@ public class HierarchicalChainResolver {
                 .orElse(false);
     }
 
-    // ── US-SEC-006 ────────────────────────────────────────────────────────────
+    // ── Recherche par attributs ───────────────────────────────────────────────
 
     /**
-     * Retourne l'identifiant Keycloak du premier employé trouvé pour un grade donné.
-     * Utilisé comme employé-type représentatif pour le contrôle anti-doublon (Sprint 6).
+     * Retourne les identifiants des collègues de même grade et même unité (réseau).
+     * Utilisé pour proposer la liste des backups (N+0) au demandeur.
      *
-     * <p>Ne lève jamais d'exception si aucun résultat : retourne {@link Optional#empty()}.
-     * La gestion du code {@code EMPLOYE_TYPE_INTROUVABLE} est traitée au Sprint 6 (P46).
-     *
-     * @param gradeDeclencheur valeur du claim grade à rechercher
-     * @return identifiant du premier employé correspondant, ou vide
-     */
-    /**
-     * Retourne les identifiants des collègues partageant le même grade et la même unité.
-     * Utilisé pour proposer la liste des backups possibles au demandeur.
+     * <p>Utilise la recherche par attribut Keycloak : {@code GET /users?q=grade:X+reseau:Y}.
+     * Le paramètre {@code q} accepte plusieurs prédicats {@code attribut:valeur} séparés
+     * par un espace (encodé {@code +} ou {@code %20}).
      */
     public List<String> resoudreColleguesMemeGradeEtUnite(String grade, String unite) {
         if (grade == null || unite == null) return List.of();
-        List<String> resultats = keycloakAdminRestClient
-                .get()
-                .uri("/users?grade={grade}&unite={unite}", grade, unite)
-                .retrieve()
-                .body(new ParameterizedTypeReference<>() {});
-        return resultats != null ? resultats : List.of();
-    }
-
-    public Optional<String> resoudreEmployeTypeParGrade(String gradeDeclencheur) {
-        List<String> resultats = keycloakAdminRestClient
-                .get()
-                .uri("/users?grade={grade}&limit=1", gradeDeclencheur)
-                .retrieve()
-                .body(new ParameterizedTypeReference<>() {});
-        if (resultats == null || resultats.isEmpty()) return Optional.empty();
-        return Optional.of(resultats.get(0));
+        try {
+            List<Map<String, Object>> resultats = keycloakAdminRestClient
+                    .get()
+                    .uri("/users?q=grade:{grade}+reseau:{unite}&max=50", grade, unite)
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<>() {});
+            if (resultats == null) return List.of();
+            return resultats.stream()
+                    .map(u -> (String) u.get("id"))
+                    .filter(Objects::nonNull)
+                    .toList();
+        } catch (Exception e) {
+            throw new KeycloakAdminException("Erreur lors de la recherche des collègues backup", e);
+        }
     }
 
     /**
-     * Retourne le grade Keycloak d'un employé identifié par son identifiant externe.
-     *
-     * @param identifiantExterne identifiant Keycloak de l'employé
-     * @return grade de l'employé, ou {@link Optional#empty()} si introuvable (404)
+     * Retourne l'identifiant du premier employé trouvé pour un grade donné.
+     * Utilisé comme employé-type représentatif pour le contrôle anti-doublon.
+     */
+    public Optional<String> resoudreEmployeTypeParGrade(String gradeDeclencheur) {
+        try {
+            List<Map<String, Object>> resultats = keycloakAdminRestClient
+                    .get()
+                    .uri("/users?q=grade:{grade}&max=1", gradeDeclencheur)
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<>() {});
+            if (resultats == null || resultats.isEmpty()) return Optional.empty();
+            return Optional.ofNullable((String) resultats.get(0).get("id"));
+        } catch (Exception e) {
+            throw new KeycloakAdminException("Erreur lors de la recherche de l'employé-type", e);
+        }
+    }
+
+    /**
+     * Retourne le grade d'un employé via son attribut Keycloak {@code grade}.
      */
     public Optional<String> resoudreGradeParIdentifiant(String identifiantExterne) {
-        String grade = keycloakAdminRestClient
-                .get()
-                .uri("/users/{id}", identifiantExterne)
-                .retrieve()
-                .onStatus(HttpStatusCode::is4xxClientError, (req, resp) -> {
-                    if (resp.getStatusCode().value() != 404) {
-                        throw new KeycloakAdminException(
-                                "Erreur API Admin Keycloak : " + resp.getStatusCode());
-                    }
-                })
-                .body(String.class);
-        return Optional.ofNullable(grade);
+        return fetchUser(identifiantExterne)
+                .flatMap(u -> lireAttribut(u, "grade"));
     }
 
     /**
-     * Retourne le réseau de rattachement d'un employé via l'API Admin Keycloak.
-     *
-     * @param identifiantExterne identifiant Keycloak de l'employé
-     * @return réseau, ou {@link Optional#empty()} si le claim est absent (404)
+     * Retourne le réseau (unité) de rattachement d'un employé via l'attribut {@code reseau}.
      */
     public Optional<String> resoudreReseau(String identifiantExterne) {
-        try {
-            String reseau = keycloakAdminRestClient
-                    .get()
-                    .uri("/users/{id}/reseau", identifiantExterne)
-                    .retrieve()
-                    .onStatus(HttpStatusCode::is4xxClientError, (req, resp) -> {
-                        if (resp.getStatusCode().value() != 404) {
-                            throw new KeycloakAdminException(
-                                    "Erreur API Admin Keycloak : " + resp.getStatusCode());
-                        }
-                    })
-                    .body(String.class);
-            return Optional.ofNullable(reseau);
-        } catch (KeycloakAdminException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new KeycloakAdminException("Erreur lors de la résolution du réseau", e);
-        }
+        return fetchUser(identifiantExterne)
+                .flatMap(u -> lireAttribut(u, "reseau"));
     }
 
     // ── Exception interne ─────────────────────────────────────────────────────
 
     public static class KeycloakAdminException extends RuntimeException {
-        public KeycloakAdminException(String message) { super(message); }
+        public KeycloakAdminException(String message)                  { super(message); }
         public KeycloakAdminException(String message, Throwable cause) { super(message, cause); }
     }
 }
