@@ -246,6 +246,12 @@ public class AbsenceServiceImpl implements AbsenceService {
         }
 
         switch (mecanisme) {
+            case BACKUP -> {
+                if (!validateurId.equals(demande.getBackupIdentifiantExterne())) {
+                    throw new ValidateurNonAutoriseException(
+                            "Le validateur n'est pas le backup désigné de la demande");
+                }
+            }
             case HIERARCHIQUE -> {
                 int profondeur = etape.getPosition() != null ? etape.getPosition() : 1;
                 boolean ok = hierarchicalChainResolver.verifierLienHierarchique(
