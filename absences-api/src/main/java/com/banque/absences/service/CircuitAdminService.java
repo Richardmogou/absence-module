@@ -94,13 +94,30 @@ public class CircuitAdminService {
         return modeleCircuitRepository.save(circuit);
     }
 
+    @Transactional(readOnly = true)
     public List<ModeleCircuit> listerCircuits() {
-        return modeleCircuitRepository.findAllByActifTrue();
+        List<ModeleCircuit> circuits = modeleCircuitRepository.findAllWithEtapes();
+        // Force lazy loading pour Jackson
+        circuits.forEach(c -> c.getEtapes().forEach(e -> e.getRegles().size()));
+        return circuits;
     }
 
-    public ModeleCircuit findById(UUID id) {
-        return modeleCircuitRepository.findByIdWithEtapes(id)
+    @Transactional
+    @PreAuthorize("hasRole('ADMIN_RH')")
+    public void toggleActif(UUID id) {
+        ModeleCircuit circuit = modeleCircuitRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Circuit introuvable : " + id));
+        circuit.setActif(!circuit.isActif());
+        modeleCircuitRepository.save(circuit);
+    }
+
+    @Transactional(readOnly = true)
+    public ModeleCircuit findById(UUID id) {
+        ModeleCircuit circuit = modeleCircuitRepository.findByIdWithEtapes(id)
+                .orElseThrow(() -> new EntityNotFoundException("Circuit introuvable : " + id));
+        // Force lazy loading
+        circuit.getEtapes().forEach(e -> e.getRegles().size());
+        return circuit;
     }
 
     @Transactional

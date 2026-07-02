@@ -61,10 +61,15 @@ public class ClaimReaderService {
     }
 
     public boolean estRolePrivilegie() {
+        return getRoles().stream()
+                .anyMatch(Set.of("ROLE_ANALYSTE_RH", "ROLE_DRH", "ROLE_ADMIN_RH")::contains);
+    }
+
+    public java.util.List<String> getRoles() {
         return SecurityContextHolder.getContext().getAuthentication().getAuthorities()
                 .stream()
                 .map(GrantedAuthority::getAuthority)
-                .anyMatch(Set.of("ROLE_ANALYSTE_RH", "ROLE_DRH", "ROLE_ADMIN_RH")::contains);
+                .toList();
     }
 
     // ── Accès au JWT ──────────────────────────────────────────────────────────

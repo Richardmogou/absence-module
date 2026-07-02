@@ -85,6 +85,12 @@ public class GlobalExceptionHandler {
                 .body(new ApiError("DUREE_INSUFFISANTE_MISSION_LONGUE", e.getMessage()));
     }
 
+    @ExceptionHandler(com.banque.absences.service.DureeInsuffisanteCongeAnnuelException.class)
+    public ResponseEntity<ApiError> handleDureeInsuffisanteCongeAnnuel(com.banque.absences.service.DureeInsuffisanteCongeAnnuelException e) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(new ApiError("DUREE_INSUFFISANTE_CONGE_ANNUEL", e.getMessage()));
+    }
+
     @ExceptionHandler(MotifRequisException.class)
     public ResponseEntity<ApiError> handleMotifRequis(MotifRequisException e) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)

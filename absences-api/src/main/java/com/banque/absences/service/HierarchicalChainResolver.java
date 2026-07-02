@@ -120,7 +120,7 @@ public class HierarchicalChainResolver {
      * Le paramètre {@code q} accepte plusieurs prédicats {@code attribut:valeur} séparés
      * par un espace (encodé {@code +} ou {@code %20}).
      */
-    public List<String> resoudreColleguesMemeGradeEtUnite(String grade, String unite) {
+    public List<com.banque.absences.dto.EmployeDto> resoudreColleguesMemeGradeEtUnite(String grade, String unite) {
         if (grade == null || unite == null) return List.of();
         try {
             List<Map<String, Object>> resultats = keycloakAdminRestClient
@@ -130,11 +130,37 @@ public class HierarchicalChainResolver {
                     .body(new ParameterizedTypeReference<>() {});
             if (resultats == null) return List.of();
             return resultats.stream()
-                    .map(u -> (String) u.get("id"))
-                    .filter(Objects::nonNull)
+                    .filter(u -> u.get("id") != null)
+                    .map(u -> new com.banque.absences.dto.EmployeDto(
+                            (String) u.get("id"),
+                            (String) u.get("firstName"),
+                            (String) u.get("lastName"),
+                            (String) u.get("email")
+                    ))
                     .toList();
         } catch (Exception e) {
             throw new KeycloakAdminException("Erreur lors de la recherche des collègues backup", e);
+        }
+    }
+
+    /**
+     * Retourne la liste des rôles disponibles dans Keycloak (realm roles).
+     */
+    public List<String> listerRolesKeycloak() {
+        try {
+            List<Map<String, Object>> resultats = keycloakAdminRestClient
+                    .get()
+                    .uri("/roles")
+                    .retrieve()
+                    .body(new ParameterizedTypeReference<>() {});
+            if (resultats == null) return List.of();
+            return resultats.stream()
+                    .map(r -> (String) r.get("name"))
+                    .filter(name -> name != null && !name.startsWith("default-") && !name.startsWith("offline_"))
+                    .sorted()
+                    .toList();
+        } catch (Exception e) {
+            throw new KeycloakAdminException("Erreur lors de la récupération des rôles Keycloak", e);
         }
     }
 
@@ -170,6 +196,18 @@ public class HierarchicalChainResolver {
     public Optional<String> resoudreReseau(String identifiantExterne) {
         return fetchUser(identifiantExterne)
                 .flatMap(u -> lireAttribut(u, "reseau"));
+    }
+
+    /** Retourne le nom complet (prénom + nom) d'un utilisateur Keycloak. */
+    public Optional<String> resolveNomComplet(String identifiantExterne) {
+        return fetchUser(identifiantExterne).map(u -> {
+            String prenom = (String) u.get("firstName");
+            String nom    = (String) u.get("lastName");
+            if (prenom != null && nom != null) return prenom + " " + nom;
+            if (nom    != null) return nom;
+            if (prenom != null) return prenom;
+            return (String) u.get("username");
+        });
     }
 
     // ── Exception interne ─────────────────────────────────────────────────────

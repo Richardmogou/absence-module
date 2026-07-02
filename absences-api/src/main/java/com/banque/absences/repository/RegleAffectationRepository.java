@@ -21,6 +21,7 @@ public interface RegleAffectationRepository extends JpaRepository<RegleAffectati
             WHERE r.gradeDeclencheur = :grade
               AND m.typeAbsenceCible  = :type
               AND m.uniteIdentifianteExterne = :unite
+              AND m.actif = true
             ORDER BY r.priorite ASC
             """)
     List<RegleAffectation> findByGradeAndTypeAndUnite(
@@ -36,6 +37,7 @@ public interface RegleAffectationRepository extends JpaRepository<RegleAffectati
             WHERE r.gradeDeclencheur = :grade
               AND m.typeAbsenceCible  = :type
               AND m.uniteIdentifianteExterne IS NULL
+              AND m.actif = true
             ORDER BY r.priorite ASC
             """)
     List<RegleAffectation> findByGradeAndTypeGlobal(
@@ -49,6 +51,7 @@ public interface RegleAffectationRepository extends JpaRepository<RegleAffectati
             JOIN FETCH e.modeleCircuit m
             WHERE r.gradeDeclencheur = :grade
               AND m.uniteIdentifianteExterne IS NULL
+              AND m.actif = true
             ORDER BY r.priorite ASC
             """)
     List<RegleAffectation> findByGradeGlobal(@Param("grade") String grade);

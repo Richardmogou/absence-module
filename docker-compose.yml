@@ -69,9 +69,9 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "curl -sf http://localhost:8080/realms/master || exit 1"]
-      interval: 20s
-      timeout: 10s
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/localhost/8080 2>/dev/null'"]
+      interval: 15s
+      timeout: 5s
       retries: 10
       start_period: 60s
 
@@ -132,17 +132,30 @@ services:
       minio:
         condition: service_healthy
 
-  # ── 5. Next.js Frontend ──────────────────────────────────────────────────
   front:
     build:
       context: ./absences-front
       dockerfile: Dockerfile
+      args:
+        - API_INTERNAL_URL=http://api:8080
     container_name: absences-front
     restart: unless-stopped
     environment:
-      NEXT_PUBLIC_API_URL:       http://api:8080
-      NEXT_PUBLIC_SSO_LOGIN_URL: http://localhost:8180/realms/absences/protocol/openid-connect/auth
-      NEXT_PUBLIC_MINIO_URL:     http://localhost:9000
+      # API — URL interne Docker pour le SSR, URL externe pour le navigateur
+      NEXT_PUBLIC_API_URL:  http://localhost:8080
+      API_INTERNAL_URL:     http://api:8080
+      NEXT_PUBLIC_MINIO_URL: http://localhost:9000
+
+      # NextAuth
+      AUTH_SECRET:          GWcCsdR/bU4Z0dKf5KMsDFPFf8QZHR/WAZaOvo2zx2o=
+      NEXTAUTH_URL:         http://localhost:3000
+
+      # Keycloak — même URL pour le navigateur ET le conteneur (via host-gateway)
+      AUTH_KEYCLOAK_ID:      absences-front
+      AUTH_KEYCLOAK_SECRET:  t5ez1RGMvvDHUR6YwAQJzqGGNBB8QFsh
+      AUTH_KEYCLOAK_ISSUER:  http://localhost:8180/realms/absences
+    extra_hosts:
+      - "localhost:host-gateway"
     ports:
       - "3000:3000"
     networks:

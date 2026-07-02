@@ -1,0 +1,1000 @@
+        eds1_0.demande_id=? 
+        and eds1_0.position=?
+2026-07-02T09:30:25.886Z DEBUG 1 --- [absences-api] [nio-8080-exec-8] org.hibernate.SQL                        : 
+    select
+        dmec1_0.id,
+        dmec1_0.demande_id,
+        dmec1_0.genere_le,
+        dmec1_0.numero,
+        dmec1_0.url_document 
+    from
+        document_mise_en_conge dmec1_0 
+    where
+        dmec1_0.demande_id=?
+2026-07-02T09:30:25.891Z DEBUG 1 --- [absences-api] [nio-8080-exec-8] org.hibernate.SQL                        : 
+    select
+        jd1_0.id,
+        jd1_0.demande_id,
+        jd1_0.depose_le,
+        jd1_0.type_piece,
+        jd1_0.url_fichier 
+    from
+        justificatif_document jd1_0 
+    where
+        jd1_0.demande_id=?
+2026-07-02T09:30:25.926Z DEBUG 1 --- [absences-api] [nio-8080-exec-8] org.hibernate.SQL                        : 
+    select
+        eds1_0.id,
+        eds1_0.date_affectation,
+        eds1_0.date_limite,
+        eds1_0.date_traitement,
+        eds1_0.demande_id,
+        eds1_0.libelle,
+        eds1_0.mecanisme_resolution,
+        eds1_0.ordre,
+        eds1_0.position,
+        eds1_0.role_habilite,
+        eds1_0.statut,
+        eds1_0.validateur_identifiant_externe,
+        eds1_0.verrouille 
+    from
+        etape_demande_snapshot eds1_0 
+    where
+        eds1_0.demande_id=? 
+    order by
+        eds1_0.ordre
+2026-07-02T09:30:25.929Z DEBUG 1 --- [absences-api] [nio-8080-exec-8] org.hibernate.SQL                        : 
+    select
+        v1_0.id,
+        v1_0.commentaire,
+        v1_0.date_decision,
+        v1_0.decision,
+        v1_0.delegant_identifiant_externe,
+        v1_0.demande_id,
+        v1_0.est_delegation,
+        v1_0.etape_snapshot_id,
+        v1_0.validateur_identifiant_externe 
+    from
+        validation v1_0 
+    where
+        v1_0.demande_id=?
+2026-07-02T09:30:35.701Z DEBUG 1 --- [absences-api] [nio-8080-exec-6] org.hibernate.SQL                        : 
+    select
+        da1_0.id,
+        da1_0.type,
+        da1_0.backup_identifiant_externe,
+        da1_0.circuit_id,
+        da1_0.circuit_nom,
+        da1_0.created_at,
+        da1_0.date_debut,
+        da1_0.date_fin,
+        da1_0.demandeur_identifiant_externe,
+        da1_0.doublon_confirme,
+        da1_0.motif_rejet_systeme,
+        da1_0.nombre_jours,
+        da1_0.position_etape_courante,
+        da1_0.statut,
+        da1_0.type,
+        da1_0.unite_identifiant_externe,
+        da1_0.updated_at,
+        da1_0.version,
+        da1_1.est_premiere_fraction,
+        da1_1.numero_fraction,
+        da1_2.demande_initiale_id,
+        da1_2.est_prolongation,
+        da1_3.objet_mission,
+        da1_4.code_motif,
+        da1_4.evenement_id 
+    from
+        demande_absence da1_0 
+    left join
+        demande_conge_annuel da1_1 
+            on da1_0.id=da1_1.id 
+    left join
+        demande_conge_maternite da1_2 
+            on da1_0.id=da1_2.id 
+    left join
+        demande_mission_longue da1_3 
+            on da1_0.id=da1_3.id 
+    left join
+        demande_permission da1_4 
+            on da1_0.id=da1_4.id 
+    where
+        da1_0.id=?
+2026-07-02T09:30:35.714Z DEBUG 1 --- [absences-api] [nio-8080-exec-6] org.hibernate.SQL                        : 
+    select
+        eds1_0.id,
+        eds1_0.date_affectation,
+        eds1_0.date_limite,
+        eds1_0.date_traitement,
+        eds1_0.demande_id,
+        eds1_0.libelle,
+        eds1_0.mecanisme_resolution,
+        eds1_0.ordre,
+        eds1_0.position,
+        eds1_0.role_habilite,
+        eds1_0.statut,
+        eds1_0.validateur_identifiant_externe,
+        eds1_0.verrouille 
+    from
+        etape_demande_snapshot eds1_0 
+    where
+        eds1_0.demande_id=? 
+        and eds1_0.position=?
+2026-07-02T09:30:35.727Z DEBUG 1 --- [absences-api] [nio-8080-exec-6] org.hibernate.SQL                        : 
+    select
+        eds1_0.id,
+        eds1_0.date_affectation,
+        eds1_0.date_limite,
+        eds1_0.date_traitement,
+        eds1_0.demande_id,
+        eds1_0.libelle,
+        eds1_0.mecanisme_resolution,
+        eds1_0.ordre,
+        eds1_0.position,
+        eds1_0.role_habilite,
+        eds1_0.statut,
+        eds1_0.validateur_identifiant_externe,
+        eds1_0.verrouille 
+    from
+        etape_demande_snapshot eds1_0 
+    where
+        eds1_0.demande_id=? 
+        and (
+            eds1_0.mecanisme_resolution is null 
+            or eds1_0.mecanisme_resolution not in ('ROLE_FIXE_GLOBAL')
+        ) 
+    order by
+        eds1_0.ordre
+2026-07-02T09:30:35.779Z DEBUG 1 --- [absences-api] [nio-8080-exec-6] org.hibernate.SQL                        : 
+    select
+        eds1_0.id,
+        eds1_0.date_affectation,
+        eds1_0.date_limite,
+        eds1_0.date_traitement,
+        eds1_0.demande_id,
+        eds1_0.libelle,
+        eds1_0.mecanisme_resolution,
+        eds1_0.ordre,
+        eds1_0.position,
+        eds1_0.role_habilite,
+        eds1_0.statut,
+        eds1_0.validateur_identifiant_externe,
+        eds1_0.verrouille 
+    from
+        etape_demande_snapshot eds1_0 
+    where
+        eds1_0.demande_id=? 
+        and eds1_0.mecanisme_resolution=?
+2026-07-02T09:30:35.822Z DEBUG 1 --- [absences-api] [nio-8080-exec-6] org.hibernate.SQL                        : 
+    insert 
+    into
+        validation
+        (commentaire, date_decision, decision, delegant_identifiant_externe, demande_id, est_delegation, etape_snapshot_id, validateur_identifiant_externe, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-07-02T09:30:35.832Z DEBUG 1 --- [absences-api] [nio-8080-exec-6] org.hibernate.SQL                        : 
+    insert 
+    into
+        etape_demande_snapshot
+        (date_affectation, date_limite, date_traitement, demande_id, libelle, mecanisme_resolution, ordre, position, role_habilite, statut, validateur_identifiant_externe, verrouille, id) 
+    values
+        (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+2026-07-02T09:30:35.838Z DEBUG 1 --- [absences-api] [nio-8080-exec-6] org.hibernate.SQL                        : 
+    update
+        demande_absence 
+    set
+        backup_identifiant_externe=?,
+        circuit_id=?,
+        circuit_nom=?,
+        date_debut=?,
+        date_fin=?,
+        demandeur_identifiant_externe=?,
+        doublon_confirme=?,
+        motif_rejet_systeme=?,
+        nombre_jours=?,
+        position_etape_courante=?,
+        statut=?,
+        unite_identifiant_externe=?,
+        updated_at=?,
+        version=? 
+    where
+        id=? 
+        and version=?
+2026-07-02T09:30:37.525Z DEBUG 1 --- [absences-api] [io-8080-exec-10] org.hibernate.SQL                        : 
+    select
+        da1_0.id,
+        da1_0.type,
+        da1_0.backup_identifiant_externe,
+        da1_0.circuit_id,
+        da1_0.circuit_nom,
+        da1_0.created_at,
+        da1_0.date_debut,
+        da1_0.date_fin,
+        da1_0.demandeur_identifiant_externe,
+        da1_0.doublon_confirme,
+        da1_0.motif_rejet_systeme,
+        da1_0.nombre_jours,
+        da1_0.position_etape_courante,
+        da1_0.statut,
+        da1_0.type,
+        da1_0.unite_identifiant_externe,
+        da1_0.updated_at,
+        da1_0.version,
+        da1_1.est_premiere_fraction,
+        da1_1.numero_fraction,
+        da1_2.demande_initiale_id,
+        da1_2.est_prolongation,
+        da1_3.objet_mission,
+        da1_4.code_motif,
+        da1_4.evenement_id 
+    from
+        demande_absence da1_0 
+    left join
+        demande_conge_annuel da1_1 
+            on da1_0.id=da1_1.id 
+    left join
+        demande_conge_maternite da1_2 
+            on da1_0.id=da1_2.id 
+    left join
+        demande_mission_longue da1_3 
+            on da1_0.id=da1_3.id 
+    left join
+        demande_permission da1_4 
+            on da1_0.id=da1_4.id 
+    where
+        da1_0.id=?
+2026-07-02T09:30:37.534Z DEBUG 1 --- [absences-api] [io-8080-exec-10] org.hibernate.SQL                        : 
+    select
+        eds1_0.id,
+        eds1_0.date_affectation,
+        eds1_0.date_limite,
+        eds1_0.date_traitement,
+        eds1_0.demande_id,
+        eds1_0.libelle,
+        eds1_0.mecanisme_resolution,
+        eds1_0.ordre,
+        eds1_0.position,
+        eds1_0.role_habilite,
+        eds1_0.statut,
+        eds1_0.validateur_identifiant_externe,
+        eds1_0.verrouille 
+    from
+        etape_demande_snapshot eds1_0 
+    where
+        eds1_0.demande_id=? 
+    order by
+        eds1_0.ordre
+2026-07-02T09:30:37.543Z DEBUG 1 --- [absences-api] [io-8080-exec-10] org.hibernate.SQL                        : 
+    select
+        eds1_0.id,
+        eds1_0.date_affectation,
+        eds1_0.date_limite,
+        eds1_0.date_traitement,
+        eds1_0.demande_id,
+        eds1_0.libelle,
+        eds1_0.mecanisme_resolution,
+        eds1_0.ordre,
+        eds1_0.position,
+        eds1_0.role_habilite,
+        eds1_0.statut,
+        eds1_0.validateur_identifiant_externe,
+        eds1_0.verrouille 
+    from
+        etape_demande_snapshot eds1_0 
+    where
+        eds1_0.demande_id=? 
+        and eds1_0.position=?
+2026-07-02T09:30:37.801Z ERROR 1 --- [absences-api] [io-8080-exec-10] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed: org.springframework.dao.IncorrectResultSizeDataAccessException: Query did not return a unique result: 2 results were returned] with root cause
+
+org.hibernate.NonUniqueResultException: Query did not return a unique result: 2 results were returned
+	at org.hibernate.query.spi.AbstractSelectionQuery.uniqueElement(AbstractSelectionQuery.java:578) ~[hibernate-core-6.5.3.Final.jar!/:6.5.3.Final]
+	at org.hibernate.query.spi.AbstractSelectionQuery.getSingleResult(AbstractSelectionQuery.java:561) ~[hibernate-core-6.5.3.Final.jar!/:6.5.3.Final]
+	at org.springframework.data.jpa.repository.query.JpaQueryExecution$SingleEntityExecution.doExecute(JpaQueryExecution.java:223) ~[spring-data-jpa-3.3.5.jar!/:3.3.5]
+	at org.springframework.data.jpa.repository.query.JpaQueryExecution.execute(JpaQueryExecution.java:92) ~[spring-data-jpa-3.3.5.jar!/:3.3.5]
+	at org.springframework.data.jpa.repository.query.AbstractJpaQuery.doExecute(AbstractJpaQuery.java:152) ~[spring-data-jpa-3.3.5.jar!/:3.3.5]
+	at org.springframework.data.jpa.repository.query.AbstractJpaQuery.execute(AbstractJpaQuery.java:140) ~[spring-data-jpa-3.3.5.jar!/:3.3.5]
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.doInvoke(RepositoryMethodInvoker.java:170) ~[spring-data-commons-3.3.5.jar!/:3.3.5]
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.invoke(RepositoryMethodInvoker.java:158) ~[spring-data-commons-3.3.5.jar!/:3.3.5]
+	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.doInvoke(QueryExecutorMethodInterceptor.java:169) ~[spring-data-commons-3.3.5.jar!/:3.3.5]
+	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.invoke(QueryExecutorMethodInterceptor.java:148) ~[spring-data-commons-3.3.5.jar!/:3.3.5]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.data.projection.DefaultMethodInvokingMethodInterceptor.invoke(DefaultMethodInvokingMethodInterceptor.java:70) ~[spring-data-commons-3.3.5.jar!/:3.3.5]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:379) ~[spring-tx-6.1.14.jar!/:6.1.14]
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119) ~[spring-tx-6.1.14.jar!/:6.1.14]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:138) ~[spring-tx-6.1.14.jar!/:6.1.14]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.data.jpa.repository.support.CrudMethodMetadataPostProcessor$CrudMethodMetadataPopulatingMethodInterceptor.invoke(CrudMethodMetadataPostProcessor.java:136) ~[spring-data-jpa-3.3.5.jar!/:3.3.5]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.aop.interceptor.ExposeInvocationInterceptor.invoke(ExposeInvocationInterceptor.java:97) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:223) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at jdk.proxy2/jdk.proxy2.$Proxy152.findByDemandeIdAndPosition(Unknown Source) ~[na:na]
+	at com.banque.absences.service.AbsenceServiceImpl.toResponse(AbsenceServiceImpl.java:666) ~[!/:0.0.1-SNAPSHOT]
+	at com.banque.absences.service.AbsenceServiceImpl.findById(AbsenceServiceImpl.java:379) ~[!/:0.0.1-SNAPSHOT]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source) ~[na:na]
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:379) ~[spring-tx-6.1.14.jar!/:6.1.14]
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119) ~[spring-tx-6.1.14.jar!/:6.1.14]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:720) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at com.banque.absences.service.AbsenceServiceImpl$$SpringCGLIB$$0.findById(<generated>) ~[!/:0.0.1-SNAPSHOT]
+	at com.banque.absences.controller.AbsenceController.findById(AbsenceController.java:50) ~[!/:0.0.1-SNAPSHOT]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source) ~[na:na]
+	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:255) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:188) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118) ~[spring-webmvc-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:926) ~[spring-webmvc-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:831) ~[spring-webmvc-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87) ~[spring-webmvc-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1089) ~[spring-webmvc-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:979) ~[spring-webmvc-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014) ~[spring-webmvc-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:903) ~[spring-webmvc-6.1.14.jar!/:6.1.14]
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:564) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885) ~[spring-webmvc-6.1.14.jar!/:6.1.14]
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:195) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51) ~[tomcat-embed-websocket-10.1.31.jar!/:na]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:108) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.security.web.FilterChainProxy.lambda$doFilterInternal$3(FilterChainProxy.java:231) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:365) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.access.intercept.AuthorizationFilter.doFilter(AuthorizationFilter.java:100) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:126) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:120) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:131) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:85) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.authentication.AnonymousAuthenticationFilter.doFilter(AnonymousAuthenticationFilter.java:100) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter.doFilter(SecurityContextHolderAwareRequestFilter.java:179) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.savedrequest.RequestCacheAwareFilter.doFilter(RequestCacheAwareFilter.java:63) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.doFilterInternal(BearerTokenAuthenticationFilter.java:145) ~[spring-security-oauth2-resource-server-6.3.4.jar!/:6.3.4]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:107) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:93) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:233) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:191) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.servlet.handler.HandlerMappingIntrospector.lambda$createCacheFilter$3(HandlerMappingIntrospector.java:195) ~[spring-webmvc-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.security.config.annotation.web.configuration.WebMvcSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebMvcSecurityConfiguration.java:230) ~[spring-security-config-6.3.4.jar!/:6.3.4]
+	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:362) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:278) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:483) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:344) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:384) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:905) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1741) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1190) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at java.base/java.lang.Thread.run(Unknown Source) ~[na:na]
+
+2026-07-02T09:31:00.023Z  INFO 1 --- [absences-api] [   scheduling-1] c.b.a.job.BackupConflictDetectionJob     : Démarrage du job de détection des conflits de backup...
+2026-07-02T09:31:00.034Z DEBUG 1 --- [absences-api] [   scheduling-1] org.hibernate.SQL                        : 
+    select
+        da1_0.id,
+        da1_0.type,
+        da1_0.backup_identifiant_externe,
+        da1_0.circuit_id,
+        da1_0.circuit_nom,
+        da1_0.created_at,
+        da1_0.date_debut,
+        da1_0.date_fin,
+        da1_0.demandeur_identifiant_externe,
+        da1_0.doublon_confirme,
+        da1_0.motif_rejet_systeme,
+        da1_0.nombre_jours,
+        da1_0.position_etape_courante,
+        da1_0.statut,
+        da1_0.type,
+        da1_0.unite_identifiant_externe,
+        da1_0.updated_at,
+        da1_0.version,
+        da1_1.est_premiere_fraction,
+        da1_1.numero_fraction,
+        da1_3.demande_initiale_id,
+        da1_3.est_prolongation,
+        da1_4.objet_mission,
+        da1_5.code_motif,
+        da1_5.evenement_id 
+    from
+        demande_absence da1_0 
+    left join
+        demande_conge_annuel da1_1 
+            on da1_0.id=da1_1.id 
+    left join
+        demande_conge_maladie da1_2 
+            on da1_0.id=da1_2.id 
+    left join
+        demande_conge_maternite da1_3 
+            on da1_0.id=da1_3.id 
+    left join
+        demande_mission_longue da1_4 
+            on da1_0.id=da1_4.id 
+    left join
+        demande_permission da1_5 
+            on da1_0.id=da1_5.id 
+    where
+        da1_0.statut in (?, ?, ?, ?)
+2026-07-02T09:31:00.042Z DEBUG 1 --- [absences-api] [   scheduling-1] org.hibernate.SQL                        : 
+    select
+        da1_0.id,
+        da1_0.type,
+        da1_0.backup_identifiant_externe,
+        da1_0.circuit_id,
+        da1_0.circuit_nom,
+        da1_0.created_at,
+        da1_0.date_debut,
+        da1_0.date_fin,
+        da1_0.demandeur_identifiant_externe,
+        da1_0.doublon_confirme,
+        da1_0.motif_rejet_systeme,
+        da1_0.nombre_jours,
+        da1_0.position_etape_courante,
+        da1_0.statut,
+        da1_0.type,
+        da1_0.unite_identifiant_externe,
+        da1_0.updated_at,
+        da1_0.version,
+        da1_1.est_premiere_fraction,
+        da1_1.numero_fraction,
+        da1_3.demande_initiale_id,
+        da1_3.est_prolongation,
+        da1_4.objet_mission,
+        da1_5.code_motif,
+        da1_5.evenement_id 
+    from
+        demande_absence da1_0 
+    left join
+        demande_conge_annuel da1_1 
+            on da1_0.id=da1_1.id 
+    left join
+        demande_conge_maladie da1_2 
+            on da1_0.id=da1_2.id 
+    left join
+        demande_conge_maternite da1_3 
+            on da1_0.id=da1_3.id 
+    left join
+        demande_mission_longue da1_4 
+            on da1_0.id=da1_4.id 
+    left join
+        demande_permission da1_5 
+            on da1_0.id=da1_5.id 
+    where
+        da1_0.demandeur_identifiant_externe=? 
+        and da1_0.statut not in (?, ?, ?)
+2026-07-02T09:31:00.045Z  INFO 1 --- [absences-api] [   scheduling-1] c.b.a.job.BackupConflictDetectionJob     : Fin du job. 0 conflits détectés et rejetés.
+2026-07-02T09:31:48.500Z DEBUG 1 --- [absences-api] [nio-8080-exec-3] org.hibernate.SQL                        : 
+    select
+        da1_0.id,
+        da1_0.type,
+        da1_0.backup_identifiant_externe,
+        da1_0.circuit_id,
+        da1_0.circuit_nom,
+        da1_0.created_at,
+        da1_0.date_debut,
+        da1_0.date_fin,
+        da1_0.demandeur_identifiant_externe,
+        da1_0.doublon_confirme,
+        da1_0.motif_rejet_systeme,
+        da1_0.nombre_jours,
+        da1_0.position_etape_courante,
+        da1_0.statut,
+        da1_0.type,
+        da1_0.unite_identifiant_externe,
+        da1_0.updated_at,
+        da1_0.version,
+        da1_1.est_premiere_fraction,
+        da1_1.numero_fraction,
+        da1_2.demande_initiale_id,
+        da1_2.est_prolongation,
+        da1_3.objet_mission,
+        da1_4.code_motif,
+        da1_4.evenement_id 
+    from
+        demande_absence da1_0 
+    left join
+        demande_conge_annuel da1_1 
+            on da1_0.id=da1_1.id 
+    left join
+        demande_conge_maternite da1_2 
+            on da1_0.id=da1_2.id 
+    left join
+        demande_mission_longue da1_3 
+            on da1_0.id=da1_3.id 
+    left join
+        demande_permission da1_4 
+            on da1_0.id=da1_4.id 
+    where
+        da1_0.id=?
+2026-07-02T09:31:48.505Z DEBUG 1 --- [absences-api] [nio-8080-exec-3] org.hibernate.SQL                        : 
+    select
+        eds1_0.id,
+        eds1_0.date_affectation,
+        eds1_0.date_limite,
+        eds1_0.date_traitement,
+        eds1_0.demande_id,
+        eds1_0.libelle,
+        eds1_0.mecanisme_resolution,
+        eds1_0.ordre,
+        eds1_0.position,
+        eds1_0.role_habilite,
+        eds1_0.statut,
+        eds1_0.validateur_identifiant_externe,
+        eds1_0.verrouille 
+    from
+        etape_demande_snapshot eds1_0 
+    where
+        eds1_0.demande_id=? 
+    order by
+        eds1_0.ordre
+2026-07-02T09:31:48.511Z DEBUG 1 --- [absences-api] [nio-8080-exec-3] org.hibernate.SQL                        : 
+    select
+        eds1_0.id,
+        eds1_0.date_affectation,
+        eds1_0.date_limite,
+        eds1_0.date_traitement,
+        eds1_0.demande_id,
+        eds1_0.libelle,
+        eds1_0.mecanisme_resolution,
+        eds1_0.ordre,
+        eds1_0.position,
+        eds1_0.role_habilite,
+        eds1_0.statut,
+        eds1_0.validateur_identifiant_externe,
+        eds1_0.verrouille 
+    from
+        etape_demande_snapshot eds1_0 
+    where
+        eds1_0.demande_id=? 
+        and eds1_0.position=?
+2026-07-02T09:31:48.515Z ERROR 1 --- [absences-api] [nio-8080-exec-3] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed: org.springframework.dao.IncorrectResultSizeDataAccessException: Query did not return a unique result: 2 results were returned] with root cause
+
+org.hibernate.NonUniqueResultException: Query did not return a unique result: 2 results were returned
+	at org.hibernate.query.spi.AbstractSelectionQuery.uniqueElement(AbstractSelectionQuery.java:578) ~[hibernate-core-6.5.3.Final.jar!/:6.5.3.Final]
+	at org.hibernate.query.spi.AbstractSelectionQuery.getSingleResult(AbstractSelectionQuery.java:561) ~[hibernate-core-6.5.3.Final.jar!/:6.5.3.Final]
+	at org.springframework.data.jpa.repository.query.JpaQueryExecution$SingleEntityExecution.doExecute(JpaQueryExecution.java:223) ~[spring-data-jpa-3.3.5.jar!/:3.3.5]
+	at org.springframework.data.jpa.repository.query.JpaQueryExecution.execute(JpaQueryExecution.java:92) ~[spring-data-jpa-3.3.5.jar!/:3.3.5]
+	at org.springframework.data.jpa.repository.query.AbstractJpaQuery.doExecute(AbstractJpaQuery.java:152) ~[spring-data-jpa-3.3.5.jar!/:3.3.5]
+	at org.springframework.data.jpa.repository.query.AbstractJpaQuery.execute(AbstractJpaQuery.java:140) ~[spring-data-jpa-3.3.5.jar!/:3.3.5]
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.doInvoke(RepositoryMethodInvoker.java:170) ~[spring-data-commons-3.3.5.jar!/:3.3.5]
+	at org.springframework.data.repository.core.support.RepositoryMethodInvoker.invoke(RepositoryMethodInvoker.java:158) ~[spring-data-commons-3.3.5.jar!/:3.3.5]
+	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.doInvoke(QueryExecutorMethodInterceptor.java:169) ~[spring-data-commons-3.3.5.jar!/:3.3.5]
+	at org.springframework.data.repository.core.support.QueryExecutorMethodInterceptor.invoke(QueryExecutorMethodInterceptor.java:148) ~[spring-data-commons-3.3.5.jar!/:3.3.5]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.data.projection.DefaultMethodInvokingMethodInterceptor.invoke(DefaultMethodInvokingMethodInterceptor.java:70) ~[spring-data-commons-3.3.5.jar!/:3.3.5]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:379) ~[spring-tx-6.1.14.jar!/:6.1.14]
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119) ~[spring-tx-6.1.14.jar!/:6.1.14]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:138) ~[spring-tx-6.1.14.jar!/:6.1.14]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.data.jpa.repository.support.CrudMethodMetadataPostProcessor$CrudMethodMetadataPopulatingMethodInterceptor.invoke(CrudMethodMetadataPostProcessor.java:136) ~[spring-data-jpa-3.3.5.jar!/:3.3.5]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.aop.interceptor.ExposeInvocationInterceptor.invoke(ExposeInvocationInterceptor.java:97) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.aop.framework.JdkDynamicAopProxy.invoke(JdkDynamicAopProxy.java:223) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at jdk.proxy2/jdk.proxy2.$Proxy152.findByDemandeIdAndPosition(Unknown Source) ~[na:na]
+	at com.banque.absences.service.AbsenceServiceImpl.toResponse(AbsenceServiceImpl.java:666) ~[!/:0.0.1-SNAPSHOT]
+	at com.banque.absences.service.AbsenceServiceImpl.findById(AbsenceServiceImpl.java:379) ~[!/:0.0.1-SNAPSHOT]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source) ~[na:na]
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:379) ~[spring-tx-6.1.14.jar!/:6.1.14]
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119) ~[spring-tx-6.1.14.jar!/:6.1.14]
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:720) ~[spring-aop-6.1.14.jar!/:6.1.14]
+	at com.banque.absences.service.AbsenceServiceImpl$$SpringCGLIB$$0.findById(<generated>) ~[!/:0.0.1-SNAPSHOT]
+	at com.banque.absences.controller.AbsenceController.findById(AbsenceController.java:50) ~[!/:0.0.1-SNAPSHOT]
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source) ~[na:na]
+	at org.springframework.web.method.support.InvocableHandlerMethod.doInvoke(InvocableHandlerMethod.java:255) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.method.support.InvocableHandlerMethod.invokeForRequest(InvocableHandlerMethod.java:188) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:118) ~[spring-webmvc-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.invokeHandlerMethod(RequestMappingHandlerAdapter.java:926) ~[spring-webmvc-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter.handleInternal(RequestMappingHandlerAdapter.java:831) ~[spring-webmvc-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.servlet.mvc.method.AbstractHandlerMethodAdapter.handle(AbstractHandlerMethodAdapter.java:87) ~[spring-webmvc-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1089) ~[spring-webmvc-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:979) ~[spring-webmvc-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014) ~[spring-webmvc-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:903) ~[spring-webmvc-6.1.14.jar!/:6.1.14]
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:564) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885) ~[spring-webmvc-6.1.14.jar!/:6.1.14]
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:195) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.tomcat.websocket.server.WsFilter.doFilter(WsFilter.java:51) ~[tomcat-embed-websocket-10.1.31.jar!/:na]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:108) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.security.web.FilterChainProxy.lambda$doFilterInternal$3(FilterChainProxy.java:231) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:365) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.access.intercept.AuthorizationFilter.doFilter(AuthorizationFilter.java:100) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:126) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.access.ExceptionTranslationFilter.doFilter(ExceptionTranslationFilter.java:120) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:131) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.session.SessionManagementFilter.doFilter(SessionManagementFilter.java:85) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.authentication.AnonymousAuthenticationFilter.doFilter(AnonymousAuthenticationFilter.java:100) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter.doFilter(SecurityContextHolderAwareRequestFilter.java:179) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.savedrequest.RequestCacheAwareFilter.doFilter(RequestCacheAwareFilter.java:63) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.doFilterInternal(BearerTokenAuthenticationFilter.java:145) ~[spring-security-oauth2-resource-server-6.3.4.jar!/:6.3.4]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:107) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:93) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:233) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:191) ~[spring-security-web-6.3.4.jar!/:6.3.4]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.servlet.handler.HandlerMappingIntrospector.lambda$createCacheFilter$3(HandlerMappingIntrospector.java:195) ~[spring-webmvc-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.security.config.annotation.web.configuration.WebMvcSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebMvcSecurityConfiguration.java:230) ~[spring-security-config-6.3.4.jar!/:6.3.4]
+	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:362) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:278) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116) ~[spring-web-6.1.14.jar!/:6.1.14]
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:483) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:344) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:384) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:905) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1741) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1190) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:63) ~[tomcat-embed-core-10.1.31.jar!/:na]
+	at java.base/java.lang.Thread.run(Unknown Source) ~[na:na]
+
+2026-07-02T09:31:59.998Z  INFO 1 --- [absences-api] [   scheduling-1] c.b.a.job.BackupConflictDetectionJob     : Démarrage du job de détection des conflits de backup...
+2026-07-02T09:32:00.006Z DEBUG 1 --- [absences-api] [   scheduling-1] org.hibernate.SQL                        : 
+    select
+        da1_0.id,
+        da1_0.type,
+        da1_0.backup_identifiant_externe,
+        da1_0.circuit_id,
+        da1_0.circuit_nom,
+        da1_0.created_at,
+        da1_0.date_debut,
+        da1_0.date_fin,
+        da1_0.demandeur_identifiant_externe,
+        da1_0.doublon_confirme,
+        da1_0.motif_rejet_systeme,
+        da1_0.nombre_jours,
+        da1_0.position_etape_courante,
+        da1_0.statut,
+        da1_0.type,
+        da1_0.unite_identifiant_externe,
+        da1_0.updated_at,
+        da1_0.version,
+        da1_1.est_premiere_fraction,
+        da1_1.numero_fraction,
+        da1_3.demande_initiale_id,
+        da1_3.est_prolongation,
+        da1_4.objet_mission,
+        da1_5.code_motif,
+        da1_5.evenement_id 
+    from
+        demande_absence da1_0 
+    left join
+        demande_conge_annuel da1_1 
+            on da1_0.id=da1_1.id 
+    left join
+        demande_conge_maladie da1_2 
+            on da1_0.id=da1_2.id 
+    left join
+        demande_conge_maternite da1_3 
+            on da1_0.id=da1_3.id 
+    left join
+        demande_mission_longue da1_4 
+            on da1_0.id=da1_4.id 
+    left join
+        demande_permission da1_5 
+            on da1_0.id=da1_5.id 
+    where
+        da1_0.statut in (?, ?, ?, ?)
+2026-07-02T09:32:00.027Z DEBUG 1 --- [absences-api] [   scheduling-1] org.hibernate.SQL                        : 
+    select
+        da1_0.id,
+        da1_0.type,
+        da1_0.backup_identifiant_externe,
+        da1_0.circuit_id,
+        da1_0.circuit_nom,
+        da1_0.created_at,
+        da1_0.date_debut,
+        da1_0.date_fin,
+        da1_0.demandeur_identifiant_externe,
+        da1_0.doublon_confirme,
+        da1_0.motif_rejet_systeme,
+        da1_0.nombre_jours,
+        da1_0.position_etape_courante,
+        da1_0.statut,
+        da1_0.type,
+        da1_0.unite_identifiant_externe,
+        da1_0.updated_at,
+        da1_0.version,
+        da1_1.est_premiere_fraction,
+        da1_1.numero_fraction,
+        da1_3.demande_initiale_id,
+        da1_3.est_prolongation,
+        da1_4.objet_mission,
+        da1_5.code_motif,
+        da1_5.evenement_id 
+    from
+        demande_absence da1_0 
+    left join
+        demande_conge_annuel da1_1 
+            on da1_0.id=da1_1.id 
+    left join
+        demande_conge_maladie da1_2 
+            on da1_0.id=da1_2.id 
+    left join
+        demande_conge_maternite da1_3 
+            on da1_0.id=da1_3.id 
+    left join
+        demande_mission_longue da1_4 
+            on da1_0.id=da1_4.id 
+    left join
+        demande_permission da1_5 
+            on da1_0.id=da1_5.id 
+    where
+        da1_0.demandeur_identifiant_externe=? 
+        and da1_0.statut not in (?, ?, ?)
+2026-07-02T09:32:00.031Z  INFO 1 --- [absences-api] [   scheduling-1] c.b.a.job.BackupConflictDetectionJob     : Fin du job. 0 conflits détectés et rejetés.
+2026-07-02T09:33:00.001Z  INFO 1 --- [absences-api] [   scheduling-1] c.b.a.job.BackupConflictDetectionJob     : Démarrage du job de détection des conflits de backup...
+2026-07-02T09:33:00.018Z DEBUG 1 --- [absences-api] [   scheduling-1] org.hibernate.SQL                        : 
+    select
+        da1_0.id,
+        da1_0.type,
+        da1_0.backup_identifiant_externe,
+        da1_0.circuit_id,
+        da1_0.circuit_nom,
+        da1_0.created_at,
+        da1_0.date_debut,
+        da1_0.date_fin,
+        da1_0.demandeur_identifiant_externe,
+        da1_0.doublon_confirme,
+        da1_0.motif_rejet_systeme,
+        da1_0.nombre_jours,
+        da1_0.position_etape_courante,
+        da1_0.statut,
+        da1_0.type,
+        da1_0.unite_identifiant_externe,
+        da1_0.updated_at,
+        da1_0.version,
+        da1_1.est_premiere_fraction,
+        da1_1.numero_fraction,
+        da1_3.demande_initiale_id,
+        da1_3.est_prolongation,
+        da1_4.objet_mission,
+        da1_5.code_motif,
+        da1_5.evenement_id 
+    from
+        demande_absence da1_0 
+    left join
+        demande_conge_annuel da1_1 
+            on da1_0.id=da1_1.id 
+    left join
+        demande_conge_maladie da1_2 
+            on da1_0.id=da1_2.id 
+    left join
+        demande_conge_maternite da1_3 
+            on da1_0.id=da1_3.id 
+    left join
+        demande_mission_longue da1_4 
+            on da1_0.id=da1_4.id 
+    left join
+        demande_permission da1_5 
+            on da1_0.id=da1_5.id 
+    where
+        da1_0.statut in (?, ?, ?, ?)
+2026-07-02T09:33:00.034Z DEBUG 1 --- [absences-api] [   scheduling-1] org.hibernate.SQL                        : 
+    select
+        da1_0.id,
+        da1_0.type,
+        da1_0.backup_identifiant_externe,
+        da1_0.circuit_id,
+        da1_0.circuit_nom,
+        da1_0.created_at,
+        da1_0.date_debut,
+        da1_0.date_fin,
+        da1_0.demandeur_identifiant_externe,
+        da1_0.doublon_confirme,
+        da1_0.motif_rejet_systeme,
+        da1_0.nombre_jours,
+        da1_0.position_etape_courante,
+        da1_0.statut,
+        da1_0.type,
+        da1_0.unite_identifiant_externe,
+        da1_0.updated_at,
+        da1_0.version,
+        da1_1.est_premiere_fraction,
+        da1_1.numero_fraction,
+        da1_3.demande_initiale_id,
+        da1_3.est_prolongation,
+        da1_4.objet_mission,
+        da1_5.code_motif,
+        da1_5.evenement_id 
+    from
+        demande_absence da1_0 
+    left join
+        demande_conge_annuel da1_1 
+            on da1_0.id=da1_1.id 
+    left join
+        demande_conge_maladie da1_2 
+            on da1_0.id=da1_2.id 
+    left join
+        demande_conge_maternite da1_3 
+            on da1_0.id=da1_3.id 
+    left join
+        demande_mission_longue da1_4 
+            on da1_0.id=da1_4.id 
+    left join
+        demande_permission da1_5 
+            on da1_0.id=da1_5.id 
+    where
+        da1_0.demandeur_identifiant_externe=? 
+        and da1_0.statut not in (?, ?, ?)
+2026-07-02T09:33:00.038Z  INFO 1 --- [absences-api] [   scheduling-1] c.b.a.job.BackupConflictDetectionJob     : Fin du job. 0 conflits détectés et rejetés.
+2026-07-02T09:34:00.002Z  INFO 1 --- [absences-api] [   scheduling-1] c.b.a.job.BackupConflictDetectionJob     : Démarrage du job de détection des conflits de backup...
+2026-07-02T09:34:00.023Z DEBUG 1 --- [absences-api] [   scheduling-1] org.hibernate.SQL                        : 
+    select
+        da1_0.id,
+        da1_0.type,
+        da1_0.backup_identifiant_externe,
+        da1_0.circuit_id,
+        da1_0.circuit_nom,
+        da1_0.created_at,
+        da1_0.date_debut,
+        da1_0.date_fin,
+        da1_0.demandeur_identifiant_externe,
+        da1_0.doublon_confirme,
+        da1_0.motif_rejet_systeme,
+        da1_0.nombre_jours,
+        da1_0.position_etape_courante,
+        da1_0.statut,
+        da1_0.type,
+        da1_0.unite_identifiant_externe,
+        da1_0.updated_at,
+        da1_0.version,
+        da1_1.est_premiere_fraction,
+        da1_1.numero_fraction,
+        da1_3.demande_initiale_id,
+        da1_3.est_prolongation,
+        da1_4.objet_mission,
+        da1_5.code_motif,
+        da1_5.evenement_id 
+    from
+        demande_absence da1_0 
+    left join
+        demande_conge_annuel da1_1 
+            on da1_0.id=da1_1.id 
+    left join
+        demande_conge_maladie da1_2 
+            on da1_0.id=da1_2.id 
+    left join
+        demande_conge_maternite da1_3 
+            on da1_0.id=da1_3.id 
+    left join
+        demande_mission_longue da1_4 
+            on da1_0.id=da1_4.id 
+    left join
+        demande_permission da1_5 
+            on da1_0.id=da1_5.id 
+    where
+        da1_0.statut in (?, ?, ?, ?)
+aladie da1_2 
+            on da1_0.id=da1_2.id 
+    left join
+        demande_conge_maternite da1_3 
+            on da1_0.id=da1_3.id 
+    left join
+        demande_mission_longue da1_4 
+            on da1_0.id=da1_4.id 
+    left join
+        demande_permission da1_5 
+            on da1_0.id=da1_5.id 
+    where
+        da1_0.demandeur_identifiant_externe=? 
+        and da1_0.statut not in (?, ?, ?)
+2026-07-02T09:34:00.051Z  INFO 1 --- [absences-api] [   scheduling-1] c.b.a.job.BackupConflictDetectionJob     : Fin du job. 0 conflits détectés et rejetés.

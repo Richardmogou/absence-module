@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Titre de congé</title>
+
+  <style>
+    @page {
+      size: A4;
+      margin: 15mm 15mm;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 14px;
+      color: #000;
+    }
+
+    .container {
+      position: relative;
+    }
+
+    .watermark {
+      position: fixed;
+      top: 55%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-60deg);
+      font-size: 80px;
+      font-weight: bold;
+      color: #e5e7eb;
+      opacity: 0.15;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .header {
+      margin-bottom: 40px;
+    }
+
+    .header img {
+      height: 60px;
+      max-width: 200px;
+    }
+
+    .title {
+      text-align: center;
+      margin-bottom: 50px;
+    }
+
+    .title h1 {
+      font-size: 18px;
+      font-weight: normal;
+      margin: 0;
+    }
+
+    .title h2 {
+      font-size: 20px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+
+
+
+    .section {
+      margin-top: 25px;
+    }
+
+    .section p {
+      line-height: 1.4;
+      margin-bottom: 8px;
+      text-align: justify;
+    }
+    .un{
+      padding-bottom: 15px;
+    }
+
+    .subject {
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    .signature {
+      margin-top: 30px;
+      text-align: right;
+    }
+
+    .signature p {
+      text-align: right;
+    }
+
+    .signature .title {
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .signature .name {
+      font-size: 14px;
+      font-weight: bold;
+      margin-top: 5px;
+      text-align: right;
+    }
+
+    .footer-note {
+      margin-top: 20px;
+      font-size: 9px;
+      font-style: italic;
+      text-align: center;
+      color: #555;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- Watermark -->
+  <div class="watermark">INTRA-ABS</div>
+
+  <div class="content">
+
+    <!-- Header -->
+    <div class="header">
+      <img th:src="${company_logo}" alt="Logo entreprise" style="height: 60px; max-width: 200px;" />
+    </div>
+
+    <!-- Title -->
+    <div class="title">
+      <h1 th:text="${issuing_department}"></h1>
+      <h2 th:text="${absence_type}"></h2>
+      <!-- <h2>TITRE DE CONGÉ / ABSENCE</h2> -->
+    </div>
+
+    <!-- Employee Information -->
+    <div class="section">
+      <table style="border: none; width: 100%;">
+        <tr>
+          <td style="border: none; width: 180px; font-weight: bold;">Nom et prénom</td>
+          <td style="border: none; width: 20px;">:</td>
+          <td style="border: none;" th:text="${employee_full_name}"></td>
+        </tr>
+        <tr>
+          <td style="border: none; width: 180px; font-weight: bold;">Matricule</td>
+          <td style="border: none; width: 20px;">:</td>
+          <td style="border: none;" th:text="${employee_matricule}"></td>
+        </tr>
+        <tr>
+          <td style="border: none; width: 180px; font-weight: bold;">Poste</td>
+          <td style="border: none; width: 20px;">:</td>
+          <td style="border: none;" th:text="${employee_position} ?: 'Non renseigné'"></td>
+        </tr>
+        <tr>
+          <td style="border: none; width: 180px; font-weight: bold;">Département</td>
+          <td style="border: none; width: 20px;">:</td>
+          <td style="border: none;" th:text="${employee_department} ?: 'Non renseigné'"></td>
+        </tr>
+        <tr>
+          <td style="border: none; width: 180px; font-weight: bold;">Manager direct</td>
+          <td style="border: none; width: 20px;">:</td>
+          <td style="border: none;" th:text="${direct_manager_name} ?: 'Non renseigné'"></td>
+        </tr>
+          <tr>
+          <td style="border: none; width: 180px; font-weight: bold;">Motif / Type</td>
+          <td style="border: none; width: 20px;">:</td>
+          <td style="border: none;" th:text="${absence_type} ?: 'Non renseigné'"></td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Subject -->
+     <div class="section un">
+      <!-- <p>
+        <strong>Motif / Type :</strong>
+        <span th:text="${absence_type}"></span>
+      </p> -->
+    </div>
+
+    <!-- Body -->
+    <div class="section">
+      <p>
+        Il est accordé à l'employé(e) susmentionné(e) un(e) <span th:text="${absence_type}"></span> pour la période suivante :
+      </p>
+
+      <p>
+        <strong>Du :</strong> <span th:text="${date_debut}"></span><br/>
+        <strong>Au :</strong> <span th:text="${date_fin}"></span><br/>
+        <strong>Date de reprise :</strong> <span th:text="${date_reprise}"></span>
+      </p>
+
+      <p>
+        <strong>Nombre de jours :</strong> <span th:text="${nombre_jours}"></span>
+      </p>
+      
+      <p>
+        <strong>Lieu de jouissance :</strong> <span th:text="${lieu_jouissance}"></span>
+      </p>
+
+      <p>
+        Ce titre de congé fait foi pour valoir ce que de droit, et a été validé selon le circuit d'approbation en vigueur.
+      </p>
+    </div>
+
+    <!-- Signature -->
+    <div class="signature">
+      <p>
+        Fait à <span th:text="${document_location}"></span>,
+        le <span th:text="${document_date}"></span>
+      </p>
+      <div class="sign">
+        <p class="title" th:text="${hr_signatory_title}"></p>
+        <p class="name" th:text="${hr_signatory_name}"></p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer-note">
+      Document généré automatiquement par le système INTRA-ABS - Non modifiable
+      <br/>
+      Généré le <span th:text="${generation_timestamp}"></span>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

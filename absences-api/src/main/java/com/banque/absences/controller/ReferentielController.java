@@ -33,10 +33,10 @@ public class ReferentielController {
         String grade       = claimReaderService.lireClaimGrade();
         String unite       = claimReaderService.lireClaimReseau().orElse(null);
 
-        List<String> pairs = hierarchicalChainResolver
+        List<com.banque.absences.dto.EmployeDto> pairs = hierarchicalChainResolver
                 .resoudreColleguesMemeGradeEtUnite(grade, unite)
                 .stream()
-                .filter(id -> !id.equals(demandeurId))
+                .filter(dto -> !dto.id().equals(demandeurId))
                 .toList();
 
         String managerDirectId = hierarchicalChainResolver
@@ -44,5 +44,10 @@ public class ReferentielController {
                 .orElse(null);
 
         return ResponseEntity.ok(new CandidatsBackupResponse(pairs, managerDirectId));
+    }
+
+    @GetMapping("/roles-keycloak")
+    public ResponseEntity<List<String>> rolesKeycloak() {
+        return ResponseEntity.ok(hierarchicalChainResolver.listerRolesKeycloak());
     }
 }

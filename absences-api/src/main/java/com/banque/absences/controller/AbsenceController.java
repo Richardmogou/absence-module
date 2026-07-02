@@ -64,6 +64,11 @@ public class AbsenceController {
         return service.findByBackup(id);
     }
 
+    @GetMapping("/a-valider")
+    public List<AbsenceResponse> demandesAValider() {
+        return service.findDemandesAValider();
+    }
+
     @GetMapping("/moi/solde")
     public ResponseEntity<com.banque.absences.dto.SoldeCongeResponse> monSolde() {
         String id = claimReaderService.identifiantUtilisateurCourant();
@@ -84,8 +89,9 @@ public class AbsenceController {
     }
 
     @PostMapping("/{id}/soumettre")
-    public ResponseEntity<DemandeAbsence> soumettre(@PathVariable UUID id) {
-        return ResponseEntity.status(HttpStatus.ACCEPTED).body(service.soumettre(id));
+    public ResponseEntity<DemandeAbsence> soumettre(@PathVariable UUID id,
+                                                    @RequestParam(required = false, defaultValue = "false") boolean confirmDoublon) {
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(service.soumettre(id, confirmDoublon));
     }
 
     @PatchMapping("/{id}/statut")
