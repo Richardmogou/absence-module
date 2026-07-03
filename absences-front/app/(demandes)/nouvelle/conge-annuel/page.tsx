@@ -62,7 +62,16 @@ export default function CongeAnnuelPage() {
       badge="Nouvelle demande"
       title="Congé annuel"
       subtitle="Votre repos annuel réglementaire. Indiquez vos dates souhaitées — la validation suivra le circuit RH configuré."
-      icon="🌴"
+      icon={
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-beach">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <path d="M17.553 16.75a7.5 7.5 0 0 0 -10.606 0" />
+          <path d="M18 3.804a6 6 0 0 0 -8.196 2.196l10.392 6a6 6 0 0 0 -2.196 -8.196" />
+          <path d="M16.732 10c1.658 -2.87 2.225 -5.644 1.268 -6.196c-.957 -.552 -3.075 1.326 -4.732 4.196" />
+          <path d="M15 9l-3 5.196" />
+          <path d="M3 19.25a2.4 2.4 0 0 1 1 -.25a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 2 1a2.4 2.4 0 0 0 2 1a2.4 2.4 0 0 0 2 -1a2.4 2.4 0 0 1 2 -1a2.4 2.4 0 0 1 1 .25" />
+        </svg>
+      }
     >
       {/* Back-up obligatoire */}
       <div className="flex flex-col gap-1.5 relative">
@@ -83,7 +92,15 @@ export default function CongeAnnuelPage() {
 
       {/* Info Back-up */}
       <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-        <span className="text-lg mt-0.5">👥</span>
+        <span className="text-lg mt-0.5">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-users">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+            <path d="M5 7a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+            <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
+          </svg>
+        </span>
         <p className="text-xs text-amber-700 leading-relaxed">
           Le Back-up est un <strong>collègue de même grade</strong> qui assurera
           la continuité de votre poste pendant votre absence.

@@ -4,10 +4,10 @@ export default function DemandesLayout({ children }: { children: React.ReactNode
       {/* Bande kente fine en haut */}
       <div
         className="h-1 w-full"
-        style={{
-          background:
-            "repeating-linear-gradient(90deg,#C41E22 0px,#C41E22 10px,#B8932A 10px,#B8932A 20px,#2C2C2C 20px,#2C2C2C 30px,#F5F5F5 30px,#F5F5F5 40px)",
-        }}
+        // style={{
+        //   background:
+        //     "repeating-linear-gradient(90deg,#C41E22 0px,#C41E22 10px,#B8932A 10px,#B8932A 20px,#2C2C2C 20px,#2C2C2C 30px,#F5F5F5 30px,#F5F5F5 40px)",
+        // }}
       />
       {/* Image africaine en fond très atténuée */}
       <div

@@ -73,7 +73,17 @@ export default function CongeMaterniteePage() {
       badge="Nouvelle demande"
       title="Congé maternité"
       subtitle="Congé naissance & maternité. La durée légale est fixée à 14 semaines — la date de fin est calculée automatiquement."
-      icon="👶"
+      icon={
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-baby-carriage">
+	<path stroke="none" d="M0 0h24v24H0z" fill="none" />
+	<path d="M6 19a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+	<path d="M16 19a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+	<path d="M2 5h2.5l1.632 4.897a6 6 0 0 0 5.693 4.103h2.675a5.5 5.5 0 0 0 0 -11h-.5v6" />
+	<path d="M6 9h14" />
+	<path d="M9 17l1 -3" />
+	<path d="M16 14l1 3" />
+</svg>
+      }
     >
       <FormField
         id="dateDebut"
@@ -87,7 +97,20 @@ export default function CongeMaterniteePage() {
       {dateFinEstimee ? (
         <div className="rounded-xl border border-gold-200 bg-gold-50 overflow-hidden">
           <div className="px-4 py-3 flex items-center gap-3 border-b border-gold-200">
-            <span className="text-xl">📅</span>
+            <span className="text-xl"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-calendar-week">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12" />
+              <path d="M16 3v4" />
+              <path d="M8 3v4" />
+              <path d="M4 11h16" />
+              <path d="M7 14h.013" />
+              <path d="M10.01 14h.005" />
+              <path d="M13.01 14h.005" />
+              <path d="M16.015 14h.005" />
+              <path d="M13.015 17h.005" />
+              <path d="M7.01 17h.005" />
+              <path d="M10.01 17h.005" />
+            </svg></span>
             <p className="text-xs text-gold-700 font-ui font-semibold uppercase tracking-wider">
               Durée légale calculée automatiquement
             </p>
