@@ -1,6 +1,7 @@
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { serverApiClient } from "@/lib/api/server-client";
 import ConfirmSubmitForm from "./_ConfirmSubmitForm";
+import { AlertTriangle } from "lucide-react";
 
 interface Demande {
   type: string;
@@ -59,7 +60,7 @@ export default async function PreviewPage({ params }: { params: Promise<{ id: st
 
         {showDgWarning && (
           <div className="flex items-start gap-2 rounded border border-amber-300 bg-amber-50 p-3 text-amber-800">
-            <span className="mt-0.5 text-base leading-none" aria-hidden="true">⚠️</span>
+            <AlertTriangle size={16} className="mt-0.5 flex-shrink-0 text-amber-600" aria-hidden="true" />
             <p className="text-sm">
               <span className="font-semibold">Étape supplémentaire :</span>{" "}
               validation du Directeur Général (requise car Mission longue)

@@ -6,6 +6,10 @@ import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import apiClient from "@/lib/api/client";
+import {
+  AlertTriangle, Baby, ClipboardList, FileText, HelpCircle, Paperclip,
+  PartyPopper, Plane, Search, Stethoscope, TreePalm, XCircle, type LucideIcon,
+} from "lucide-react";
 
 interface Absence {
   id: string;
@@ -22,12 +26,12 @@ const TYPES_AVEC_JUSTIFICATIF = new Set([
   "CONGE_MALADIE", "PERMISSION", "MISSION_LONGUE", "CONGE_MATERNITE",
 ]);
 
-const TYPE_LABELS: Record<string, { label: string; icon: string; color: string }> = {
-  CONGE_ANNUEL:    { label: "Congé annuel",         icon: "🌴", color: "#C41E22" },
-  CONGE_MALADIE:   { label: "Congé maladie",        icon: "🏥", color: "#1A1A2E" },
-  PERMISSION:      { label: "Permission",           icon: "📋", color: "#B8932A" },
-  MISSION_LONGUE:  { label: "Mission longue durée", icon: "✈️", color: "#2C2C2C" },
-  CONGE_MATERNITE: { label: "Congé maternité",      icon: "👶", color: "#96751A" },
+const TYPE_LABELS: Record<string, { label: string; icon: LucideIcon; color: string }> = {
+  CONGE_ANNUEL:    { label: "Congé annuel",         icon: TreePalm,      color: "#C41E22" },
+  CONGE_MALADIE:   { label: "Congé maladie",        icon: Stethoscope,   color: "#1A1A2E" },
+  PERMISSION:      { label: "Permission",           icon: ClipboardList, color: "#B8932A" },
+  MISSION_LONGUE:  { label: "Mission longue durée", icon: Plane,         color: "#2C2C2C" },
+  CONGE_MATERNITE: { label: "Congé maternité",      icon: Baby,          color: "#96751A" },
 };
 
 const KENTE = "repeating-linear-gradient(90deg,#C41E22 0px,#C41E22 8px,#B8932A 8px,#B8932A 16px,#2C2C2C 16px,#2C2C2C 24px,#F5F5F5 24px,#F5F5F5 32px)";
@@ -79,7 +83,7 @@ export default function AnalysteRHPage() {
 
       {/* Compteur */}
       <div className="flex items-center gap-4 rounded-xl border border-purple-200 bg-purple-50 px-5 py-4">
-        <span className="text-3xl">🔍</span>
+        <Search size={28} className="text-purple-600 flex-shrink-0" />
         <div>
           <p className="text-sm font-semibold text-purple-700">
             {loading ? "Chargement…" : `${demandes.length} demande(s) en attente d'instruction`}
@@ -91,25 +95,25 @@ export default function AnalysteRHPage() {
       {/* Erreur globale */}
       {erreur && (
         <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-          <span className="text-lg">⚠️</span>
+          <AlertTriangle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-red-700">{erreur}</p>
         </div>
       )}
 
       {/* Liste */}
       <Card>
-        <CardHeader><CardTitle className="text-base">📋 Demandes à instruire</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base flex items-center gap-2"><ClipboardList size={18} /> Demandes à instruire</CardTitle></CardHeader>
         <CardContent className="flex flex-col gap-3">
           {loading && <p className="text-sm text-neutral-400 text-center py-8">Chargement…</p>}
           {!loading && demandes.length === 0 && (
             <div className="flex flex-col items-center gap-3 py-12">
-              <span className="text-5xl">🎉</span>
+              <PartyPopper size={48} className="text-gold-400" />
               <p className="text-sm font-semibold text-neutral-500">Aucune demande en attente</p>
               <p className="text-xs text-neutral-400">Toutes les demandes ont été instruites.</p>
             </div>
           )}
           {demandes.map(d => {
-            const type          = TYPE_LABELS[d.type] ?? { label: d.type, icon: "❓", color: "#6B7280" };
+            const type          = TYPE_LABELS[d.type] ?? { label: d.type, icon: HelpCircle, color: "#6B7280" };
             const justificatifRequis = TYPES_AVEC_JUSTIFICATIF.has(d.type);
             const aJustificatif = (d.justificatifs?.length ?? 0) > 0;
             return (
@@ -118,9 +122,9 @@ export default function AnalysteRHPage() {
                 {/* En-tête de la carte */}
                 <div className="flex items-center justify-between flex-wrap gap-3">
                   <div className="flex items-center gap-4">
-                    <div className="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+                    <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
                       style={{ background: type.color + "15" }}>
-                      {type.icon}
+                      <type.icon size={20} style={{ color: type.color }} />
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-primary-500">{type.label}</p>
@@ -132,14 +136,18 @@ export default function AnalysteRHPage() {
                       </p>
                     </div>
                   </div>
-                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${
+                  <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border ${
                     aJustificatif
                       ? "bg-green-50 text-green-700 border-green-200"
                       : justificatifRequis
                       ? "bg-red-50 text-red-700 border-red-200"
                       : "bg-neutral-50 text-neutral-500 border-neutral-200"
                   }`}>
-                    {aJustificatif ? "📎 Justificatif présent" : justificatifRequis ? "❌ Justificatif manquant" : "Sans justificatif"}
+                    {aJustificatif
+                      ? <><Paperclip size={12} /> Justificatif présent</>
+                      : justificatifRequis
+                      ? <><XCircle size={12} /> Justificatif manquant</>
+                      : "Sans justificatif"}
                   </span>
                 </div>
 
@@ -148,8 +156,8 @@ export default function AnalysteRHPage() {
                   <div className="flex flex-wrap gap-2">
                     {d.justificatifs!.map(j => (
                       <a key={j.id} href={j.urlFichier} target="_blank" rel="noopener noreferrer"
-                        className="text-xs text-purple-700 border border-purple-200 bg-purple-50 rounded px-2.5 py-1 hover:bg-purple-100 transition-colors">
-                        📄 {j.typePiece}
+                        className="inline-flex items-center gap-1 text-xs text-purple-700 border border-purple-200 bg-purple-50 rounded px-2.5 py-1 hover:bg-purple-100 transition-colors">
+                        <FileText size={12} /> {j.typePiece}
                       </a>
                     ))}
                   </div>
@@ -163,14 +171,14 @@ export default function AnalysteRHPage() {
                     onClick={() => instruire(d.id)}
                     style={{ background: (!justificatifRequis || aJustificatif) ? "#7C3AED" : undefined }}
                   >
-                    {loadingId === d.id ? "Transmission…" : "🔍 Transmettre au DRH"}
+                    {loadingId === d.id ? "Transmission…" : <><Search size={14} /> Transmettre au DRH</>}
                   </Button>
                   <Button asChild size="sm" variant="outline">
                     <Link href={`/${d.id}`}>Voir le détail</Link>
                   </Button>
                   {justificatifRequis && !aJustificatif && (
                     <Button asChild size="sm" variant="outline">
-                      <Link href={`/${d.id}/justificatif`}>📎 Déposer justificatif</Link>
+                      <Link href={`/${d.id}/justificatif`}><Paperclip size={14} /> Déposer justificatif</Link>
                     </Button>
                   )}
                 </div>

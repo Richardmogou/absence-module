@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import apiClient from "@/lib/api/client";
+import { Pencil, Trash2 } from "lucide-react";
 
 interface Props {
   id: string;
@@ -39,7 +40,7 @@ export default function BoutonsSupprimerModifier({ id, peutModifier, peutSupprim
     <div className="flex flex-wrap items-center gap-3">
       {peutModifier && (
         <Button asChild variant="outline" className="gap-2">
-          <a href={`/${id}/modifier`}>✏️ Modifier</a>
+          <a href={`/${id}/modifier`}><Pencil size={14} /> Modifier</a>
         </Button>
       )}
       {peutSupprimer && (
@@ -49,7 +50,7 @@ export default function BoutonsSupprimerModifier({ id, peutModifier, peutSupprim
           onClick={supprimer}
           className="gap-2 border-secondary-300 text-secondary-600 hover:bg-secondary-50"
         >
-          {loading ? "Suppression…" : "🗑 Supprimer"}
+          {loading ? "Suppression…" : <><Trash2 size={14} /> Supprimer</>}
         </Button>
       )}
       {erreur && <p className="text-xs text-secondary-500 w-full">{erreur}</p>}

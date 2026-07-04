@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
 import apiClient from "@/lib/api/client";
+import { ArrowRight, CheckCircle2, XCircle } from "lucide-react";
 
 const schema = z
   .object({
@@ -100,9 +101,9 @@ export default function ValidationPage({ params }: { params: Promise<{ id: strin
           </div>
 
           <div className="flex flex-col gap-4">
-            <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl"
+            <div className="w-14 h-14 rounded-xl flex items-center justify-center"
               style={{ background: "rgba(255,255,255,0.10)", backdropFilter: "blur(8px)" }}>
-              ✅
+              <CheckCircle2 size={26} className="text-gold-300" />
             </div>
             <h2 className="font-heading text-4xl font-bold text-white leading-tight">
               Décision de validation
@@ -167,8 +168,8 @@ export default function ValidationPage({ params }: { params: Promise<{ id: strin
                       )}
                     </div>
                     <div>
-                      <p className="text-sm font-semibold" style={{ color: val === "VALIDER" ? "#059669" : "#DC2626" }}>
-                        {val === "VALIDER" ? "✅ Valider" : "❌ Rejeter"}
+                      <p className="text-sm font-semibold flex items-center gap-1.5" style={{ color: val === "VALIDER" ? "#059669" : "#DC2626" }}>
+                        {val === "VALIDER" ? <><CheckCircle2 size={14} /> Valider</> : <><XCircle size={14} /> Rejeter</>}
                       </p>
                       <p className="text-xs text-neutral-400">
                         {val === "VALIDER" ? "Approuver la demande" : "Refuser la demande"}
@@ -200,7 +201,7 @@ export default function ValidationPage({ params }: { params: Promise<{ id: strin
             {apiError && <Alert variant="destructive"><AlertDescription>{apiError}</AlertDescription></Alert>}
             {success && (
               <Alert>
-                <AlertDescription>✅ Décision enregistrée. Redirection en cours…</AlertDescription>
+                <AlertDescription className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-600 flex-shrink-0" /> Décision enregistrée. Redirection en cours…</AlertDescription>
               </Alert>
             )}
 
@@ -209,7 +210,7 @@ export default function ValidationPage({ params }: { params: Promise<{ id: strin
                 Annuler
               </Button>
               <Button type="submit" disabled={isDisabled} className="flex-1 h-12 text-base">
-                {isSubmitting ? "Envoi…" : "Confirmer ma décision →"}
+                {isSubmitting ? "Envoi…" : <>Confirmer ma décision <ArrowRight size={16} /></>}
               </Button>
             </div>
           </form>

@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import FormPageLayout from "@/components/FormPageLayout";
 import apiClient from "@/lib/api/client";
 import { BackupSelector } from "@/components/BackupSelector";
+import { ArrowRight, Info, Paperclip, Scale } from "lucide-react";
 
 const schema = z.object({
   dateDebut: z.string().min(1, "La date de début est obligatoire"),
@@ -136,7 +137,7 @@ export default function CongeMaterniteePage() {
         </div>
       ) : (
         <div className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
-          <span className="text-lg">ℹ️</span>
+          <Info size={18} className="text-neutral-400 flex-shrink-0" />
           <p className="text-xs text-neutral-500">
             Sélectionnez une date de début pour voir la date de fin estimée.
           </p>
@@ -159,7 +160,7 @@ export default function CongeMaterniteePage() {
 
       {/* Info justificatif requis */}
       <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-        <span className="text-lg mt-0.5">📎</span>
+        <Paperclip size={18} className="text-amber-600 flex-shrink-0 mt-0.5" />
         <p className="text-xs text-amber-700 leading-relaxed">
           Un <strong>certificat de grossesse</strong> vous sera demandé à l&apos;étape suivante.
           Préparez-le en format PDF ou image.
@@ -168,7 +169,7 @@ export default function CongeMaterniteePage() {
 
       {/* Info légale */}
       <div className="flex items-start gap-3 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
-        <span className="text-lg mt-0.5">⚖️</span>
+        <Scale size={18} className="text-neutral-400 flex-shrink-0 mt-0.5" />
         <p className="text-xs text-neutral-500 leading-relaxed">
           Conformément au <strong>Code du travail</strong>, la durée du congé maternité
           est fixée à <strong>14 semaines</strong> (98 jours) non modulables.
@@ -188,7 +189,7 @@ export default function CongeMaterniteePage() {
         onClick={handleSubmit(onSubmit)}
         style={{ background: "#96751A" }}
       >
-        {isSubmitting ? "Envoi en cours…" : "Continuer →"}
+        {isSubmitting ? "Envoi en cours…" : <>Continuer <ArrowRight size={16} /></>}
       </Button>
     </FormPageLayout>
   );

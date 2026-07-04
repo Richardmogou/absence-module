@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { BoutonSupprimerCircuit } from "../BoutonSupprimerCircuit";
 import { BoutonToggleActif } from "../BoutonToggleActif";
 import { serverApiClient } from "@/lib/api/server-client";
+import { ArrowLeft, Lock } from "lucide-react";
 
 interface RegleAffectation {
   mecanisme: string;
@@ -90,8 +91,8 @@ export default async function CircuitDetailPage({ params }: { params: Promise<{ 
 
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-xs font-ui text-neutral-400">
-        <Link href="/circuits" className="hover:text-accent-500 transition-colors">
-          ← Circuits
+        <Link href="/circuits" className="flex items-center gap-1 hover:text-accent-500 transition-colors">
+          <ArrowLeft size={12} /> Circuits
         </Link>
         <span className="text-neutral-300">›</span>
         <span className="text-primary-500 font-semibold">{circuit.nom}</span>
@@ -193,8 +194,8 @@ export default async function CircuitDetailPage({ params }: { params: Promise<{ 
                             {etape.libelle}
                           </span>
                           {etape.estVerrouillable && (
-                            <span className="text-xxs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-semibold">
-                              🔒 Verrouillé
+                            <span className="inline-flex items-center gap-1 text-xxs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-semibold">
+                              <Lock size={10} /> Verrouillé
                             </span>
                           )}
                         </div>
@@ -236,7 +237,7 @@ export default async function CircuitDetailPage({ params }: { params: Promise<{ 
       {/* Actions */}
       <div className="flex gap-3 pt-2 border-t border-neutral-100">
         <Button asChild variant="outline" className="flex-1">
-          <Link href="/circuits">← Retour à la liste</Link>
+          <Link href="/circuits"><ArrowLeft size={16} /> Retour à la liste</Link>
         </Button>
       </div>
     </div>

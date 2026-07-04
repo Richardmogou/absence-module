@@ -10,6 +10,7 @@ import { FormField } from "@/components/FormField";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import apiClient from "@/lib/api/client";
+import { AlertTriangle, ArrowRight, CheckCircle2, Coins, RotateCcw } from "lucide-react";
 
 const schema = z.object({
   dateRetourEffective: z.string().min(1, "La date de retour est obligatoire"),
@@ -111,9 +112,9 @@ export default function RetourAnticipePage({ params }: { params: Promise<{ id: s
           </div>
 
           <div className="flex flex-col gap-4">
-            <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl"
+            <div className="w-14 h-14 rounded-xl flex items-center justify-center"
               style={{ background: "rgba(255,255,255,0.10)", backdropFilter: "blur(8px)" }}>
-              🔄
+              <RotateCcw size={26} className="text-gold-300" />
             </div>
             <h2 className="font-heading text-4xl font-bold text-white leading-tight">
               Retour anticipé
@@ -137,7 +138,7 @@ export default function RetourAnticipePage({ params }: { params: Promise<{ id: s
 
             {avecSolde && joursNonConsommes > 0 && (
               <div className="flex items-start gap-2 rounded-lg border border-green-400 bg-green-500/20 px-3 py-3">
-                <span className="text-lg">💰</span>
+                <Coins size={18} className="text-green-300 flex-shrink-0" />
                 <p className="text-xs text-green-200 leading-relaxed">
                   <strong>{joursNonConsommes} jour(s)</strong> non consommé(s)
                   seront <strong>recrédités</strong> automatiquement sur votre solde.
@@ -176,7 +177,7 @@ export default function RetourAnticipePage({ params }: { params: Promise<{ id: s
           {/* Info recrédit solde */}
           {avecSolde && (
             <div className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3">
-              <span className="text-lg mt-0.5">💰</span>
+              <Coins size={18} className="text-green-600 flex-shrink-0 mt-0.5" />
               <p className="text-xs text-green-700 leading-relaxed">
                 Pour ce type de congé, les jours non consommés seront
                 <strong> automatiquement recrédités</strong> sur votre solde de congés.
@@ -202,7 +203,7 @@ export default function RetourAnticipePage({ params }: { params: Promise<{ id: s
             <Alert variant="destructive"><AlertDescription>{apiError}</AlertDescription></Alert>
           )}
           {success && (
-            <Alert><AlertDescription>✅ Retour anticipé enregistré. Redirection…</AlertDescription></Alert>
+            <Alert><AlertDescription className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-600 flex-shrink-0" /> Retour anticipé enregistré. Redirection…</AlertDescription></Alert>
           )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
@@ -215,7 +216,7 @@ export default function RetourAnticipePage({ params }: { params: Promise<{ id: s
             />
 
             <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-              <span className="text-lg mt-0.5">⚠️</span>
+              <AlertTriangle size={18} className="text-amber-600 flex-shrink-0 mt-0.5" />
               <p className="text-xs text-amber-700 leading-relaxed">
                 Cette action est <strong>irréversible</strong>. La demande passera au
                 statut <strong>Clôturée</strong> et ne pourra plus être modifiée.
@@ -237,7 +238,7 @@ export default function RetourAnticipePage({ params }: { params: Promise<{ id: s
                 className="flex-1 h-12 text-base"
                 style={{ background: isSubmitting || success ? undefined : "#059669" }}
               >
-                {isSubmitting ? "Enregistrement…" : "Confirmer le retour anticipé →"}
+                {isSubmitting ? "Enregistrement…" : <>Confirmer le retour anticipé <ArrowRight size={16} /></>}
               </Button>
             </div>
           </form>

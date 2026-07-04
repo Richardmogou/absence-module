@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import apiClient from "@/lib/api/client";
+import { Baby, CheckCircle2, FileText, FolderOpen } from "lucide-react";
 
 interface Props {
   demandeId: string;
@@ -49,7 +50,7 @@ export function BoutonProlongation({ demandeId }: Props) {
   if (done) {
     return (
       <div className="flex items-center gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3">
-        <span className="text-xl">✅</span>
+        <CheckCircle2 size={20} className="text-green-600 flex-shrink-0" />
         <div>
           <p className="text-sm font-semibold text-green-700">Prolongation créée avec succès</p>
           <p className="text-xs text-green-600 mt-0.5">Redirection vers la nouvelle demande…</p>
@@ -87,7 +88,9 @@ export function BoutonProlongation({ demandeId }: Props) {
             onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
           />
           <div className="flex items-center gap-3 pointer-events-none">
-            <span className="text-2xl">{fileName ? "📄" : "📂"}</span>
+            {fileName
+              ? <FileText size={24} style={{ color: "#96751A" }} />
+              : <FolderOpen size={24} className="text-neutral-400" />}
             <p className="text-sm text-neutral-500">
               {fileName
                 ? <span className="font-medium" style={{ color: "#96751A" }}>{fileName}</span>
@@ -111,7 +114,7 @@ export function BoutonProlongation({ demandeId }: Props) {
         className="h-11 gap-2"
         style={{ background: "#96751A" }}
       >
-        {loading ? "Création en cours…" : "👶 Créer la prolongation (6 semaines)"}
+        {loading ? "Création en cours…" : <><Baby size={16} /> Créer la prolongation (6 semaines)</>}
       </Button>
     </div>
   );

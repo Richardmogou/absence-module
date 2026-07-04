@@ -6,6 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { serverApiClient } from "@/lib/api/server-client";
 import { auth } from "@/auth";
+import {
+  Baby, Ban, CheckCircle2, ClipboardList, FilePen, HelpCircle, Hourglass,
+  Landmark, Lock, Plane, Plus, Search, Send, Stethoscope, TreePalm, Users,
+  XCircle, type LucideIcon,
+} from "lucide-react";
 
 interface Solde {
   joursAcquis: number;
@@ -43,24 +48,24 @@ async function getData(): Promise<{ solde: Solde; demandes: Absence[]; aValider:
   }
 }
 
-const STATUT_CONFIG: Record<string, { label: string; color: string; bg: string; icon: string }> = {
-  BROUILLON:                  { label: "Brouillon",          color: "#6B7280", bg: "#F3F4F6", icon: "📝" },
-  SOUMISE:                    { label: "Soumise",            color: "#0EA5E9", bg: "#F0F9FF", icon: "📤" },
-  EN_VALIDATION_ETAPE:        { label: "En validation",      color: "#D97706", bg: "#FFFBEB", icon: "⏳" },
-  EN_INSTRUCTION_ANALYSTE_RH: { label: "En instruction RH", color: "#7C3AED", bg: "#F5F3FF", icon: "🔍" },
-  EN_VALIDATION_DRH:          { label: "En validation DRH", color: "#B8932A", bg: "#FDFBF0", icon: "🏛️" },
-  VALIDEE:                    { label: "Validée",            color: "#059669", bg: "#ECFDF5", icon: "✅" },
-  REJETEE:                    { label: "Rejetée",            color: "#DC2626", bg: "#FEF2F2", icon: "❌" },
-  REJETEE_PAR_LE_SYSTEME:     { label: "Rejetée système",   color: "#DC2626", bg: "#FEF2F2", icon: "🚫" },
-  CLOTUREE:                   { label: "Clôturée",           color: "#4B5563", bg: "#F9FAFB", icon: "🔒" },
+const STATUT_CONFIG: Record<string, { label: string; color: string; bg: string; icon: LucideIcon }> = {
+  BROUILLON:                  { label: "Brouillon",          color: "#6B7280", bg: "#F3F4F6", icon: FilePen },
+  SOUMISE:                    { label: "Soumise",            color: "#0EA5E9", bg: "#F0F9FF", icon: Send },
+  EN_VALIDATION_ETAPE:        { label: "En validation",      color: "#D97706", bg: "#FFFBEB", icon: Hourglass },
+  EN_INSTRUCTION_ANALYSTE_RH: { label: "En instruction RH", color: "#7C3AED", bg: "#F5F3FF", icon: Search },
+  EN_VALIDATION_DRH:          { label: "En validation DRH", color: "#B8932A", bg: "#FDFBF0", icon: Landmark },
+  VALIDEE:                    { label: "Validée",            color: "#059669", bg: "#ECFDF5", icon: CheckCircle2 },
+  REJETEE:                    { label: "Rejetée",            color: "#DC2626", bg: "#FEF2F2", icon: XCircle },
+  REJETEE_PAR_LE_SYSTEME:     { label: "Rejetée système",   color: "#DC2626", bg: "#FEF2F2", icon: Ban },
+  CLOTUREE:                   { label: "Clôturée",           color: "#4B5563", bg: "#F9FAFB", icon: Lock },
 };
 
-const TYPE_LABELS: Record<string, { label: string; icon: string }> = {
-  CONGE_ANNUEL:    { label: "Congé annuel",         icon: "🌴" },
-  CONGE_MALADIE:   { label: "Congé maladie",        icon: "🏥" },
-  PERMISSION:      { label: "Permission",           icon: "📋" },
-  MISSION_LONGUE:  { label: "Mission longue durée", icon: "✈️" },
-  CONGE_MATERNITE: { label: "Congé maternité",      icon: "👶" },
+const TYPE_LABELS: Record<string, { label: string; icon: LucideIcon }> = {
+  CONGE_ANNUEL:    { label: "Congé annuel",         icon: TreePalm },
+  CONGE_MALADIE:   { label: "Congé maladie",        icon: Stethoscope },
+  PERMISSION:      { label: "Permission",           icon: ClipboardList },
+  MISSION_LONGUE:  { label: "Mission longue durée", icon: Plane },
+  CONGE_MATERNITE: { label: "Congé maternité",      icon: Baby },
 };
 
 const KENTE = "repeating-linear-gradient(90deg,#C41E22 0px,#C41E22 8px,#B8932A 8px,#B8932A 16px,#2C2C2C 16px,#2C2C2C 24px,#F5F5F5 24px,#F5F5F5 32px)";
@@ -98,7 +103,7 @@ export default async function MonEspacePage() {
       {/* Solde congés */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">🌴 Solde congé annuel — Exercice {solde.exercice}</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2"><TreePalm size={18} /> Solde congé annuel — Exercice {solde.exercice}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-3 gap-4">
@@ -119,10 +124,10 @@ export default async function MonEspacePage() {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: "En cours",   value: enCours.length,    color: "#D97706", icon: "⏳" },
-          { label: "Validées",   value: validees.length,   color: "#059669", icon: "✅" },
-          { label: "Rejetées",   value: rejetees.length,   color: "#DC2626", icon: "❌" },
-          { label: "Brouillons", value: brouillons.length, color: "#6B7280", icon: "📝" },
+          { label: "En cours",   value: enCours.length,    color: "#D97706", icon: Hourglass },
+          { label: "Validées",   value: validees.length,   color: "#059669", icon: CheckCircle2 },
+          { label: "Rejetées",   value: rejetees.length,   color: "#DC2626", icon: XCircle },
+          { label: "Brouillons", value: brouillons.length, color: "#6B7280", icon: FilePen },
         ].map(s => (
           <div key={s.label} className="relative overflow-hidden rounded-xl border border-neutral-200 bg-white px-5 py-4">
             <div className="flex items-start justify-between">
@@ -130,7 +135,7 @@ export default async function MonEspacePage() {
                 <p className="text-xxs text-neutral-400 uppercase tracking-wider font-ui">{s.label}</p>
                 <p className="font-heading text-3xl font-bold mt-1" style={{ color: s.color }}>{s.value}</p>
               </div>
-              <span className="text-2xl">{s.icon}</span>
+              <s.icon size={22} style={{ color: s.color }} />
             </div>
             <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: s.color }} />
           </div>
@@ -155,12 +160,12 @@ export default async function MonEspacePage() {
           </div>
           <div className="flex flex-col gap-2">
             {aValider.map(d => {
-              const type = TYPE_LABELS[d.type] ?? { label: d.type, icon: "❓" };
+              const type = TYPE_LABELS[d.type] ?? { label: d.type, icon: HelpCircle };
               return (
                 <Link key={d.id} href={`/${d.id}`}
                   className="flex items-center justify-between rounded-lg border border-secondary-200 bg-white px-4 py-3 hover:bg-secondary-50 transition-colors">
                   <div className="flex items-center gap-3">
-                    <span className="text-xl">{type.icon}</span>
+                    <type.icon size={20} className="text-secondary-600 flex-shrink-0" />
                     <div>
                       <p className="text-sm font-medium text-primary-500">{type.label}</p>
                       <p className="text-xs text-neutral-400">{d.dateDebut} → {d.dateFin ?? "—"} · {d.nombreJours ?? "?"} j</p>
@@ -179,7 +184,7 @@ export default async function MonEspacePage() {
       {/* Demandes en cours */}
       {enCours.length > 0 && (
         <Card>
-          <CardHeader><CardTitle className="text-base">⏳ Demandes en cours de traitement</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-base flex items-center gap-2"><Hourglass size={18} /> Demandes en cours de traitement</CardTitle></CardHeader>
           <CardContent className="flex flex-col gap-2">
             {enCours.map(d => <DemandeLigne key={d.id} d={d} />)}
           </CardContent>
@@ -190,7 +195,7 @@ export default async function MonEspacePage() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base">📋 Toutes mes demandes</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2"><ClipboardList size={18} /> Toutes mes demandes</CardTitle>
             <Link href="/mes-demandes" className="text-xs text-gold-600 hover:underline">Voir tout →</Link>
           </div>
         </CardHeader>
@@ -211,7 +216,7 @@ export default async function MonEspacePage() {
             {estAnalysteRH && (
               <Link href="/analyste-rh"
                 className="flex items-center gap-3 rounded-xl border-2 border-purple-200 bg-purple-50 px-4 py-4 hover:border-purple-400 transition-colors">
-                <span className="text-2xl">🔍</span>
+                <Search size={24} className="text-purple-600 flex-shrink-0" />
                 <div>
                   <p className="text-sm font-semibold text-purple-700">File d&apos;instruction RH</p>
                   <p className="text-xs text-purple-500">Demandes à transmettre au DRH</p>
@@ -221,7 +226,7 @@ export default async function MonEspacePage() {
             {estDRH && (
               <Link href="/drh"
                 className="flex items-center gap-3 rounded-xl border-2 border-amber-200 bg-amber-50 px-4 py-4 hover:border-amber-400 transition-colors">
-                <span className="text-2xl">🏛️</span>
+                <Landmark size={24} className="text-amber-600 flex-shrink-0" />
                 <div>
                   <p className="text-sm font-semibold text-amber-700">Validation DRH</p>
                   <p className="text-xs text-amber-500">Demandes en attente de décision finale</p>
@@ -235,7 +240,7 @@ export default async function MonEspacePage() {
       {/* Actions rapides */}
       <div className="grid grid-cols-2 gap-3">
         <Link href="/" className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-4 hover:border-gold-400 transition-colors">
-          <span className="text-2xl">➕</span>
+          <Plus size={24} className="text-gold-600 flex-shrink-0" />
           <div>
             <p className="text-sm font-semibold text-primary-500">Nouvelle demande</p>
             <p className="text-xs text-neutral-400">Créer une absence</p>
@@ -258,7 +263,7 @@ export default async function MonEspacePage() {
           </div>
         </Link>
         <Link href="/backup" className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-4 hover:border-gold-400 transition-colors col-span-2">
-          <span className="text-2xl">👥</span>
+          <Users size={24} className="text-gold-600 flex-shrink-0" />
           <div>
             <p className="text-sm font-semibold text-primary-500">Mon rôle Back-up</p>
             <p className="text-xs text-neutral-400">
@@ -267,18 +272,37 @@ export default async function MonEspacePage() {
           </div>
         </Link>
       </div>
+      {/* ══════════════════════════════════════
+                FOOTER DÉCORATIF
+                ══════════════════════════════════════ */}
+            <footer className="px-8 sm:px-16 py-6 bg-white/50">
+              <div className="mx-auto max-w-container flex items-center gap-4">
+                <div className="flex-1 h-px"
+                  style={{ background: "linear-gradient(90deg, transparent, #B8932A)" }} />
+                <Image
+                  src="/icon_afb.png"
+                  alt=""
+                  aria-hidden="true"
+                  width={20}
+                  height={20}
+                  className="opacity-40"
+                />
+                <div className="flex-1 h-px"
+                  style={{ background: "linear-gradient(90deg, #B8932A, transparent)" }} />
+              </div>
+            </footer>
     </div>
   );
 }
 
 function DemandeLigne({ d }: { d: Absence }) {
-  const type   = TYPE_LABELS[d.type] ?? { label: d.type, icon: "❓" };
-  const statut = STATUT_CONFIG[d.statut] ?? { label: d.statut, color: "#6B7280", bg: "#F3F4F6", icon: "❓" };
+  const type   = TYPE_LABELS[d.type] ?? { label: d.type, icon: HelpCircle };
+  const statut = STATUT_CONFIG[d.statut] ?? { label: d.statut, color: "#6B7280", bg: "#F3F4F6", icon: HelpCircle };
   return (
     <Link href={`/${d.id}`}
       className="flex items-center justify-between rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 hover:bg-neutral-100 transition-colors">
       <div className="flex items-center gap-3">
-        <span className="text-xl">{type.icon}</span>
+        <type.icon size={20} className="text-neutral-500 flex-shrink-0" />
         <div>
           <p className="text-sm font-medium text-primary-500">{type.label}</p>
           <p className="text-xs text-neutral-400">{d.dateDebut} → {d.dateFin ?? "—"} · {d.nombreJours ?? "?"} j</p>
@@ -286,7 +310,7 @@ function DemandeLigne({ d }: { d: Absence }) {
       </div>
       <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
         style={{ background: statut.bg, color: statut.color }}>
-        {statut.icon} {statut.label}
+        <statut.icon size={12} /> {statut.label}
       </span>
     </Link>
   );

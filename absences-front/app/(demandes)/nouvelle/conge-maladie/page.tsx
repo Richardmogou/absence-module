@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import FormPageLayout from "@/components/FormPageLayout";
 import apiClient from "@/lib/api/client";
 import { BackupSelector } from "@/components/BackupSelector";
+import { ArrowRight, Paperclip, Stethoscope } from "lucide-react";
 
 const schema = z
   .object({
@@ -64,7 +65,7 @@ export default function CongeMaladiePage() {
       badge="Nouvelle demande"
       title="Congé maladie"
       subtitle="Arrêt médical certifié. Joignez votre certificat médical à l'étape suivante — il sera transmis automatiquement au service RH."
-      icon="🏥"
+      icon={<Stethoscope size={24} />}
     >
       {/* Back-up optionnel */}
       <div className="flex flex-col gap-1.5">
@@ -99,7 +100,7 @@ export default function CongeMaladiePage() {
 
       {/* Info certificat */}
       <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
-        <span className="text-lg mt-0.5">📎</span>
+        <Paperclip size={18} className="text-blue-600 flex-shrink-0 mt-0.5" />
         <p className="text-xs text-blue-700 leading-relaxed">
           Un <strong>certificat médical</strong> vous sera demandé à l&apos;étape suivante.
           Préparez-le en format PDF ou image.

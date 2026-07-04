@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import apiClient from "@/lib/api/client";
+import { Search } from "lucide-react";
 
 export default function BoutonInstruction({ id }: { id: string }) {
   const router = useRouter();
@@ -39,7 +40,7 @@ export default function BoutonInstruction({ id }: { id: string }) {
         className="gap-2"
         style={{ background: "#7C3AED" }}
       >
-        {loading ? "Transmission…" : "🔍 Transmettre à la DRH"}
+        {loading ? "Transmission…" : <><Search size={16} /> Transmettre à la DRH</>}
       </Button>
       {erreur && <p className="text-xs text-secondary-500">{erreur}</p>}
     </div>

@@ -6,6 +6,10 @@ import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import apiClient from "@/lib/api/client";
+import {
+  ArrowRight, Baby, CheckCircle2, ClipboardList, HelpCircle, Hourglass,
+  PartyPopper, Plane, Stethoscope, TreePalm, type LucideIcon,
+} from "lucide-react";
 
 interface Absence {
   id: string;
@@ -18,12 +22,12 @@ interface Absence {
   demandeurIdentifiantExterne: string;
 }
 
-const TYPE_LABELS: Record<string, { label: string; icon: string; color: string }> = {
-  CONGE_ANNUEL:    { label: "Congé annuel",         icon: "🌴", color: "#C41E22" },
-  CONGE_MALADIE:   { label: "Congé maladie",        icon: "🏥", color: "#1A1A2E" },
-  PERMISSION:      { label: "Permission",           icon: "📋", color: "#B8932A" },
-  MISSION_LONGUE:  { label: "Mission longue durée", icon: "✈️", color: "#2C2C2C" },
-  CONGE_MATERNITE: { label: "Congé maternité",      icon: "👶", color: "#96751A" },
+const TYPE_LABELS: Record<string, { label: string; icon: LucideIcon; color: string }> = {
+  CONGE_ANNUEL:    { label: "Congé annuel",         icon: TreePalm,      color: "#C41E22" },
+  CONGE_MALADIE:   { label: "Congé maladie",        icon: Stethoscope,   color: "#1A1A2E" },
+  PERMISSION:      { label: "Permission",           icon: ClipboardList, color: "#B8932A" },
+  MISSION_LONGUE:  { label: "Mission longue durée", icon: Plane,         color: "#2C2C2C" },
+  CONGE_MATERNITE: { label: "Congé maternité",      icon: Baby,          color: "#96751A" },
 };
 
 const KENTE = "repeating-linear-gradient(90deg,#C41E22 0px,#C41E22 8px,#B8932A 8px,#B8932A 16px,#2C2C2C 16px,#2C2C2C 24px,#F5F5F5 24px,#F5F5F5 32px)";
@@ -56,7 +60,7 @@ export default function ValidationFilePage() {
 
       {/* Compteur */}
       <div className="flex items-center gap-4 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4">
-        <span className="text-3xl">⏳</span>
+        <Hourglass size={28} className="text-amber-600 flex-shrink-0" />
         <div>
           <p className="text-sm font-semibold text-amber-700">
             {loading ? "Chargement…" : `${demandes.length} demande(s) en attente de validation`}
@@ -67,25 +71,25 @@ export default function ValidationFilePage() {
 
       {/* Liste */}
       <Card>
-        <CardHeader><CardTitle className="text-base">📋 File d&apos;attente</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base flex items-center gap-2"><ClipboardList size={18} /> File d&apos;attente</CardTitle></CardHeader>
         <CardContent className="flex flex-col gap-3">
           {loading && <p className="text-sm text-neutral-400 text-center py-8">Chargement…</p>}
           {!loading && demandes.length === 0 && (
             <div className="flex flex-col items-center gap-3 py-12">
-              <span className="text-5xl">🎉</span>
+              <PartyPopper size={48} className="text-gold-400" />
               <p className="text-sm font-semibold text-neutral-500">Aucune demande en attente</p>
               <p className="text-xs text-neutral-400">Toutes les demandes ont été traitées.</p>
             </div>
           )}
           {demandes.map(d => {
-            const type = TYPE_LABELS[d.type] ?? { label: d.type, icon: "❓", color: "#6B7280" };
+            const type = TYPE_LABELS[d.type] ?? { label: d.type, icon: HelpCircle, color: "#6B7280" };
             return (
               <div key={d.id}
                 className="flex items-center justify-between rounded-xl border border-neutral-200 bg-white px-5 py-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
                     style={{ background: type.color + "15" }}>
-                    {type.icon}
+                    <type.icon size={20} style={{ color: type.color }} />
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-primary-500">{type.label}</p>
@@ -104,10 +108,10 @@ export default function ValidationFilePage() {
                 </div>
                 <div className="flex flex-col gap-2 items-end">
                   <Button asChild size="sm">
-                    <Link href={`/${d.id}/validation`}>✅ Décider</Link>
+                    <Link href={`/${d.id}/validation`}><CheckCircle2 size={14} /> Décider</Link>
                   </Button>
-                  <Link href={`/${d.id}`} className="text-xs text-neutral-400 hover:underline">
-                    Voir le détail →
+                  <Link href={`/${d.id}`} className="inline-flex items-center gap-1 text-xs text-neutral-400 hover:underline">
+                    Voir le détail <ArrowRight size={12} />
                   </Link>
                 </div>
               </div>

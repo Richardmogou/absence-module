@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import FormPageLayout from "@/components/FormPageLayout";
 import apiClient from "@/lib/api/client";
 import { BackupSelector } from "@/components/BackupSelector";
+import { ArrowRight, Paperclip, Timer } from "lucide-react";
 
 interface MotifPermission {
   codeMotif: string;
@@ -128,7 +129,7 @@ export default function PermissionPage() {
       {motifSelectionne && !estAutreMotif && (
         <div className="flex items-center justify-between rounded-lg border border-gold-200 bg-gold-50 px-4 py-3">
           <div className="flex items-center gap-3">
-            <span className="text-xl">⏱</span>
+            <Timer size={20} className="text-gold-600 flex-shrink-0" />
             <div>
               <p className="text-xs text-gold-700 font-ui uppercase tracking-wider">Durée accordée</p>
               <p className="text-lg font-heading font-bold text-gold-600">
@@ -141,7 +142,7 @@ export default function PermissionPage() {
           {/* Badge justificatif requis */}
           {justificatifRequis && (
             <span className="flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-1 text-xxs font-semibold text-amber-700">
-              📎 Justificatif requis
+              <Paperclip size={12} /> Justificatif requis
             </span>
           )}
         </div>
@@ -177,7 +178,7 @@ export default function PermissionPage() {
       {/* Info justificatif si requis */}
       {justificatifRequis && (
         <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-          <span className="text-lg mt-0.5">📎</span>
+          <Paperclip size={18} className="text-amber-600 flex-shrink-0 mt-0.5" />
           <p className="text-xs text-amber-700 leading-relaxed">
             Ce motif requiert un <strong>justificatif</strong>. Vous pourrez le déposer
             à l&apos;étape suivante avant la soumission.
@@ -197,7 +198,7 @@ export default function PermissionPage() {
         style={{ background: "#B8932A" }}
         onClick={handleSubmit(onSubmit)}
       >
-        {isSubmitting ? "Envoi en cours…" : "Continuer →"}
+        {isSubmitting ? "Envoi en cours…" : <>Continuer <ArrowRight size={16} /></>}
       </Button>
     </FormPageLayout>
   );

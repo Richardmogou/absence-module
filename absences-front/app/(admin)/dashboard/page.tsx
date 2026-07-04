@@ -5,6 +5,10 @@ import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { serverApiClient } from "@/lib/api/server-client";
+import {
+  BarChart3, Ban, CheckCircle2, ClipboardList, Clock, FilePen, HelpCircle,
+  Hourglass, Landmark, Lock, Search, Send, Settings, XCircle, type LucideIcon,
+} from "lucide-react";
 
 interface Absence {
   id: string;
@@ -55,16 +59,16 @@ const TYPE_LABELS: Record<string, string> = {
   CONGE_MATERNITE: "Congé maternité",
 };
 
-const STATUT_CONFIG: Record<string, { label: string; color: string; bg: string; icon: string }> = {
-  BROUILLON:                  { label: "Brouillon",          color: "#6B7280", bg: "#F3F4F6", icon: "📝" },
-  SOUMISE:                    { label: "Soumise",            color: "#0EA5E9", bg: "#F0F9FF", icon: "📤" },
-  EN_VALIDATION_ETAPE:        { label: "En validation",      color: "#D97706", bg: "#FFFBEB", icon: "⏳" },
-  EN_INSTRUCTION_ANALYSTE_RH: { label: "En instruction RH", color: "#7C3AED", bg: "#F5F3FF", icon: "🔍" },
-  EN_VALIDATION_DRH:          { label: "En validation DRH", color: "#B8932A", bg: "#FDFBF0", icon: "🏛️" },
-  VALIDEE:                    { label: "Validée",            color: "#059669", bg: "#ECFDF5", icon: "✅" },
-  REJETEE:                    { label: "Rejetée",            color: "#DC2626", bg: "#FEF2F2", icon: "❌" },
-  REJETEE_PAR_LE_SYSTEME:     { label: "Rejetée système",   color: "#DC2626", bg: "#FEF2F2", icon: "🚫" },
-  CLOTUREE:                   { label: "Clôturée",           color: "#4B5563", bg: "#F9FAFB", icon: "🔒" },
+const STATUT_CONFIG: Record<string, { label: string; color: string; bg: string; icon: LucideIcon }> = {
+  BROUILLON:                  { label: "Brouillon",          color: "#6B7280", bg: "#F3F4F6", icon: FilePen },
+  SOUMISE:                    { label: "Soumise",            color: "#0EA5E9", bg: "#F0F9FF", icon: Send },
+  EN_VALIDATION_ETAPE:        { label: "En validation",      color: "#D97706", bg: "#FFFBEB", icon: Hourglass },
+  EN_INSTRUCTION_ANALYSTE_RH: { label: "En instruction RH", color: "#7C3AED", bg: "#F5F3FF", icon: Search },
+  EN_VALIDATION_DRH:          { label: "En validation DRH", color: "#B8932A", bg: "#FDFBF0", icon: Landmark },
+  VALIDEE:                    { label: "Validée",            color: "#059669", bg: "#ECFDF5", icon: CheckCircle2 },
+  REJETEE:                    { label: "Rejetée",            color: "#DC2626", bg: "#FEF2F2", icon: XCircle },
+  REJETEE_PAR_LE_SYSTEME:     { label: "Rejetée système",   color: "#DC2626", bg: "#FEF2F2", icon: Ban },
+  CLOTUREE:                   { label: "Clôturée",           color: "#4B5563", bg: "#F9FAFB", icon: Lock },
 };
 
 const KENTE = "repeating-linear-gradient(90deg,#C41E22 0px,#C41E22 8px,#B8932A 8px,#B8932A 16px,#2C2C2C 16px,#2C2C2C 24px,#F5F5F5 24px,#F5F5F5 32px)";
@@ -93,7 +97,7 @@ export default async function AdminDashboardPage() {
             <p className="text-sm text-neutral-300 mt-1">Vue globale de toutes les demandes en cours</p>
           </div>
           <Button asChild variant="outline" className="flex-shrink-0 border-white text-white hover:bg-white/10">
-            <Link href="/circuits">⚙️ Gérer les circuits</Link>
+            <Link href="/circuits"><Settings size={16} /> Gérer les circuits</Link>
           </Button>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-1" style={{ background: KENTE }} />
@@ -102,16 +106,16 @@ export default async function AdminDashboardPage() {
       {/* KPIs pipeline */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         {[
-          { label: "Total",         value: toutes.length,       color: "#2C2C2C", icon: "📋" },
-          { label: "En validation", value: enValidation.length, color: "#D97706", icon: "⏳" },
-          { label: "Instruction",   value: instruction.length,  color: "#7C3AED", icon: "🔍" },
-          { label: "Attente DRH",   value: drh.length,          color: "#B8932A", icon: "🏛️" },
-          { label: "Validées",      value: validees.length,     color: "#059669", icon: "✅" },
-          { label: "Rejetées",      value: rejetees.length,     color: "#DC2626", icon: "❌" },
+          { label: "Total",         value: toutes.length,       color: "#2C2C2C", icon: ClipboardList },
+          { label: "En validation", value: enValidation.length, color: "#D97706", icon: Hourglass },
+          { label: "Instruction",   value: instruction.length,  color: "#7C3AED", icon: Search },
+          { label: "Attente DRH",   value: drh.length,          color: "#B8932A", icon: Landmark },
+          { label: "Validées",      value: validees.length,     color: "#059669", icon: CheckCircle2 },
+          { label: "Rejetées",      value: rejetees.length,     color: "#DC2626", icon: XCircle },
         ].map(s => (
           <div key={s.label} className="relative overflow-hidden rounded-xl border border-neutral-200 bg-white px-4 py-4">
             <div className="flex flex-col gap-1">
-              <span className="text-xl">{s.icon}</span>
+              <s.icon size={20} style={{ color: s.color }} />
               <p className="font-heading text-2xl font-bold" style={{ color: s.color }}>{s.value}</p>
               <p className="text-xxs text-neutral-400 uppercase tracking-wider font-ui">{s.label}</p>
             </div>
@@ -122,7 +126,7 @@ export default async function AdminDashboardPage() {
 
       {/* Répartition par type */}
       <Card>
-        <CardHeader><CardTitle className="text-base">📊 Répartition par type d&apos;absence</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base flex items-center gap-2"><BarChart3 size={18} /> Répartition par type d&apos;absence</CardTitle></CardHeader>
         <CardContent>
           <div className="flex flex-col gap-3">
             {Object.entries(parType).map(([type, count]) => {
@@ -147,14 +151,14 @@ export default async function AdminDashboardPage() {
       {/* Accès rapides aux files */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {[
-          { href: "/validation-file", icon: "⏳", label: "File de validation",  desc: `${enValidation.length} demande(s)`, color: "#D97706", bg: "#FFFBEB" },
-          { href: "/analyste-rh",     icon: "🔍", label: "File Analyste RH",    desc: `${instruction.length} demande(s)`,  color: "#7C3AED", bg: "#F5F3FF" },
-          { href: "/drh",             icon: "🏛️", label: "File DRH",            desc: `${drh.length} demande(s)`,          color: "#B8932A", bg: "#FDFBF0" },
+          { href: "/validation-file", icon: Hourglass, label: "File de validation",  desc: `${enValidation.length} demande(s)`, color: "#D97706", bg: "#FFFBEB" },
+          { href: "/analyste-rh",     icon: Search,    label: "File Analyste RH",    desc: `${instruction.length} demande(s)`,  color: "#7C3AED", bg: "#F5F3FF" },
+          { href: "/drh",             icon: Landmark,  label: "File DRH",            desc: `${drh.length} demande(s)`,          color: "#B8932A", bg: "#FDFBF0" },
         ].map(s => (
           <Link key={s.href} href={s.href}
             className="flex items-center gap-4 rounded-xl border px-5 py-4 hover:shadow-md transition-all"
             style={{ borderColor: s.color, background: s.bg }}>
-            <span className="text-3xl">{s.icon}</span>
+            <s.icon size={28} style={{ color: s.color }} />
             <div>
               <p className="text-sm font-semibold" style={{ color: s.color }}>{s.label}</p>
               <p className="text-xs text-neutral-500">{s.desc}</p>
@@ -167,7 +171,7 @@ export default async function AdminDashboardPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base">⚙️ Circuits de validation configurés</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2"><Settings size={18} /> Circuits de validation configurés</CardTitle>
             <Button asChild variant="ghost" size="sm">
               <Link href="/circuits">Gérer</Link>
             </Button>
@@ -209,13 +213,13 @@ export default async function AdminDashboardPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base">🕐 Dernières demandes</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2"><Clock size={18} /> Dernières demandes</CardTitle>
             <span className="text-xs text-neutral-400">{toutes.length} au total</span>
           </div>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
           {toutes.slice(0, 10).map(d => {
-            const statut = STATUT_CONFIG[d.statut] ?? { label: d.statut, color: "#6B7280", bg: "#F3F4F6", icon: "❓" };
+            const statut = STATUT_CONFIG[d.statut] ?? { label: d.statut, color: "#6B7280", bg: "#F3F4F6", icon: HelpCircle };
             return (
               <Link key={d.id} href={`/${d.id}`}
                 className="flex items-center justify-between rounded-lg border border-neutral-100 bg-neutral-50 px-4 py-3 hover:bg-neutral-100 transition-colors">
@@ -229,7 +233,7 @@ export default async function AdminDashboardPage() {
                 </div>
                 <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold flex-shrink-0"
                   style={{ background: statut.bg, color: statut.color }}>
-                  {statut.icon} {statut.label}
+                  <statut.icon size={12} /> {statut.label}
                 </span>
               </Link>
             );

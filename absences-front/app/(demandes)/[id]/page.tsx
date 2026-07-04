@@ -7,6 +7,12 @@ import { serverApiClient } from "@/lib/api/server-client";
 import { BoutonProlongation } from "./BoutonProlongation";
 import BoutonsSupprimerModifier from "./BoutonsSupprimerModifier";
 import BoutonInstruction from "./BoutonInstruction";
+import {
+  AlertTriangle, ArrowLeft, ArrowRight, ArrowRightLeft, Ban, Check,
+  CheckCircle2, Circle, FileCheck, FilePen, FileText, HelpCircle, Hourglass,
+  Landmark, Lock, Paperclip, PartyPopper, RotateCcw, Search, Send, X, XCircle,
+  type LucideIcon,
+} from "lucide-react";
 
 function formatMinioUrl(url?: string | null) {
   if (!url) return "";
@@ -49,18 +55,18 @@ async function getAbsence(id: string): Promise<Absence> {
 }
 
 /* ── Config statuts — tous les StatutDemande couverts ── */
-const STATUT_CONFIG: Record<string, { label: string; color: string; bg: string; icon: string }> = {
-  BROUILLON:                  { label: "Brouillon",              color: "#6B7280", bg: "#F3F4F6", icon: "📝" },
-  SOUMISE:                    { label: "Soumise",                color: "#0EA5E9", bg: "#F0F9FF", icon: "📤" },
-  EN_VALIDATION_ETAPE:        { label: "En cours de validation", color: "#D97706", bg: "#FFFBEB", icon: "⏳" },
-  EN_INSTRUCTION_ANALYSTE_RH: { label: "En instruction RH",     color: "#7C3AED", bg: "#F5F3FF", icon: "🔍" },
-  EN_VALIDATION_DRH:          { label: "En validation DRH",     color: "#B8932A", bg: "#FDFBF0", icon: "🏛️" },
-  VALIDEE:                    { label: "Validée",                color: "#059669", bg: "#ECFDF5", icon: "✅" },
-  REJETEE:                    { label: "Rejetée",                color: "#DC2626", bg: "#FEF2F2", icon: "❌" },
-  REJETEE_PAR_LE_SYSTEME:     { label: "Rejetée système",        color: "#DC2626", bg: "#FEF2F2", icon: "🚫" },
-  DELEGUEE:                   { label: "Déléguée",               color: "#6366F1", bg: "#EEF2FF", icon: "🔀" },
-  CLOTUREE:                   { label: "Clôturée",               color: "#4B5563", bg: "#F9FAFB", icon: "🔒" },
-  ANNULEE:                    { label: "Annulée",                color: "#6B7280", bg: "#F3F4F6", icon: "🚫" },
+const STATUT_CONFIG: Record<string, { label: string; color: string; bg: string; icon: LucideIcon }> = {
+  BROUILLON:                  { label: "Brouillon",              color: "#6B7280", bg: "#F3F4F6", icon: FilePen },
+  SOUMISE:                    { label: "Soumise",                color: "#0EA5E9", bg: "#F0F9FF", icon: Send },
+  EN_VALIDATION_ETAPE:        { label: "En cours de validation", color: "#D97706", bg: "#FFFBEB", icon: Hourglass },
+  EN_INSTRUCTION_ANALYSTE_RH: { label: "En instruction RH",     color: "#7C3AED", bg: "#F5F3FF", icon: Search },
+  EN_VALIDATION_DRH:          { label: "En validation DRH",     color: "#B8932A", bg: "#FDFBF0", icon: Landmark },
+  VALIDEE:                    { label: "Validée",                color: "#059669", bg: "#ECFDF5", icon: CheckCircle2 },
+  REJETEE:                    { label: "Rejetée",                color: "#DC2626", bg: "#FEF2F2", icon: XCircle },
+  REJETEE_PAR_LE_SYSTEME:     { label: "Rejetée système",        color: "#DC2626", bg: "#FEF2F2", icon: Ban },
+  DELEGUEE:                   { label: "Déléguée",               color: "#6366F1", bg: "#EEF2FF", icon: ArrowRightLeft },
+  CLOTUREE:                   { label: "Clôturée",               color: "#4B5563", bg: "#F9FAFB", icon: Lock },
+  ANNULEE:                    { label: "Annulée",                color: "#6B7280", bg: "#F3F4F6", icon: Ban },
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -91,7 +97,7 @@ export default async function AbsenceDetailPage({
   const estDRH       = roles.includes("DRH");
   const estAnalyste  = roles.includes("ANALYSTE_RH");
 
-  const statut  = STATUT_CONFIG[absence.statut] ?? { label: absence.statut, color: "#6B7280", bg: "#F3F4F6", icon: "❓" };
+  const statut  = STATUT_CONFIG[absence.statut] ?? { label: absence.statut, color: "#6B7280", bg: "#F3F4F6", icon: HelpCircle };
   const peutModifier     = ["BROUILLON", "REJETEE"].includes(absence.statut);
   const peutSupprimer    = ["BROUILLON", "REJETEE", "REJETEE_PAR_LE_SYSTEME"].includes(absence.statut);
   const peutValiderEtape = !!absence.estMonTourDeValider;
@@ -105,7 +111,7 @@ export default async function AbsenceDetailPage({
       {/* ── Bannière succès ── */}
       {sp.success === "1" && (
         <div className="flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-5 py-4">
-          <span className="text-2xl">🎉</span>
+          <PartyPopper size={24} className="text-green-600 flex-shrink-0" />
           <div>
             <p className="text-sm font-semibold text-green-700">Demande soumise avec succès !</p>
             <p className="text-xs text-green-600 mt-0.5">Votre demande est maintenant en cours de validation.</p>
@@ -132,7 +138,7 @@ export default async function AbsenceDetailPage({
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold flex-shrink-0"
             style={{ background: statut.bg, color: statut.color }}
           >
-            {statut.icon} {statut.label}
+            <statut.icon size={14} /> {statut.label}
           </span>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: KENTE }} />
@@ -168,7 +174,7 @@ export default async function AbsenceDetailPage({
       {/* ── Motif rejet système ── */}
       {absence.motifRejetSysteme && (
         <div className="flex items-start gap-3 rounded-lg border border-secondary-200 bg-secondary-50 px-4 py-3">
-          <span className="text-lg mt-0.5">⚠️</span>
+          <AlertTriangle size={18} className="text-secondary-600 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-semibold text-secondary-700">Motif du rejet</p>
             <p className="text-sm text-secondary-600 mt-0.5">{absence.motifRejetSysteme}</p>
@@ -180,7 +186,7 @@ export default async function AbsenceDetailPage({
       {absence.justificatifs && absence.justificatifs.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">📎 Justificatifs déposés</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2"><Paperclip size={18} /> Justificatifs déposés</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
             {absence.justificatifs.map((j) => (
@@ -192,7 +198,7 @@ export default async function AbsenceDetailPage({
                 className="flex items-center justify-between rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 hover:bg-neutral-100 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-xl">📄</span>
+                  <FileText size={20} className="text-neutral-500 flex-shrink-0" />
                   <div>
                     <p className="text-sm font-medium text-primary-500">{j.typePiece}</p>
                     <p className="text-xs text-neutral-400">
@@ -200,7 +206,7 @@ export default async function AbsenceDetailPage({
                     </p>
                   </div>
                 </div>
-                <span className="text-xs text-gold-600 font-medium">Télécharger →</span>
+                <span className="inline-flex items-center gap-1 text-xs text-gold-600 font-medium">Télécharger <ArrowRight size={12} /></span>
               </a>
             ))}
           </CardContent>
@@ -221,7 +227,7 @@ export default async function AbsenceDetailPage({
         <Card>
           <CardContent className="pt-5 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">📜</span>
+              <FileCheck size={24} className="text-gold-600 flex-shrink-0" />
               <div>
                 <p className="text-sm font-bold text-primary-600">Titre de congé / Lettre de mise en congé</p>
                 <p className="text-xs text-neutral-500">Généré suite à la validation DRH</p>
@@ -240,12 +246,12 @@ export default async function AbsenceDetailPage({
       <div className="flex flex-wrap gap-3">
         {peutValiderDRH && (
           <Button asChild className="gap-2">
-            <Link href={`/${absence.id}/validation-drh`}>✅ Valider (DRH)</Link>
+            <Link href={`/${absence.id}/validation-drh`}><CheckCircle2 size={14} /> Valider (DRH)</Link>
           </Button>
         )}
         {peutValiderEtape && (
           <Button asChild variant="outline" className="gap-2">
-            <Link href={`/${absence.id}/validation`}>🔍 Étape de validation</Link>
+            <Link href={`/${absence.id}/validation`}><Search size={14} /> Étape de validation</Link>
           </Button>
         )}
         {peutInstruire && (
@@ -253,7 +259,7 @@ export default async function AbsenceDetailPage({
         )}
         {peutRetourAnticipe && (
           <Button asChild variant="outline" className="gap-2">
-            <Link href={`/${absence.id}/retour-anticipe`}>🔄 Retour anticipé</Link>
+            <Link href={`/${absence.id}/retour-anticipe`}><RotateCcw size={14} /> Retour anticipé</Link>
           </Button>
         )}
         {(peutModifier || peutSupprimer) && (
@@ -265,11 +271,11 @@ export default async function AbsenceDetailPage({
         )}
         {absence.statut === "BROUILLON" && (
           <Button asChild className="gap-2" style={{ background: "#C41E22" }}>
-            <Link href={`/${absence.id}/preview`}>🚀 Soumettre</Link>
+            <Link href={`/${absence.id}/preview`}><Send size={14} /> Soumettre</Link>
           </Button>
         )}
         <Button asChild variant="ghost" className="text-neutral-500 text-sm">
-          <Link href="/">← Retour à l&apos;accueil</Link>
+          <Link href="/"><ArrowLeft size={14} /> Retour à l&apos;accueil</Link>
         </Button>
       </div>
 
@@ -277,11 +283,11 @@ export default async function AbsenceDetailPage({
   );
 }
 
-const ETAPE_STATUT_CONFIG: Record<string, { color: string; bg: string; icon: string; ring: string }> = {
-  EN_ATTENTE: { color: "#9CA3AF", bg: "#F9FAFB", icon: "○",  ring: "#D1D5DB" },
-  EN_COURS:   { color: "#D97706", bg: "#FFFBEB", icon: "⏳", ring: "#D97706" },
-  APPROUVEE:  { color: "#059669", bg: "#ECFDF5", icon: "✓",  ring: "#059669" },
-  REJETEE:    { color: "#DC2626", bg: "#FEF2F2", icon: "✗",  ring: "#DC2626" },
+const ETAPE_STATUT_CONFIG: Record<string, { color: string; bg: string; icon: LucideIcon; ring: string }> = {
+  EN_ATTENTE: { color: "#9CA3AF", bg: "#F9FAFB", icon: Circle,    ring: "#D1D5DB" },
+  EN_COURS:   { color: "#D97706", bg: "#FFFBEB", icon: Hourglass, ring: "#D97706" },
+  APPROUVEE:  { color: "#059669", bg: "#ECFDF5", icon: Check,     ring: "#059669" },
+  REJETEE:    { color: "#DC2626", bg: "#FEF2F2", icon: X,         ring: "#DC2626" },
 };
 
 function CircuitProgression({ etapes }: { etapes: EtapeProgression[] }) {
@@ -325,7 +331,7 @@ function CircuitProgression({ etapes }: { etapes: EtapeProgression[] }) {
                     borderColor: cfg.ring,
                   }}
                 >
-                  {cfg.icon}
+                  <cfg.icon size={13} strokeWidth={3} />
                 </div>
                 {!isLast && (
                   <div

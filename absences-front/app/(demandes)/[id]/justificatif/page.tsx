@@ -6,6 +6,10 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import apiClient from "@/lib/api/client";
+import {
+  ArrowRight, Baby, CheckCircle2, ClipboardList, FileText, FolderOpen,
+  Plane, Stethoscope, type LucideIcon,
+} from "lucide-react";
 
 const KENTE =
   "repeating-linear-gradient(90deg,#C41E22 0px,#C41E22 8px,#B8932A 8px,#B8932A 16px,#2C2C2C 16px,#2C2C2C 24px,#F5F5F5 24px,#F5F5F5 32px)";
@@ -15,35 +19,35 @@ const JUSTIF_CONFIG: Record<string, {
   typePiece: string;
   label: string;
   description: string;
-  icon: string;
+  icon: LucideIcon;
   accentColor: string;
 }> = {
   CONGE_MALADIE:   {
     typePiece:    "CERTIFICAT_MEDICAL",
     label:        "Certificat médical",
     description:  "Certificat établi par un médecin agréé, mentionnant la durée de l'arrêt.",
-    icon:         "🏥",
+    icon:         Stethoscope,
     accentColor:  "#1A1A2E",
   },
   PERMISSION:      {
     typePiece:    "JUSTIFICATIF_PERMISSION",
     label:        "Justificatif officiel",
     description:  "Document officiel correspondant au motif sélectionné.",
-    icon:         "📋",
+    icon:         ClipboardList,
     accentColor:  "#B8932A",
   },
   MISSION_LONGUE:  {
     typePiece:    "ORDRE_DE_MISSION",
     label:        "Ordre de mission",
     description:  "Document signé par la hiérarchie autorisée, précisant la destination et l'objet.",
-    icon:         "✈️",
+    icon:         Plane,
     accentColor:  "#2C2C2C",
   },
   CONGE_MATERNITE: {
     typePiece:    "CERTIFICAT_GROSSESSE",
     label:        "Certificat de grossesse",
     description:  "Certificat médical attestant la grossesse et la date présumée d'accouchement.",
-    icon:         "👶",
+    icon:         Baby,
     accentColor:  "#96751A",
   },
 };
@@ -126,10 +130,10 @@ export default function JustificatifPage({ params }: { params: Promise<{ id: str
 
           <div className="flex flex-col gap-4">
             <div
-              className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl"
+              className="w-14 h-14 rounded-xl flex items-center justify-center"
               style={{ background: "rgba(255,255,255,0.10)", backdropFilter: "blur(8px)" }}
             >
-              {cfg.icon}
+              <cfg.icon size={26} className="text-gold-300" />
             </div>
             <h2 className="font-heading text-4xl font-bold text-white leading-tight">
               {cfg.label}
@@ -205,7 +209,9 @@ export default function JustificatifPage({ params }: { params: Promise<{ id: str
                     onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
                   />
                   <div className="flex flex-col items-center gap-3 pointer-events-none">
-                    <span className="text-4xl">{fileName ? "📄" : "📂"}</span>
+                    {fileName
+                      ? <FileText size={40} style={{ color: cfg.accentColor }} />
+                      : <FolderOpen size={40} className="text-neutral-400" />}
                     {fileName ? (
                       <div className="flex flex-col items-center gap-1">
                         <p className="text-sm font-semibold" style={{ color: cfg.accentColor }}>
@@ -257,7 +263,7 @@ export default function JustificatifPage({ params }: { params: Promise<{ id: str
           ) : (
             <div className="flex flex-col gap-5">
               <div className="flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 px-5 py-4">
-                <span className="text-2xl">✅</span>
+                <CheckCircle2 size={24} className="text-green-600 flex-shrink-0" />
                 <div>
                   <p className="text-sm font-semibold text-green-700">
                     {cfg.label} déposé avec succès
@@ -271,7 +277,7 @@ export default function JustificatifPage({ params }: { params: Promise<{ id: str
                 style={{ background: cfg.accentColor }}
                 onClick={() => router.push(`/${id}/preview`)}
               >
-                Continuer vers l&apos;aperçu →
+                Continuer vers l&apos;aperçu <ArrowRight size={16} />
               </Button>
             </div>
           )}

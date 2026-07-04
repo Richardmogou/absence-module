@@ -6,6 +6,10 @@ import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import apiClient from "@/lib/api/client";
+import {
+  AlertTriangle, Baby, ClipboardList, FileText, HelpCircle, Landmark,
+  Paperclip, PartyPopper, Plane, Stethoscope, TreePalm, XCircle, type LucideIcon,
+} from "lucide-react";
 
 interface Absence {
   id: string;
@@ -18,12 +22,12 @@ interface Absence {
   justificatifs?: { id: string; typePiece: string; urlFichier: string }[];
 }
 
-const TYPE_LABELS: Record<string, { label: string; icon: string; color: string }> = {
-  CONGE_ANNUEL:    { label: "Congé annuel",         icon: "🌴", color: "#C41E22" },
-  CONGE_MALADIE:   { label: "Congé maladie",        icon: "🏥", color: "#1A1A2E" },
-  PERMISSION:      { label: "Permission",           icon: "📋", color: "#B8932A" },
-  MISSION_LONGUE:  { label: "Mission longue durée", icon: "✈️", color: "#2C2C2C" },
-  CONGE_MATERNITE: { label: "Congé maternité",      icon: "👶", color: "#96751A" },
+const TYPE_LABELS: Record<string, { label: string; icon: LucideIcon; color: string }> = {
+  CONGE_ANNUEL:    { label: "Congé annuel",         icon: TreePalm,      color: "#C41E22" },
+  CONGE_MALADIE:   { label: "Congé maladie",        icon: Stethoscope,   color: "#1A1A2E" },
+  PERMISSION:      { label: "Permission",           icon: ClipboardList, color: "#B8932A" },
+  MISSION_LONGUE:  { label: "Mission longue durée", icon: Plane,         color: "#2C2C2C" },
+  CONGE_MATERNITE: { label: "Congé maternité",      icon: Baby,          color: "#96751A" },
 };
 
 const KENTE = "repeating-linear-gradient(90deg,#C41E22 0px,#C41E22 8px,#B8932A 8px,#B8932A 16px,#2C2C2C 16px,#2C2C2C 24px,#F5F5F5 24px,#F5F5F5 32px)";
@@ -62,9 +66,9 @@ export default function DRHPage() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "En attente",           value: total,    color: "#B8932A", icon: "🏛️" },
-          { label: "Justificatif présent", value: avecJust, color: "#059669", icon: "📎" },
-          { label: "Justificatif manquant",value: sansJust, color: "#DC2626", icon: "❌" },
+          { label: "En attente",           value: total,    color: "#B8932A", icon: Landmark },
+          { label: "Justificatif présent", value: avecJust, color: "#059669", icon: Paperclip },
+          { label: "Justificatif manquant",value: sansJust, color: "#DC2626", icon: XCircle },
         ].map(s => (
           <div key={s.label} className="relative overflow-hidden rounded-xl border border-neutral-200 bg-white px-5 py-4">
             <div className="flex items-start justify-between">
@@ -74,7 +78,7 @@ export default function DRHPage() {
                   {loading ? "…" : s.value}
                 </p>
               </div>
-              <span className="text-2xl">{s.icon}</span>
+              <s.icon size={22} style={{ color: s.color }} />
             </div>
             <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: s.color }} />
           </div>
@@ -84,25 +88,25 @@ export default function DRHPage() {
       {/* Erreur */}
       {erreur && (
         <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
-          <span className="text-lg">⚠️</span>
+          <AlertTriangle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-red-700">{erreur}</p>
         </div>
       )}
 
       {/* Liste */}
       <Card>
-        <CardHeader><CardTitle className="text-base">🏛️ Demandes à valider</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base flex items-center gap-2"><Landmark size={18} /> Demandes à valider</CardTitle></CardHeader>
         <CardContent className="flex flex-col gap-3">
           {loading && <p className="text-sm text-neutral-400 text-center py-8">Chargement…</p>}
           {!loading && demandes.length === 0 && (
             <div className="flex flex-col items-center gap-3 py-12">
-              <span className="text-5xl">🎉</span>
+              <PartyPopper size={48} className="text-gold-400" />
               <p className="text-sm font-semibold text-neutral-500">Aucune demande en attente</p>
               <p className="text-xs text-neutral-400">Toutes les demandes ont été traitées.</p>
             </div>
           )}
           {demandes.map(d => {
-            const type          = TYPE_LABELS[d.type] ?? { label: d.type, icon: "❓", color: "#6B7280" };
+            const type          = TYPE_LABELS[d.type] ?? { label: d.type, icon: HelpCircle, color: "#6B7280" };
             const aJustificatif = (d.justificatifs?.length ?? 0) > 0;
             return (
               <div key={d.id} className="rounded-xl border border-neutral-200 bg-white px-5 py-4 flex flex-col gap-3">
@@ -110,9 +114,9 @@ export default function DRHPage() {
                 {/* En-tête */}
                 <div className="flex items-center justify-between flex-wrap gap-3">
                   <div className="flex items-center gap-4">
-                    <div className="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+                    <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
                       style={{ background: type.color + "15" }}>
-                      {type.icon}
+                      <type.icon size={20} style={{ color: type.color }} />
                     </div>
                     <div>
                       <p className="text-sm font-semibold text-primary-500">{type.label}</p>
@@ -122,12 +126,14 @@ export default function DRHPage() {
                       </p>
                     </div>
                   </div>
-                  <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${
+                  <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border ${
                     aJustificatif
                       ? "bg-green-50 text-green-700 border-green-200"
                       : "bg-amber-50 text-amber-700 border-amber-200"
                   }`}>
-                    {aJustificatif ? "📎 Justificatif présent" : "⚠️ Sans justificatif"}
+                    {aJustificatif
+                      ? <><Paperclip size={12} /> Justificatif présent</>
+                      : <><AlertTriangle size={12} /> Sans justificatif</>}
                   </span>
                 </div>
 
@@ -136,8 +142,8 @@ export default function DRHPage() {
                   <div className="flex flex-wrap gap-2">
                     {d.justificatifs!.map(j => (
                       <a key={j.id} href={j.urlFichier} target="_blank" rel="noopener noreferrer"
-                        className="text-xs text-gold-700 border border-gold-200 bg-gold-50 rounded px-2.5 py-1 hover:bg-gold-100 transition-colors">
-                        📄 {j.typePiece}
+                        className="inline-flex items-center gap-1 text-xs text-gold-700 border border-gold-200 bg-gold-50 rounded px-2.5 py-1 hover:bg-gold-100 transition-colors">
+                        <FileText size={12} /> {j.typePiece}
                       </a>
                     ))}
                   </div>
@@ -146,7 +152,7 @@ export default function DRHPage() {
                 {/* Actions */}
                 <div className="flex gap-3 flex-wrap pt-1">
                   <Button asChild size="sm" style={{ background: "#B8932A" }}>
-                    <Link href={`/${d.id}/validation-drh`}>🏛️ Statuer</Link>
+                    <Link href={`/${d.id}/validation-drh`}><Landmark size={14} /> Statuer</Link>
                   </Button>
                   <Button asChild size="sm" variant="outline">
                     <Link href={`/${d.id}`}>Voir le détail</Link>

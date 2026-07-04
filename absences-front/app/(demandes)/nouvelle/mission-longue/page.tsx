@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import FormPageLayout from "@/components/FormPageLayout";
 import apiClient from "@/lib/api/client";
 import { BackupSelector } from "@/components/BackupSelector";
+import { AlertTriangle, ArrowRight, Paperclip, Plane } from "lucide-react";
 
 const DUREE_MIN_JOURS = 15;
 
@@ -97,7 +98,7 @@ export default function MissionLonguePage() {
       badge="Nouvelle demande"
       title="Mission longue durée"
       subtitle="Déplacement professionnel étendu (≥ 15 jours). Déclenche une validation renforcée incluant la Direction Générale pour les agents."
-      icon="✈️"
+      icon={<Plane size={24} />}
     >
       <div className="grid grid-cols-2 gap-4">
         <FormField
@@ -126,7 +127,9 @@ export default function MissionLonguePage() {
           }}
         >
           <div className="flex items-center gap-3">
-            <span className="text-xl">{dureeValide ? "✈️" : "⚠️"}</span>
+            {dureeValide
+              ? <Plane size={20} className="flex-shrink-0" style={{ color: "#2C2C2C" }} />
+              : <AlertTriangle size={20} className="flex-shrink-0" style={{ color: "#DC2626" }} />}
             <div>
               <p
                 className="text-xs uppercase tracking-wider font-ui font-semibold"
@@ -174,7 +177,7 @@ export default function MissionLonguePage() {
 
       {/* Info ordre de mission */}
       <div className="flex items-start gap-3 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
-        <span className="text-lg mt-0.5">📎</span>
+        <Paperclip size={18} className="text-neutral-500 flex-shrink-0 mt-0.5" />
         <p className="text-xs text-neutral-600 leading-relaxed">
           Un <strong>ordre de mission</strong> vous sera demandé à l&apos;étape suivante.
           Préparez-le en format PDF ou image.
@@ -183,7 +186,7 @@ export default function MissionLonguePage() {
 
       {/* Avertissement DG */}
       <div className="flex items-start gap-3 rounded-lg border border-primary-200 bg-primary-50 px-4 py-3">
-        <span className="text-lg mt-0.5">⚠️</span>
+        <AlertTriangle size={18} className="text-primary-500 flex-shrink-0 mt-0.5" />
         <p className="text-xs text-primary-600 leading-relaxed">
           Les missions longue durée nécessitent une{" "}
           <strong>validation Direction Générale</strong> en plus du circuit RH standard.
@@ -202,7 +205,7 @@ export default function MissionLonguePage() {
         className="h-12 text-base mt-2"
         onClick={handleSubmit(onSubmit)}
       >
-        {isSubmitting ? "Envoi en cours…" : "Continuer →"}
+        {isSubmitting ? "Envoi en cours…" : <>Continuer <ArrowRight size={16} /></>}
       </Button>
     </FormPageLayout>
   );

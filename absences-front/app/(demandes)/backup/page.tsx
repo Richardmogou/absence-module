@@ -6,6 +6,11 @@ import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import apiClient from "@/lib/api/client";
+import {
+  AlertTriangle, Baby, CheckCircle2, CircleDot, ClipboardList, FilePen,
+  FolderOpen, HelpCircle, Hourglass, Info, Landmark, Lock, Plane, Search,
+  Send, Stethoscope, TreePalm, Users, XCircle, type LucideIcon,
+} from "lucide-react";
 
 interface Absence {
   id: string;
@@ -18,23 +23,23 @@ interface Absence {
   backupIdentifiantExterne: string | null;
 }
 
-const TYPE_LABELS: Record<string, { label: string; icon: string; color: string }> = {
-  CONGE_ANNUEL:    { label: "Congé annuel",         icon: "🌴", color: "#C41E22" },
-  CONGE_MALADIE:   { label: "Congé maladie",        icon: "🏥", color: "#1A1A2E" },
-  PERMISSION:      { label: "Permission",           icon: "📋", color: "#B8932A" },
-  MISSION_LONGUE:  { label: "Mission longue durée", icon: "✈️", color: "#2C2C2C" },
-  CONGE_MATERNITE: { label: "Congé maternité",      icon: "👶", color: "#96751A" },
+const TYPE_LABELS: Record<string, { label: string; icon: LucideIcon; color: string }> = {
+  CONGE_ANNUEL:    { label: "Congé annuel",         icon: TreePalm,      color: "#C41E22" },
+  CONGE_MALADIE:   { label: "Congé maladie",        icon: Stethoscope,   color: "#1A1A2E" },
+  PERMISSION:      { label: "Permission",           icon: ClipboardList, color: "#B8932A" },
+  MISSION_LONGUE:  { label: "Mission longue durée", icon: Plane,         color: "#2C2C2C" },
+  CONGE_MATERNITE: { label: "Congé maternité",      icon: Baby,          color: "#96751A" },
 };
 
-const STATUT_CONFIG: Record<string, { label: string; color: string; bg: string; icon: string }> = {
-  BROUILLON:                  { label: "Brouillon",          color: "#6B7280", bg: "#F3F4F6", icon: "📝" },
-  SOUMISE:                    { label: "Soumise",            color: "#0EA5E9", bg: "#F0F9FF", icon: "📤" },
-  EN_VALIDATION_ETAPE:        { label: "En validation",      color: "#D97706", bg: "#FFFBEB", icon: "⏳" },
-  EN_INSTRUCTION_ANALYSTE_RH: { label: "En instruction RH", color: "#7C3AED", bg: "#F5F3FF", icon: "🔍" },
-  EN_VALIDATION_DRH:          { label: "En validation DRH", color: "#B8932A", bg: "#FDFBF0", icon: "🏛️" },
-  VALIDEE:                    { label: "Validée ✅",         color: "#059669", bg: "#ECFDF5", icon: "✅" },
-  REJETEE:                    { label: "Rejetée",            color: "#DC2626", bg: "#FEF2F2", icon: "❌" },
-  CLOTUREE:                   { label: "Clôturée",           color: "#4B5563", bg: "#F9FAFB", icon: "🔒" },
+const STATUT_CONFIG: Record<string, { label: string; color: string; bg: string; icon: LucideIcon }> = {
+  BROUILLON:                  { label: "Brouillon",          color: "#6B7280", bg: "#F3F4F6", icon: FilePen },
+  SOUMISE:                    { label: "Soumise",            color: "#0EA5E9", bg: "#F0F9FF", icon: Send },
+  EN_VALIDATION_ETAPE:        { label: "En validation",      color: "#D97706", bg: "#FFFBEB", icon: Hourglass },
+  EN_INSTRUCTION_ANALYSTE_RH: { label: "En instruction RH", color: "#7C3AED", bg: "#F5F3FF", icon: Search },
+  EN_VALIDATION_DRH:          { label: "En validation DRH", color: "#B8932A", bg: "#FDFBF0", icon: Landmark },
+  VALIDEE:                    { label: "Validée",            color: "#059669", bg: "#ECFDF5", icon: CheckCircle2 },
+  REJETEE:                    { label: "Rejetée",            color: "#DC2626", bg: "#FEF2F2", icon: XCircle },
+  CLOTUREE:                   { label: "Clôturée",           color: "#4B5563", bg: "#F9FAFB", icon: Lock },
 };
 
 const KENTE = "repeating-linear-gradient(90deg,#C41E22 0px,#C41E22 8px,#B8932A 8px,#B8932A 16px,#2C2C2C 16px,#2C2C2C 24px,#F5F5F5 24px,#F5F5F5 32px)";
@@ -77,7 +82,7 @@ export default function BackupDashboardPage() {
 
       {/* Explication du rôle */}
       <div className="flex items-start gap-4 rounded-xl border border-blue-200 bg-blue-50 px-5 py-4">
-        <span className="text-2xl mt-0.5">👥</span>
+        <Users size={24} className="text-blue-600 flex-shrink-0 mt-0.5" />
         <div className="flex flex-col gap-1">
           <p className="text-sm font-semibold text-blue-700">Qu&apos;est-ce que le rôle Back-up ?</p>
           <p className="text-xs text-blue-600 leading-relaxed">
@@ -92,9 +97,9 @@ export default function BackupDashboardPage() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "À valider",       value: aValider.length,   color: "#D97706", icon: "⏳" },
-          { label: "Absences actives", value: enCours.length,   color: "#059669", icon: "🟢" },
-          { label: "Historique",       value: historique.length, color: "#6B7280", icon: "📂" },
+          { label: "À valider",       value: aValider.length,   color: "#D97706", icon: Hourglass },
+          { label: "Absences actives", value: enCours.length,   color: "#059669", icon: CircleDot },
+          { label: "Historique",       value: historique.length, color: "#6B7280", icon: FolderOpen },
         ].map(s => (
           <div key={s.label} className="relative overflow-hidden rounded-xl border border-neutral-200 bg-white px-5 py-4">
             <div className="flex items-start justify-between">
@@ -104,7 +109,7 @@ export default function BackupDashboardPage() {
                   {loading ? "…" : s.value}
                 </p>
               </div>
-              <span className="text-2xl">{s.icon}</span>
+              <s.icon size={22} style={{ color: s.color }} />
             </div>
             <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: s.color }} />
           </div>
@@ -115,18 +120,18 @@ export default function BackupDashboardPage() {
       {!loading && aValider.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">⏳ Demandes en attente de votre validation Back-up</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2"><Hourglass size={18} /> Demandes en attente de votre validation Back-up</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-              <span className="text-lg">⚠️</span>
+              <AlertTriangle size={18} className="text-amber-600 flex-shrink-0" />
               <p className="text-xs text-amber-700 leading-relaxed">
                 Ces demandes nécessitent votre validation en tant que Back-up <strong>avant</strong> de
                 poursuivre le circuit RH. Délai conseillé : <strong>2 jours ouvrés</strong>.
               </p>
             </div>
             {aValider.map(d => (
-              <DemandeCarte key={d.id} d={d} actionLabel="✅ Valider en tant que Back-up" actionHref={`/${d.id}/validation`} highlight />
+              <DemandeCarte key={d.id} d={d} actionLabel={<><CheckCircle2 size={14} /> Valider en tant que Back-up</>} actionHref={`/${d.id}/validation`} highlight />
             ))}
           </CardContent>
         </Card>
@@ -136,11 +141,11 @@ export default function BackupDashboardPage() {
       {!loading && enCours.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">🟢 Absences en cours — vous êtes Back-up actif</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2"><CircleDot size={18} className="text-green-600" /> Absences en cours — vous êtes Back-up actif</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <div className="flex items-start gap-3 rounded-lg border border-green-200 bg-green-50 px-4 py-3">
-              <span className="text-lg">ℹ️</span>
+              <Info size={18} className="text-green-600 flex-shrink-0" />
               <p className="text-xs text-green-700 leading-relaxed">
                 Ces demandes ont été validées. Vous exercez actuellement les habilitations
                 temporaires du collègue absent. Elles seront révoquées automatiquement
@@ -158,7 +163,7 @@ export default function BackupDashboardPage() {
       {!loading && historique.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">📂 Historique</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2"><FolderOpen size={18} /> Historique</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
             {historique.map(d => (
@@ -171,7 +176,7 @@ export default function BackupDashboardPage() {
       {/* État vide */}
       {!loading && demandes.length === 0 && (
         <div className="flex flex-col items-center gap-4 py-16 rounded-xl border-2 border-dashed border-neutral-200">
-          <span className="text-5xl">👥</span>
+          <Users size={48} className="text-neutral-300" />
           <div className="text-center">
             <p className="font-heading text-lg font-semibold text-primary-500">
               Aucune demande Back-up
@@ -194,22 +199,22 @@ function DemandeCarte({
   compact = false,
 }: {
   d: Absence;
-  actionLabel: string;
+  actionLabel: React.ReactNode;
   actionHref: string;
   highlight?: boolean;
   compact?: boolean;
 }) {
-  const type   = TYPE_LABELS[d.type] ?? { label: d.type, icon: "❓", color: "#6B7280" };
-  const statut = STATUT_CONFIG[d.statut] ?? { label: d.statut, color: "#6B7280", bg: "#F3F4F6", icon: "❓" };
+  const type   = TYPE_LABELS[d.type] ?? { label: d.type, icon: HelpCircle, color: "#6B7280" };
+  const statut = STATUT_CONFIG[d.statut] ?? { label: d.statut, color: "#6B7280", bg: "#F3F4F6", icon: HelpCircle };
 
   return (
     <div className={`rounded-xl border px-5 py-4 flex items-center justify-between gap-4 ${
       highlight ? "border-amber-300 bg-amber-50/50" : "border-neutral-200 bg-white"
     }`}>
       <div className="flex items-center gap-4 min-w-0">
-        <div className="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+        <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ background: type.color + "15" }}>
-          {type.icon}
+          <type.icon size={20} style={{ color: type.color }} />
         </div>
         <div className="min-w-0">
           <p className="text-sm font-semibold text-primary-500">{type.label}</p>
@@ -226,7 +231,7 @@ function DemandeCarte({
       <div className="flex flex-col items-end gap-2 flex-shrink-0">
         <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
           style={{ background: statut.bg, color: statut.color }}>
-          {statut.icon} {statut.label}
+          <statut.icon size={12} /> {statut.label}
         </span>
         <Button asChild size="sm" variant={highlight ? "default" : "outline"}>
           <Link href={actionHref}>{actionLabel}</Link>

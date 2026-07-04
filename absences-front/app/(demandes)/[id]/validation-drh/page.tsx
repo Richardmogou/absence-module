@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
 import { FormField } from "@/components/FormField";
 import apiClient from "@/lib/api/client";
+import { ArrowRight, CheckCircle2, Landmark, XCircle } from "lucide-react";
 
 const schema = z
   .object({
@@ -112,8 +113,8 @@ export default function ValidationDRHPage({ params }: { params: Promise<{ id: st
           </div>
 
           <div className="flex flex-col gap-4">
-            <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl"
-              style={{ background: "rgba(255,255,255,0.10)", backdropFilter: "blur(8px)" }}>🏛️</div>
+            <div className="w-14 h-14 rounded-xl flex items-center justify-center"
+              style={{ background: "rgba(255,255,255,0.10)", backdropFilter: "blur(8px)" }}><Landmark size={26} className="text-gold-300" /></div>
             <h2 className="font-heading text-4xl font-bold text-white leading-tight">
               Validation DRH
             </h2>
@@ -175,8 +176,8 @@ export default function ValidationDRHPage({ params }: { params: Promise<{ id: st
                       )}
                     </div>
                     <div>
-                      <p className="text-sm font-semibold" style={{ color: val === "VALIDER" ? "#B8932A" : "#DC2626" }}>
-                        {val === "VALIDER" ? "✅ Approuver" : "❌ Rejeter"}
+                      <p className="text-sm font-semibold flex items-center gap-1.5" style={{ color: val === "VALIDER" ? "#B8932A" : "#DC2626" }}>
+                        {val === "VALIDER" ? <><CheckCircle2 size={14} /> Approuver</> : <><XCircle size={14} /> Rejeter</>}
                       </p>
                       <p className="text-xs text-neutral-400">
                         {val === "VALIDER" ? "Générer le document" : "Retour au demandeur"}
@@ -214,13 +215,13 @@ export default function ValidationDRHPage({ params }: { params: Promise<{ id: st
             )}
 
             {apiError && <Alert variant="destructive"><AlertDescription>{apiError}</AlertDescription></Alert>}
-            {success && <Alert><AlertDescription>✅ Décision DRH enregistrée. Redirection…</AlertDescription></Alert>}
+            {success && <Alert><AlertDescription className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-600 flex-shrink-0" /> Décision DRH enregistrée. Redirection…</AlertDescription></Alert>}
 
             <div className="flex gap-3 pt-2">
               <Button type="button" variant="outline" onClick={() => router.back()} className="flex-1 h-12">Annuler</Button>
               <Button type="submit" disabled={isDisabled} className="flex-1 h-12 text-base"
                 style={{ background: isDisabled ? undefined : "#B8932A" }}>
-                {isSubmitting ? "Envoi…" : "Confirmer la décision DRH →"}
+                {isSubmitting ? "Envoi…" : <>Confirmer la décision DRH <ArrowRight size={16} /></>}
               </Button>
             </div>
           </form>

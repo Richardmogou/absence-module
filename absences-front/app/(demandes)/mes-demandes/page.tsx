@@ -4,6 +4,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { serverApiClient } from "@/lib/api/server-client";
+import {
+  Baby, Ban, CheckCircle2, ClipboardList, FilePen, HelpCircle, Hourglass,
+  Inbox, Lock, Plane, Search, Stethoscope, TreePalm, XCircle, type LucideIcon,
+} from "lucide-react";
 
 interface Absence {
   id: string;
@@ -26,22 +30,22 @@ async function getMesDemandes(): Promise<Absence[]> {
   }
 }
 
-const STATUT_CONFIG: Record<string, { label: string; color: string; bg: string; icon: string }> = {
-  BROUILLON:              { label: "Brouillon",             color: "#6B7280", bg: "#F3F4F6", icon: "📝" },
-  EN_VALIDATION_ETAPE:    { label: "En validation",         color: "#D97706", bg: "#FFFBEB", icon: "⏳" },
-  VALIDEE:                { label: "Validée",               color: "#059669", bg: "#ECFDF5", icon: "✅" },
-  REJETEE:                { label: "Rejetée",               color: "#DC2626", bg: "#FEF2F2", icon: "❌" },
-  REJETEE_PAR_LE_SYSTEME: { label: "Rejetée (système)",     color: "#DC2626", bg: "#FEF2F2", icon: "🚫" },
-  CLOTUREE:               { label: "Clôturée",              color: "#4B5563", bg: "#F9FAFB", icon: "🔒" },
-  INSTRUCTION:            { label: "En instruction",        color: "#7C3AED", bg: "#F5F3FF", icon: "🔍" },
+const STATUT_CONFIG: Record<string, { label: string; color: string; bg: string; icon: LucideIcon }> = {
+  BROUILLON:              { label: "Brouillon",             color: "#6B7280", bg: "#F3F4F6", icon: FilePen },
+  EN_VALIDATION_ETAPE:    { label: "En validation",         color: "#D97706", bg: "#FFFBEB", icon: Hourglass },
+  VALIDEE:                { label: "Validée",               color: "#059669", bg: "#ECFDF5", icon: CheckCircle2 },
+  REJETEE:                { label: "Rejetée",               color: "#DC2626", bg: "#FEF2F2", icon: XCircle },
+  REJETEE_PAR_LE_SYSTEME: { label: "Rejetée (système)",     color: "#DC2626", bg: "#FEF2F2", icon: Ban },
+  CLOTUREE:               { label: "Clôturée",              color: "#4B5563", bg: "#F9FAFB", icon: Lock },
+  INSTRUCTION:            { label: "En instruction",        color: "#7C3AED", bg: "#F5F3FF", icon: Search },
 };
 
-const TYPE_LABELS: Record<string, { label: string; icon: string; color: string }> = {
-  CONGE_ANNUEL:    { label: "Congé annuel",         icon: "🌴", color: "#C41E22" },
-  CONGE_MALADIE:   { label: "Congé maladie",        icon: "🏥", color: "#1A1A2E" },
-  PERMISSION:      { label: "Permission",           icon: "📋", color: "#B8932A" },
-  MISSION_LONGUE:  { label: "Mission longue durée", icon: "✈️", color: "#2C2C2C" },
-  CONGE_MATERNITE: { label: "Congé maternité",      icon: "👶", color: "#96751A" },
+const TYPE_LABELS: Record<string, { label: string; icon: LucideIcon; color: string }> = {
+  CONGE_ANNUEL:    { label: "Congé annuel",         icon: TreePalm,      color: "#C41E22" },
+  CONGE_MALADIE:   { label: "Congé maladie",        icon: Stethoscope,   color: "#1A1A2E" },
+  PERMISSION:      { label: "Permission",           icon: ClipboardList, color: "#B8932A" },
+  MISSION_LONGUE:  { label: "Mission longue durée", icon: Plane,         color: "#2C2C2C" },
+  CONGE_MATERNITE: { label: "Congé maternité",      icon: Baby,          color: "#96751A" },
 };
 
 const KENTE = "repeating-linear-gradient(90deg,#C41E22 0px,#C41E22 8px,#B8932A 8px,#B8932A 16px,#2C2C2C 16px,#2C2C2C 24px,#F5F5F5 24px,#F5F5F5 32px)";
@@ -84,10 +88,10 @@ export default async function MesDemandesPage() {
       {/* ── Stats ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: "Total",      value: stats.total,    color: "#2C2C2C", icon: "📋" },
-          { label: "En cours",   value: stats.enCours,  color: "#D97706", icon: "⏳" },
-          { label: "Validées",   value: stats.validees, color: "#059669", icon: "✅" },
-          { label: "Rejetées",   value: stats.rejetees, color: "#DC2626", icon: "❌" },
+          { label: "Total",      value: stats.total,    color: "#2C2C2C", icon: ClipboardList },
+          { label: "En cours",   value: stats.enCours,  color: "#D97706", icon: Hourglass },
+          { label: "Validées",   value: stats.validees, color: "#059669", icon: CheckCircle2 },
+          { label: "Rejetées",   value: stats.rejetees, color: "#DC2626", icon: XCircle },
         ].map((s) => (
           <div key={s.label}
             className="relative overflow-hidden rounded-xl border border-neutral-200 bg-white/90 px-5 py-4 shadow-card">
@@ -96,7 +100,7 @@ export default async function MesDemandesPage() {
                 <p className="text-xxs text-neutral-400 uppercase tracking-wider font-ui">{s.label}</p>
                 <p className="font-heading text-3xl font-bold mt-1" style={{ color: s.color }}>{s.value}</p>
               </div>
-              <span className="text-2xl">{s.icon}</span>
+              <s.icon size={22} style={{ color: s.color }} />
             </div>
             <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: s.color }} />
           </div>
@@ -106,7 +110,7 @@ export default async function MesDemandesPage() {
       {/* ── Liste ── */}
       {demandes.length === 0 ? (
         <div className="flex flex-col items-center gap-4 py-20 rounded-xl border-2 border-dashed border-neutral-200">
-          <span className="text-5xl">📭</span>
+          <Inbox size={48} className="text-neutral-300" />
           <div className="text-center">
             <p className="font-heading text-lg font-semibold text-primary-500">Aucune demande</p>
             <p className="text-sm text-neutral-400 mt-1">Vous n&apos;avez pas encore soumis de demande d&apos;absence.</p>
@@ -117,8 +121,8 @@ export default async function MesDemandesPage() {
         <div className="flex flex-col gap-3">
           {demandes.map((d) => {
             const typeKey = d.type ?? d.typeAbsence ?? "";
-            const type   = TYPE_LABELS[typeKey] ?? { label: typeKey, icon: "❓", color: "#6B7280" };
-            const statut = STATUT_CONFIG[d.statut] ?? { label: d.statut, color: "#6B7280", bg: "#F3F4F6", icon: "❓" };
+            const type   = TYPE_LABELS[typeKey] ?? { label: typeKey, icon: HelpCircle, color: "#6B7280" };
+            const statut = STATUT_CONFIG[d.statut] ?? { label: d.statut, color: "#6B7280", bg: "#F3F4F6", icon: HelpCircle };
             const statutText = d.statut === "EN_VALIDATION_ETAPE" && d.etapeCouranteLibelle ? `${statut.label} (${d.etapeCouranteLibelle})` : statut.label;
             return (
               <Link key={d.id} href={`/${d.id}`}
@@ -127,9 +131,9 @@ export default async function MesDemandesPage() {
                 <div className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl" style={{ background: type.color }} />
 
                 {/* Icône */}
-                <div className="w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0 transition-transform duration-350 group-hover:scale-110"
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform duration-350 group-hover:scale-110"
                   style={{ background: type.color + "15" }}>
-                  {type.icon}
+                  <type.icon size={20} style={{ color: type.color }} />
                 </div>
 
                 {/* Infos */}
@@ -143,7 +147,7 @@ export default async function MesDemandesPage() {
                 {/* Statut */}
                 <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold flex-shrink-0"
                   style={{ background: statut.bg, color: statut.color }}>
-                  {statut.icon} {statutText}
+                  <statut.icon size={12} /> {statutText}
                 </span>
 
                 {/* Flèche */}

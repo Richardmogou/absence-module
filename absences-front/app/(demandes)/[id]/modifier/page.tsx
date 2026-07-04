@@ -10,6 +10,7 @@ import { FormField } from "@/components/FormField";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import apiClient from "@/lib/api/client";
+import { AlertTriangle, CheckCircle2, Pencil } from "lucide-react";
 
 const schema = z
   .object({
@@ -125,9 +126,9 @@ export default function ModifierPage({ params }: { params: Promise<{ id: string 
           </div>
 
           <div className="flex flex-col gap-4">
-            <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl"
+            <div className="w-14 h-14 rounded-xl flex items-center justify-center"
               style={{ background: "rgba(255,255,255,0.10)", backdropFilter: "blur(8px)" }}>
-              ✏️
+              <Pencil size={26} className="text-gold-300" />
             </div>
             <h2 className="font-heading text-4xl font-bold text-white leading-tight">
               Modifier la demande
@@ -181,13 +182,13 @@ export default function ModifierPage({ params }: { params: Promise<{ id: string 
           )}
           {success && (
             <Alert>
-              <AlertDescription>✅ Demande mise à jour. Redirection…</AlertDescription>
+              <AlertDescription className="flex items-center gap-2"><CheckCircle2 size={16} className="text-green-600 flex-shrink-0" /> Demande mise à jour. Redirection…</AlertDescription>
             </Alert>
           )}
           {dureeInvalide && (
             <Alert variant="destructive">
               <AlertDescription>
-                ⚠️ La mission longue durée doit durer au minimum <strong>15 jours</strong>.
+                <AlertTriangle size={14} className="inline mr-1 -mt-0.5" /> La mission longue durée doit durer au minimum <strong>15 jours</strong>.
                 Durée actuelle : {joursCalcules} jour(s).
               </AlertDescription>
             </Alert>
