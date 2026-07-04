@@ -33,10 +33,13 @@ public interface AbsenceRepository extends JpaRepository<DemandeAbsence, UUID> {
             JOIN EtapeDemandeSnapshot e ON e.demandeId = d.id
             WHERE (e.validateurIdentifiantExterne = :validateurId
                    OR (e.mecanismeResolution IN (com.banque.absences.domain.MecanismeResolution.ROLE_FIXE_GLOBAL, com.banque.absences.domain.MecanismeResolution.DG_CONDITIONNEL)
-                       AND CONCAT('ROLE_', e.roleHabilite) IN :roles))
+                       AND CONCAT('ROLE_', e.roleHabilite) IN :roles)
+                   OR (e.mecanismeResolution = com.banque.absences.domain.MecanismeResolution.ROLE_FIXE_SCOPE_RESEAU
+                       AND CONCAT('ROLE_', e.roleHabilite) IN :roles
+                       AND d.uniteIdentifiantExterne = :reseau))
               AND e.position = d.positionEtapeCourante
               AND d.statut = com.banque.absences.domain.StatutDemande.EN_VALIDATION_ETAPE
             ORDER BY d.createdAt ASC
             """)
-    List<DemandeAbsence> findDemandesAValider(@Param("validateurId") String validateurId, @Param("roles") List<String> roles);
+    List<DemandeAbsence> findDemandesAValider(@Param("validateurId") String validateurId, @Param("roles") List<String> roles, @Param("reseau") String reseau);
 }

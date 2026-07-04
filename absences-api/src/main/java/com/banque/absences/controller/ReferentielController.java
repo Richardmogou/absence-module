@@ -31,10 +31,11 @@ public class ReferentielController {
     public ResponseEntity<CandidatsBackupResponse> backupPossibles() {
         String demandeurId = claimReaderService.identifiantUtilisateurCourant();
         String grade       = claimReaderService.lireClaimGrade();
-        String unite       = claimReaderService.lireClaimReseau().orElse(null);
+        String reseau      = claimReaderService.lireClaimReseau().orElse(null);
+        String unite       = claimReaderService.lireClaimUnite().orElse(null);
 
         List<com.banque.absences.dto.EmployeDto> pairs = hierarchicalChainResolver
-                .resoudreColleguesMemeGradeEtUnite(grade, unite)
+                .resoudreColleguesMemeGradeEtUnite(grade, unite, reseau)
                 .stream()
                 .filter(dto -> !dto.id().equals(demandeurId))
                 .toList();

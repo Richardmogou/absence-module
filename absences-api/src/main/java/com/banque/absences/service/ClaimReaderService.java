@@ -42,6 +42,16 @@ public class ClaimReaderService {
     }
 
     /**
+     * Retourne l'unité/département (claim {@link KeycloakClaims#CLAIM_UNITE}).
+     *
+     * @return {@code Optional} contenant la valeur, ou vide si le claim est absent
+     */
+    public Optional<String> lireClaimUnite() {
+        return Optional.ofNullable(
+                jwtCourant().getClaimAsString(KeycloakClaims.CLAIM_UNITE));
+    }
+
+    /**
      * Retourne l'identifiant du manager hiérarchique (claim {@link KeycloakClaims#CLAIM_MANAGER}).
      *
      * @return {@code Optional} contenant la valeur, ou vide si le claim est absent

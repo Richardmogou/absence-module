@@ -16,6 +16,8 @@ public class DGConditionnelService {
 
     public boolean necessiteInjection(DemandeAbsence demande) {
         return demande.getType() == TypeAbsence.MISSION_LONGUE
+                && demande.getNombreJours() != null
+                && demande.getNombreJours() > 15
                 && !dejaInjecte(demande);
     }
 

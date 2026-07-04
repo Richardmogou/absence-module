@@ -52,8 +52,8 @@ public class CircuitAdminService {
             sauvegarderEtape(circuit, position++, e.mecanismeResolution(), e.roleHabilite(),
                     false, e.profondeurHierarchique());
         }
-        sauvegarderEtape(circuit, position++, MecanismeResolution.ROLE_FIXE_GLOBAL, "ANALYSTE_RH", true, null);
-        sauvegarderEtape(circuit, position,   MecanismeResolution.ROLE_FIXE_GLOBAL, "DRH",         true, null);
+        // Les étapes Analyste RH et DRH sont désormais gérées par la machine à états
+        // et n'ont plus besoin d'être injectées en dur dans le circuit.
 
         // US-ADM-003 / US-ADM-004 / US-ADM-006 : contrôle de cohérence anti-doublon.
         // Lève EmployeTypeIntrouvableException (422) si aucun employé-type n'existe pour le grade,

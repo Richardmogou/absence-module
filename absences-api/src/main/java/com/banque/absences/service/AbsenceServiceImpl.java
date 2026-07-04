@@ -190,9 +190,10 @@ public class AbsenceServiceImpl implements AbsenceService {
                     snap.setValidateurIdentifiantExterne(demande.getBackupIdentifiantExterne());
                 } else if (r.getMecanisme() == MecanismeResolution.HIERARCHIQUE) {
                     int prof = r.getProfondeurHierarchique() != null ? r.getProfondeurHierarchique() : 1;
-                    hierarchicalChainResolver
+                    String managerId = hierarchicalChainResolver
                             .resoudreHierarchique(demande.getDemandeurIdentifiantExterne(), prof)
-                            .ifPresent(snap::setValidateurIdentifiantExterne);
+                            .orElseThrow(() -> new IllegalStateException("Manager hiérarchique introuvable pour le niveau " + prof));
+                    snap.setValidateurIdentifiantExterne(managerId);
                 }
             }
             etapeDemandeSnapshotRepository.save(snap);
@@ -448,7 +449,17 @@ public class AbsenceServiceImpl implements AbsenceService {
         if (roles == null || roles.isEmpty()) {
             roles = List.of("NONE");
         }
-        return toResponseBatch(repository.findDemandesAValider(validateurId, roles));
+        String reseau = claimReaderService.lireClaimReseau().orElse("NONE");
+        List<DemandeAbsence> demandes = new java.util.ArrayList<>(repository.findDemandesAValider(validateurId, roles, reseau));
+        
+        if (roles.contains("ROLE_ANALYSTE_RH")) {
+            demandes.addAll(repository.findByStatut(StatutDemande.EN_INSTRUCTION_ANALYSTE_RH));
+        }
+        if (roles.contains("ROLE_DRH")) {
+            demandes.addAll(repository.findByStatut(StatutDemande.EN_VALIDATION_DRH));
+        }
+        
+        return toResponseBatch(demandes);
     }
 
     @Override
@@ -603,15 +614,18 @@ public class AbsenceServiceImpl implements AbsenceService {
                 .orElseThrow(() -> new EntityNotFoundException("Demande introuvable : " + demandeId));
         verifierOwnership(demande);
 
+        if (demande.getStatut() != StatutDemande.VALIDEE) {
+            throw new IllegalStateException("Le retour anticipé ne peut être déclaré que pour une demande validée.");
+        }
+
         Set<TypeAbsence> typesAvecSolde = Set.of(TypeAbsence.CONGE_ANNUEL, TypeAbsence.PERMISSION);
         if (typesAvecSolde.contains(demande.getType())) {
-            long joursNonConsommes = ChronoUnit.DAYS.between(
-                    dateRetourEffective, demande.getDateFin());
+            int joursNonConsommes = calculerJoursOuvres(dateRetourEffective, demande.getDateFin());
             if (joursNonConsommes > 0) {
                 soldeCongeService.recrediter(
                         demande.getDemandeurIdentifiantExterne(),
                         demande.getType(),
-                        (int) joursNonConsommes);
+                        joursNonConsommes);
             }
         }
 

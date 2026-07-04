@@ -120,12 +120,23 @@ public class HierarchicalChainResolver {
      * Le paramètre {@code q} accepte plusieurs prédicats {@code attribut:valeur} séparés
      * par un espace (encodé {@code +} ou {@code %20}).
      */
-    public List<com.banque.absences.dto.EmployeDto> resoudreColleguesMemeGradeEtUnite(String grade, String unite) {
-        if (grade == null || unite == null) return List.of();
+    public List<com.banque.absences.dto.EmployeDto> resoudreColleguesMemeGradeEtUnite(String grade, String uniteDept, String reseau) {
+        if (grade == null || reseau == null) return List.of();
         try {
+            // Si uniteDept est présent, on l'ajoute au q, sinon on cherche juste grade et reseau
+            String queryParams = "grade:" + grade + " reseau:" + reseau;
+            if (uniteDept != null && !uniteDept.isBlank()) {
+                queryParams += " unite:" + uniteDept;
+            }
+            final String finalQueryParams = queryParams;
+            
             List<Map<String, Object>> resultats = keycloakAdminRestClient
                     .get()
-                    .uri("/users?q=grade:{grade}+reseau:{unite}&max=50", grade, unite)
+                    .uri(builder -> builder
+                            .path("/users")
+                            .queryParam("q", finalQueryParams)
+                            .queryParam("max", "50")
+                            .build())
                     .retrieve()
                     .body(new ParameterizedTypeReference<>() {});
             if (resultats == null) return List.of();
