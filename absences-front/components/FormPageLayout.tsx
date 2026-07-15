@@ -85,13 +85,7 @@ export default function FormPageLayout({
               }}
             />
           </div>
-          {/* Numéro de step décoratif */}
-          <span
-            className="font-heading text-8xl font-bold opacity-10 select-none"
-            style={{ color: "#D4A017" }}
-          >
-            01
-          </span>
+
         </div>
       </div>
 
@@ -100,7 +94,7 @@ export default function FormPageLayout({
         {/* Barre d'accent colorée en haut */}
         <div className="h-1 w-full" style={{ background: accentColor }} />
 
-        <div className="flex-1 flex flex-col justify-center px-8 sm:px-12 py-10 max-w-xl w-full mx-auto gap-6">
+        <div className="flex-1 flex flex-col justify-center px-6 sm:px-12 py-6 w-full gap-4">
           {/* Badge mobile (masqué sur lg) */}
           <div className="flex items-center gap-3 lg:hidden">
             <div
@@ -128,8 +122,8 @@ export default function FormPageLayout({
             >
               {badge}
             </p>
-            <h1 className="font-heading text-3xl font-bold text-primary-500">{title}</h1>
-            <p className="text-sm text-neutral-500 mt-1">{subtitle}</p>
+            <h1 className="font-heading text-2xl font-bold text-primary-500">{title}</h1>
+            <p className="text-xs text-neutral-500 mt-1">{subtitle}</p>
           </div>
 
           {/* Séparateur or */}
@@ -142,7 +136,7 @@ export default function FormPageLayout({
           />
 
           {/* Slot formulaire */}
-          <div className="flex flex-col gap-5">{children}</div>
+          <div className="flex flex-col gap-4">{children}</div>
         </div>
       </div>
     </div>

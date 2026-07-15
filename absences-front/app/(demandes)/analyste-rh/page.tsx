@@ -174,11 +174,11 @@ export default function AnalysteRHPage() {
                     {loadingId === d.id ? "Transmission…" : <><Search size={14} /> Transmettre au DRH</>}
                   </Button>
                   <Button asChild size="sm" variant="outline">
-                    <Link href={`/${d.id}`}>Voir le détail</Link>
+                    <Link href={`/demande/${d.id}`}>Voir le détail</Link>
                   </Button>
                   {justificatifRequis && !aJustificatif && (
                     <Button asChild size="sm" variant="outline">
-                      <Link href={`/${d.id}/justificatif`}><Paperclip size={14} /> Déposer justificatif</Link>
+                      <Link href={`/demande/${d.id}/justificatif`}><Paperclip size={14} /> Déposer justificatif</Link>
                     </Button>
                   )}
                 </div>

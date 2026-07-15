@@ -80,7 +80,7 @@ export default function ValidationDRHPage({ params }: { params: Promise<{ id: st
         nombreJoursAjuste: data.nombreJoursAjuste ? Number(data.nombreJoursAjuste) : null,
       });
       setSuccess(true);
-      setTimeout(() => router.push(`/${id}?success=1`), 1500);
+      setTimeout(() => router.push(`/demande/${id}?success=1`), 1500);
     } catch (err: unknown) {
       const resp = (err as { response?: { status?: number; data?: { code?: string } } })?.response;
       const code = resp?.data?.code;

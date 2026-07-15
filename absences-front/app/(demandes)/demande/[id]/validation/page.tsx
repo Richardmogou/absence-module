@@ -31,11 +31,16 @@ interface Demande {
   nombreJours?: number;
   statut?: string;
   demandeurIdentifiantExterne?: string;
+  nomCompletDemandeur?: string;
+  destination?: string;
+  categorie?: string;
+  objetMission?: string;
+  motifMission?: string;
 }
 
 const TYPE_LABELS: Record<string, string> = {
   CONGE_ANNUEL: "Congé annuel", CONGE_MALADIE: "Congé maladie",
-  PERMISSION: "Permission", MISSION_LONGUE: "Mission longue durée",
+  PERMISSION: "Permission", MISSION: "Mission", MISSION_LONGUE: "Mission longue durée",
   CONGE_MATERNITE: "Congé maternité",
 };
 
@@ -67,7 +72,7 @@ export default function ValidationPage({ params }: { params: Promise<{ id: strin
         motif: data.motif?.trim() || null,
       });
       setSuccess(true);
-      setTimeout(() => router.push(`/${id}?success=1`), 1500);
+      setTimeout(() => router.push(`/demande/${id}?success=1`), 1500);
     } catch (err: unknown) {
       const resp = (err as { response?: { status?: number; data?: { code?: string } } })?.response;
       const code = resp?.data?.code;
@@ -83,6 +88,19 @@ export default function ValidationPage({ params }: { params: Promise<{ id: strin
   }
 
   const isDisabled = isSubmitting || success || (decision === "REJETER" && !motif?.trim());
+
+  /* Cellules d'info — identiques au tableau du modal (cf. page détail). */
+  const infoCells: { label: string; value: string }[] = demande
+    ? [
+        { label: "Employé",       value: demande.nomCompletDemandeur ?? demande.demandeurIdentifiantExterne ?? "—" },
+        { label: "Type",          value: TYPE_LABELS[demande.type ?? ""] ?? demande.type ?? "—" },
+        { label: "Date de début", value: demande.dateDebut ?? "—" },
+        { label: "Date de fin",   value: demande.dateFin ?? "—" },
+        { label: "Durée",         value: demande.nombreJours != null ? `${demande.nombreJours} jour(s)` : "—" },
+        ...(demande.destination ? [{ label: "Destination", value: demande.destination }] : []),
+        ...(demande.categorie   ? [{ label: "Catégorie",   value: demande.categorie }]   : []),
+      ]
+    : [];
 
   return (
     <div className="min-h-[calc(100vh-176px)] flex items-stretch rounded-xl overflow-hidden border border-neutral-200 shadow-card">
@@ -143,6 +161,54 @@ export default function ValidationPage({ params }: { params: Promise<{ id: strin
           </div>
 
           <div className="h-px" style={{ background: "linear-gradient(90deg,#059669,transparent 60%)" }} />
+
+          {/* ── Détails de la demande — tableau identique au modal ── */}
+          {demande && (
+            <div className="flex flex-col gap-3">
+              <p className="text-xxs text-neutral-500 tracking-[0.18em] uppercase font-ui font-semibold">
+                Détails de la demande
+              </p>
+              <div className="rounded-lg border border-neutral-200 bg-white overflow-x-auto styled-scrollbar">
+                <table className="w-full border-collapse text-left">
+                  <thead>
+                    <tr className="border-b border-neutral-100 bg-neutral-50/60">
+                      {infoCells.map((c) => (
+                        <th key={c.label} className="px-3 py-2 text-[10px] font-semibold text-neutral-400 uppercase tracking-wider whitespace-nowrap">
+                          {c.label}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      {infoCells.map((c) => (
+                        <td key={c.label} className="px-3 py-2 text-sm text-primary-800 font-bold whitespace-nowrap">
+                          {c.value}
+                        </td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {(demande.objetMission || demande.motifMission) && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {demande.objetMission && (
+                    <div className="rounded-lg border border-neutral-200 bg-white p-3">
+                      <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider block mb-1">Objet de la mission</span>
+                      <span className="text-sm text-primary-700 font-medium">{demande.objetMission}</span>
+                    </div>
+                  )}
+                  {demande.motifMission && (
+                    <div className="rounded-lg border border-neutral-200 bg-white p-3">
+                      <span className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider block mb-1">Justification / Motif</span>
+                      <span className="text-sm text-primary-700 font-medium">{demande.motifMission}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-6">
 

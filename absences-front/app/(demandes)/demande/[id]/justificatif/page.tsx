@@ -253,7 +253,7 @@ export default function JustificatifPage({ params }: { params: Promise<{ id: str
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={() => router.push(`/${id}/preview`)}
+                  onClick={() => router.push(`/demande/${id}/preview`)}
                   className="h-12 text-sm text-neutral-400"
                 >
                   Passer
@@ -275,7 +275,7 @@ export default function JustificatifPage({ params }: { params: Promise<{ id: str
                 type="button"
                 className="h-12 text-base"
                 style={{ background: cfg.accentColor }}
-                onClick={() => router.push(`/${id}/preview`)}
+                onClick={() => router.push(`/demande/${id}/preview`)}
               >
                 Continuer vers l&apos;aperçu <ArrowRight size={16} />
               </Button>

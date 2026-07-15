@@ -216,6 +216,18 @@ module.exports = {
         'card-dark':      'linear-gradient(180deg, #2C2C2C 0%, #1A1A2E 100%)',
         'overlay-dark':   'linear-gradient(135deg, rgba(44,44,44,0.88) 0%, rgba(26,26,46,0.70) 50%, rgba(44,44,44,0.92) 100%)',
       },
+      
+      /* ────────────────────────────────────────────
+       * Animations personnalisées
+       * ──────────────────────────────────────────── */
+      keyframes: {
+        shimmer: {
+          '100%': { transform: 'translateX(100%)' },
+        }
+      },
+      animation: {
+        shimmer: 'shimmer 1.5s infinite',
+      }
     },
   },
   plugins: [],

@@ -40,6 +40,14 @@ const demandes = [
     accentLight: "rgba(44,44,44,0.85)",
   },
   {
+    href: "/nouvelle/mission",
+    label: "Mission classique",
+    description: "Déplacement professionnel court",
+    image: "/Image_africaine6_resize.png",
+    accent: "#1A1A2E",
+    accentLight: "rgba(26,26,46,0.85)",
+  },
+  {
     href: "/nouvelle/conge-maternite",
     label: "Congé maternité",
     description: "Congé naissance & maternité",
@@ -67,7 +75,7 @@ export default function HomePage() {
       {/* ══════════════════════════════════════
           SECTION TITRE
           ══════════════════════════════════════ */}
-      <section className="bg-white/70 backdrop-blur-sm border-b border-neutral-200 px-8 sm:px-16 py-8">
+      <section className="bg-white/70 backdrop-blur-sm border-b border-neutral-200 px-6 lg:px-8 py-8">
         <div className="mx-auto max-w-container flex items-end justify-between gap-4">
           <div>
             <p className="text-xxs text-secondary-500 tracking-[0.2em] uppercase font-ui mb-1">
@@ -86,17 +94,16 @@ export default function HomePage() {
       {/* ══════════════════════════════════════
           GRILLE DES CARTES D'ABSENCE
           ══════════════════════════════════════ */}
-      <section className="flex-1 px-8 sm:px-16 py-10">
+      <section className="flex-1 px-6 lg:px-8 py-10">
         <div className="mx-auto max-w-container">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
 
-            {/* 4 premières cartes en grille */}
-            {demandes.slice(0, 4).map((d) => (
+            {demandes.slice(0, 5).map((d) => (
               <AbsenceCard key={d.href} {...d} />
             ))}
 
-            {/* 5ème carte + bloc décoratif côte à côte sur large */}
-            <AbsenceCard {...demandes[4]} />
+            {/* 6ème carte + bloc décoratif côte à côte sur large */}
+            <AbsenceCard {...demandes[5]} />
 
             {/* Bloc admin — discret */}
             <div className="flex flex-col justify-between rounded-lg border border-neutral-200 bg-white/80 p-6 shadow-card">
@@ -127,7 +134,7 @@ export default function HomePage() {
       {/* ══════════════════════════════════════
           FOOTER DÉCORATIF
           ══════════════════════════════════════ */}
-      <footer className="px-8 sm:px-16 py-6 bg-white/50">
+      <footer className="px-6 lg:px-8 py-6 bg-white/50">
         <div className="mx-auto max-w-container flex items-center gap-4">
           <div className="flex-1 h-px"
             style={{ background: "linear-gradient(90deg, transparent, #B8932A)" }} />

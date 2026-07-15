@@ -32,7 +32,7 @@ export function BoutonProlongation({ demandeId }: Props) {
       );
       setDone(true);
       // Rediriger vers la page de la nouvelle demande prolongation
-      setTimeout(() => router.push(`/${res.data.id}`), 1500);
+      setTimeout(() => router.push(`/demande/${res.data.id}`), 1500);
     } catch (err: unknown) {
       const code = (err as { response?: { data?: { code?: string; message?: string } } })
         ?.response?.data?.code;

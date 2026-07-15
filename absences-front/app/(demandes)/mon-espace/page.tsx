@@ -26,6 +26,9 @@ interface Absence {
   dateFin: string | null;
   nombreJours: number | null;
   statut: string;
+  demandeurNom?: string; // Peut provenir de l'API (ex: demandeur.nomComplet ou demandeurNom)
+  demandeurMatricule?: string;
+  demandeur?: { nomComplet?: string, matricule?: string };
 }
 
 const SOLDE_VIDE: Solde = { joursAcquis: 0, joursPris: 0, joursRestants: 0, exercice: new Date().getFullYear() };
@@ -64,6 +67,7 @@ const TYPE_LABELS: Record<string, { label: string; icon: LucideIcon }> = {
   CONGE_ANNUEL:    { label: "Congé annuel",         icon: TreePalm },
   CONGE_MALADIE:   { label: "Congé maladie",        icon: Stethoscope },
   PERMISSION:      { label: "Permission",           icon: ClipboardList },
+  MISSION:         { label: "Mission classique",    icon: Plane },
   MISSION_LONGUE:  { label: "Mission longue durée", icon: Plane },
   CONGE_MATERNITE: { label: "Congé maternité",      icon: Baby },
 };
@@ -82,7 +86,7 @@ export default async function MonEspacePage() {
   const brouillons = demandes.filter(d => d.statut === "BROUILLON");
 
   return (
-    <div className="flex flex-col gap-6 max-w-4xl mx-auto py-4">
+    <div className="flex flex-col gap-6 w-full py-4">
 
       {/* Hero */}
       <div className="relative overflow-hidden rounded-xl" style={{ minHeight: "130px" }}>
@@ -93,7 +97,7 @@ export default async function MonEspacePage() {
             <span className="text-xxs text-gold-300 tracking-[0.2em] uppercase font-ui">Mon espace — AFB</span>
             <h1 className="font-heading text-3xl font-bold text-white">Tableau de bord</h1>
           </div>
-          <Button asChild className="flex-shrink-0">
+          <Button asChild className="flex-shrink-0 bg-white/20 backdrop-blur-md text-white border border-white/30 hover:bg-white/30 shadow-none">
             <Link href="/">+ Nouvelle demande</Link>
           </Button>
         </div>
@@ -118,6 +122,24 @@ export default async function MonEspacePage() {
               </div>
             ))}
           </div>
+          {solde.joursAcquis > 0 && (
+            <div className="mt-6 flex flex-col gap-2">
+              <div className="flex justify-between text-xs font-semibold text-neutral-500">
+                <span>Consommation : {Math.round((solde.joursPris / solde.joursAcquis) * 100)}%</span>
+                <span>{solde.joursRestants} jours restants</span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-neutral-100 overflow-hidden flex">
+                <div 
+                  className="h-full bg-[#C41E22] transition-all duration-500" 
+                  style={{ width: `${(solde.joursPris / solde.joursAcquis) * 100}%` }}
+                />
+                <div 
+                  className="h-full bg-[#059669] transition-all duration-500" 
+                  style={{ width: `${(solde.joursRestants / solde.joursAcquis) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -142,9 +164,36 @@ export default async function MonEspacePage() {
         ))}
       </div>
 
+      {/* Actions rapides */}
+      <div className="grid grid-cols-2 gap-3">
+        <Link href="/" className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-4 hover:border-gold-400 transition-colors">
+          <Plus size={24} className="text-gold-600 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-primary-500">Nouvelle demande</p>
+            <p className="text-xs text-neutral-400">Créer une absence</p>
+          </div>
+        </Link>
+        <Link href="/mes-demandes" className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-4 hover:border-gold-400 transition-colors">
+          <span className="text-2xl text-gold-600 flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2" /><path d="M9 14v.01" /><path d="M12 14v.01" /><path d="M15 14v.01" /></svg>
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-primary-500">Mes demandes</p>
+            <p className="text-xs text-neutral-400">Voir l&apos;historique complet</p>
+          </div>
+        </Link>
+        <Link href="/backup" className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-4 hover:border-gold-400 transition-colors col-span-2">
+          <Users size={24} className="text-gold-600 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-primary-500">Mon rôle Back-up</p>
+            <p className="text-xs text-neutral-400">Demandes où je suis désigné comme Back-up d&apos;un collègue</p>
+          </div>
+        </Link>
+      </div>
+
       {/* Demandes à valider (section manager/validateur) */}
       {aValider.length > 0 && (
-        <div className="relative overflow-hidden rounded-xl border-2 border-secondary-400 bg-secondary-50 px-5 py-4 flex flex-col gap-3">
+        <div className="relative overflow-hidden rounded-xl border-2 border-secondary-400 bg-secondary-50 px-5 py-4 flex flex-col gap-4">
           <div className="flex items-center gap-3">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary-500 text-white text-base font-bold flex-shrink-0">
               {aValider.length}
@@ -158,54 +207,33 @@ export default async function MonEspacePage() {
               <p className="text-xs text-secondary-500">Votre action est requise pour traiter ces demandes.</p>
             </div>
           </div>
-          <div className="flex flex-col gap-2">
-            {aValider.map(d => {
-              const type = TYPE_LABELS[d.type] ?? { label: d.type, icon: HelpCircle };
-              return (
-                <Link key={d.id} href={`/${d.id}`}
-                  className="flex items-center justify-between rounded-lg border border-secondary-200 bg-white px-4 py-3 hover:bg-secondary-50 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <type.icon size={20} className="text-secondary-600 flex-shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-primary-500">{type.label}</p>
-                      <p className="text-xs text-neutral-400">{d.dateDebut} → {d.dateFin ?? "—"} · {d.nombreJours ?? "?"} j</p>
-                    </div>
-                  </div>
-                  <span className="text-xs font-semibold text-secondary-600 flex items-center gap-1">
-                    Valider →
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
+          <DemandeTable demandes={aValider} actionType="validate" showDemandeur={true} />
         </div>
       )}
 
       {/* Demandes en cours */}
       {enCours.length > 0 && (
-        <Card>
-          <CardHeader><CardTitle className="text-base flex items-center gap-2"><Hourglass size={18} /> Demandes en cours de traitement</CardTitle></CardHeader>
-          <CardContent className="flex flex-col gap-2">
-            {enCours.map(d => <DemandeLigne key={d.id} d={d} />)}
-          </CardContent>
+        <Card className="overflow-hidden">
+          <CardHeader className="bg-white/50 border-b border-neutral-100 pb-4">
+            <CardTitle className="text-base flex items-center gap-2"><Hourglass size={18} className="text-gold-500" /> Demandes en cours de traitement</CardTitle>
+          </CardHeader>
+          <DemandeTable demandes={enCours} />
         </Card>
       )}
 
       {/* Toutes les demandes */}
-      <Card>
-        <CardHeader>
+      <Card className="overflow-hidden">
+        <CardHeader className="bg-white/50 border-b border-neutral-100 pb-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-base flex items-center gap-2"><ClipboardList size={18} /> Toutes mes demandes</CardTitle>
-            <Link href="/mes-demandes" className="text-xs text-gold-600 hover:underline">Voir tout →</Link>
+            <CardTitle className="text-base flex items-center gap-2"><ClipboardList size={18} className="text-gold-500" /> Toutes mes demandes</CardTitle>
+            <Link href="/mes-demandes" className="text-xs font-semibold text-gold-600 hover:text-gold-700 hover:underline">Voir tout →</Link>
           </div>
         </CardHeader>
-        <CardContent className="flex flex-col gap-2">
-          {demandes.length === 0 ? (
-            <p className="text-sm text-neutral-400 text-center py-6">Aucune demande pour l&apos;instant.</p>
-          ) : (
-            demandes.slice(0, 5).map(d => <DemandeLigne key={d.id} d={d} />)
-          )}
-        </CardContent>
+        {demandes.length === 0 ? (
+          <p className="text-sm text-neutral-400 text-center py-8">Aucune demande pour l&apos;instant.</p>
+        ) : (
+          <DemandeTable demandes={demandes.slice(0, 5)} />
+        )}
       </Card>
 
       {/* Espaces privilégiés (RH) */}
@@ -237,81 +265,89 @@ export default async function MonEspacePage() {
         </div>
       )}
 
-      {/* Actions rapides */}
-      <div className="grid grid-cols-2 gap-3">
-        <Link href="/" className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-4 hover:border-gold-400 transition-colors">
-          <Plus size={24} className="text-gold-600 flex-shrink-0" />
-          <div>
-            <p className="text-sm font-semibold text-primary-500">Nouvelle demande</p>
-            <p className="text-xs text-neutral-400">Créer une absence</p>
-          </div>
-        </Link>
-        <Link href="/mes-demandes" className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-4 hover:border-gold-400 transition-colors">
-          <span className="text-2xl">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-file-dots">
-              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path d="M14 3v4a1 1 0 0 0 1 1h4" />
-              <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2" />
-              <path d="M9 14v.01" />
-              <path d="M12 14v.01" />
-              <path d="M15 14v.01" />
-            </svg>
-          </span>
-          <div>
-            <p className="text-sm font-semibold text-primary-500">Mes demandes</p>
-            <p className="text-xs text-neutral-400">Voir l&apos;historique complet</p>
-          </div>
-        </Link>
-        <Link href="/backup" className="flex items-center gap-3 rounded-xl border border-neutral-200 bg-white px-4 py-4 hover:border-gold-400 transition-colors col-span-2">
-          <Users size={24} className="text-gold-600 flex-shrink-0" />
-          <div>
-            <p className="text-sm font-semibold text-primary-500">Mon rôle Back-up</p>
-            <p className="text-xs text-neutral-400">
-              Demandes où je suis désigné comme Back-up d&apos;un collègue
-            </p>
-          </div>
-        </Link>
-      </div>
-      {/* ══════════════════════════════════════
-                FOOTER DÉCORATIF
-                ══════════════════════════════════════ */}
-            <footer className="px-8 sm:px-16 py-6 bg-white/50">
-              <div className="mx-auto max-w-container flex items-center gap-4">
-                <div className="flex-1 h-px"
-                  style={{ background: "linear-gradient(90deg, transparent, #B8932A)" }} />
-                <Image
-                  src="/icon_afb.png"
-                  alt=""
-                  aria-hidden="true"
-                  width={20}
-                  height={20}
-                  className="opacity-40"
-                />
-                <div className="flex-1 h-px"
-                  style={{ background: "linear-gradient(90deg, #B8932A, transparent)" }} />
-              </div>
-            </footer>
     </div>
   );
 }
 
-function DemandeLigne({ d }: { d: Absence }) {
-  const type   = TYPE_LABELS[d.type] ?? { label: d.type, icon: HelpCircle };
-  const statut = STATUT_CONFIG[d.statut] ?? { label: d.statut, color: "#6B7280", bg: "#F3F4F6", icon: HelpCircle };
+function DemandeTable({ demandes, actionType = "view", showDemandeur = false }: { demandes: Absence[], actionType?: "view" | "validate", showDemandeur?: boolean }) {
   return (
-    <Link href={`/${d.id}`}
-      className="flex items-center justify-between rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3 hover:bg-neutral-100 transition-colors">
-      <div className="flex items-center gap-3">
-        <type.icon size={20} className="text-neutral-500 flex-shrink-0" />
-        <div>
-          <p className="text-sm font-medium text-primary-500">{type.label}</p>
-          <p className="text-xs text-neutral-400">{d.dateDebut} → {d.dateFin ?? "—"} · {d.nombreJours ?? "?"} j</p>
-        </div>
-      </div>
-      <span className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold"
-        style={{ background: statut.bg, color: statut.color }}>
-        <statut.icon size={12} /> {statut.label}
-      </span>
-    </Link>
+    <div className="overflow-x-auto w-full">
+      <table className="w-full text-left border-collapse">
+        <thead>
+          <tr className="bg-neutral-50/80 border-b border-neutral-100 text-xs font-semibold text-neutral-500 uppercase tracking-wider font-ui">
+            {showDemandeur && <th className="py-3 px-5 font-medium">Demandeur</th>}
+            <th className="py-3 px-5 font-medium w-1/3">Type d'absence</th>
+            <th className="py-3 px-5 font-medium">Période</th>
+            <th className="py-3 px-5 font-medium">Durée</th>
+            <th className="py-3 px-5 font-medium">Statut</th>
+            <th className="py-3 px-5 text-right font-medium">Action</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-neutral-100">
+          {demandes.map((d) => {
+            const typeKey = d.type ?? (d as any).typeAbsence ?? "";
+            const type   = TYPE_LABELS[typeKey] ?? { label: typeKey, icon: HelpCircle };
+            const statut = STATUT_CONFIG[d.statut] ?? { label: d.statut, color: "#6B7280", bg: "#F3F4F6", icon: HelpCircle };
+            const nomDemandeur = d.demandeur?.nomComplet || d.demandeurNom || "Non renseigné";
+            const matriculeDemandeur = d.demandeur?.matricule || d.demandeurMatricule || "";
+
+            /* La liste « à valider » mélange 3 statuts, chacun avec sa propre action/endpoint :
+               - EN_VALIDATION_ETAPE      → page /validation (décision d'étape)
+               - EN_VALIDATION_DRH        → page /validation-drh (décision DRH)
+               - EN_INSTRUCTION_ANALYSTE_RH (et autres) → page détail (bouton « Transmettre à la DRH »)
+               Router tout vers /validation provoque un 409 TRANSITION_ILLEGALE. */
+            const actionHref =
+              actionType !== "validate"                 ? `/demande/${d.id}`
+              : d.statut === "EN_VALIDATION_DRH"        ? `/demande/${d.id}/validation-drh`
+              : d.statut === "EN_VALIDATION_ETAPE"      ? `/demande/${d.id}/validation`
+              :                                           `/demande/${d.id}`;
+
+            return (
+              <tr key={d.id} className="group hover:bg-neutral-50 transition-colors">
+                {showDemandeur && (
+                  <td className="py-2.5 px-5 whitespace-nowrap">
+                    <p className="font-semibold text-primary-500 text-sm">{nomDemandeur}</p>
+                    {matriculeDemandeur && <p className="text-xs text-neutral-400">{matriculeDemandeur}</p>}
+                  </td>
+                )}
+                <td className="py-2.5 px-5 whitespace-nowrap">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-neutral-100 flex items-center justify-center flex-shrink-0 text-neutral-500">
+                      <type.icon size={16} />
+                    </div>
+                    <span className="font-semibold text-primary-500 text-sm">{type.label}</span>
+                  </div>
+                </td>
+                <td className="py-2.5 px-5 text-sm text-neutral-600 whitespace-nowrap">
+                  {d.dateDebut} <span className="text-neutral-400 mx-1">→</span> {d.dateFin ?? "—"}
+                </td>
+                <td className="py-2.5 px-5 text-sm text-neutral-600 whitespace-nowrap">
+                  {d.nombreJours ?? "?"} jour(s)
+                </td>
+                <td className="py-2.5 px-5 whitespace-nowrap">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold" style={{ background: statut.bg, color: statut.color }}>
+                    <statut.icon size={12} /> {statut.label}
+                  </span>
+                </td>
+                <td className="py-2.5 px-5 text-right whitespace-nowrap">
+                  <Link href={actionHref}
+                    className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md font-medium text-sm transition-colors border ${
+                      actionType === "validate"
+                        ? "text-secondary-600 hover:text-white hover:bg-secondary-600 border-secondary-200 hover:border-secondary-600"
+                        : "text-neutral-600 hover:text-gold-700 hover:bg-gold-50 border-neutral-200 hover:border-gold-400"
+                    }`}>
+                    {actionType === "validate" ? (
+                      <><CheckCircle2 size={16} /> Valider</>
+                    ) : (
+                      <><FilePen size={16} /> Détails</>
+                    )}
+                  </Link>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
   );
 }

@@ -81,7 +81,7 @@ export default function RetourAnticipePage({ params }: { params: Promise<{ id: s
         dateRetourEffective: data.dateRetourEffective,
       });
       setSuccess(true);
-      setTimeout(() => router.push(`/${id}?success=1`), 1500);
+      setTimeout(() => router.push(`/demande/${id}?success=1`), 1500);
     } catch (err: unknown) {
       const code = (err as { response?: { data?: { code?: string } } })
         ?.response?.data?.code;
@@ -227,7 +227,7 @@ export default function RetourAnticipePage({ params }: { params: Promise<{ id: s
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => router.push(`/${id}`)}
+                onClick={() => router.push(`/demande/${id}`)}
                 className="flex-1 h-12"
               >
                 Annuler

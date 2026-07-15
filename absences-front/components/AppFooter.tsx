@@ -185,7 +185,7 @@ export default function AppFooter() {
                       Votre banque, votre avenir
                     </p>
                     <p className="text-xxs text-gold-300 font-ui tracking-wider uppercase mt-0.5">
-                      Africa Financial Bank
+                      AfrilandFirstBank
                     </p>
                   </div>
                 </div>
@@ -233,7 +233,7 @@ export default function AppFooter() {
                   className="opacity-40"
                 />
                 <p className="text-xs text-neutral-500 font-ui">
-                  © {annee} Africa Financial Bank — Tous droits réservés
+                  © {annee} Afrilandfirstbank — Tous droits réservés
                 </p>
               </div>
               <p className="text-xxs text-neutral-600 font-ui tracking-wider uppercase">

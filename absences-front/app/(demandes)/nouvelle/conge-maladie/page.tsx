@@ -1,16 +1,16 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { FormField } from "@/components/FormField";
 import { Button } from "@/components/ui/button";
 import FormPageLayout from "@/components/FormPageLayout";
-import apiClient from "@/lib/api/client";
 import { BackupSelector } from "@/components/BackupSelector";
-import { ArrowRight, Paperclip, Stethoscope } from "lucide-react";
+import { ArrowRight, Paperclip, Stethoscope, FileText, FolderOpen } from "lucide-react";
+import { useSoumission } from "@/lib/hooks/useSoumission";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const schema = z
   .object({
@@ -26,36 +26,39 @@ const schema = z
 type FormData = z.infer<typeof schema>;
 
 export default function CongeMaladiePage() {
-  const router = useRouter();
-  const [erreurApi, setErreurApi] = useState<string | null>(null);
-
   const {
     register,
     handleSubmit,
     watch,
     setValue,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
+  const {
+    soumettre,
+    apiError,
+    isSubmitting
+  } = useSoumission();
+
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
+
   async function onSubmit(data: FormData) {
-    setErreurApi(null);
-    try {
-      const res = await apiClient.post("/api/v5/demandes", {
-        type:      "CONGE_MALADIE",
-        dateDebut: data.dateDebut,
-        dateFin:   data.dateFin,
-        backupIdentifiantExterne: data.backupIdentifiantExterne,
-      });
-      // Redirige vers la page justificatif dédiée (certificat médical obligatoire)
-      router.push(`/${res.data.id}/justificatif`);
-    } catch (err: unknown) {
-      const code = (err as { response?: { data?: { code?: string } } })
-        ?.response?.data?.code;
-      if (code === "CHEVAUCHEMENT_DATES")
-        setErreurApi("Une demande existe déjà sur cette période.");
-      else
-        setErreurApi("Une erreur est survenue. Veuillez réessayer.");
+    setLocalError(null);
+    if (!file) {
+      setLocalError("Le certificat médical est obligatoire.");
+      return;
     }
+    await soumettre(
+      {
+        type: "CONGE_MALADIE",
+        dateDebut: data.dateDebut,
+        dateFin: data.dateFin,
+        backupIdentifiantExterne: data.backupIdentifiantExterne,
+      },
+      file ? { file, typePiece: "CERTIFICAT_MEDICAL" } : undefined
+    );
   }
 
   return (
@@ -64,7 +67,7 @@ export default function CongeMaladiePage() {
       accentColor="#1A1A2E"
       badge="Nouvelle demande"
       title="Congé maladie"
-      subtitle="Arrêt médical certifié. Joignez votre certificat médical à l'étape suivante — il sera transmis automatiquement au service RH."
+      subtitle="Arrêt médical certifié. Veuillez joindre votre certificat médical ci-dessous."
       icon={<Stethoscope size={24} />}
     >
       {/* Back-up optionnel */}
@@ -98,26 +101,52 @@ export default function CongeMaladiePage() {
         />
       </div>
 
-      {/* Info certificat */}
-      <div className="flex items-start gap-3 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3">
-        <Paperclip size={18} className="text-blue-600 flex-shrink-0 mt-0.5" />
-        <p className="text-xs text-blue-700 leading-relaxed">
-          Un <strong>certificat médical</strong> vous sera demandé à l&apos;étape suivante.
-          Préparez-le en format PDF ou image.
-        </p>
+      <div className="flex flex-col gap-2 mt-4">
+        <label className="text-sm font-medium text-neutral-700">Certificat médical (Obligatoire)</label>
+        <div
+          className="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-6 text-center transition-colors cursor-pointer"
+          style={{
+            borderColor: file ? "#1A1A2E" : "#D1D5DB",
+            background:  file ? "#1A1A2E0A" : "#FAFAFA",
+          }}
+        >
+          <input
+            ref={fileRef}
+            type="file"
+            accept=".pdf,.jpg,.jpeg,.png"
+            className="absolute inset-0 opacity-0 cursor-pointer"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+          />
+          <div className="flex flex-col items-center gap-3 pointer-events-none">
+            {file ? (
+              <>
+                <FileText size={32} style={{ color: "#1A1A2E" }} />
+                <p className="text-sm font-semibold" style={{ color: "#1A1A2E" }}>{file.name}</p>
+              </>
+            ) : (
+              <>
+                <FolderOpen size={32} className="text-neutral-400" />
+                <p className="text-sm text-neutral-500">Glissez votre fichier ici ou cliquez pour parcourir</p>
+              </>
+            )}
+          </div>
+        </div>
       </div>
 
-      {erreurApi && (
-        <p className="text-xs text-secondary-500 font-medium">{erreurApi}</p>
+      {(apiError || localError) && (
+        <Alert variant="destructive" className="mt-4">
+          <AlertDescription>{apiError || localError}</AlertDescription>
+        </Alert>
       )}
+
 
       <Button
         type="button"
         disabled={isSubmitting}
-        className="h-12 text-base mt-2"
+        className="h-12 text-base mt-4"
         onClick={handleSubmit(onSubmit)}
       >
-        {isSubmitting ? "Envoi en cours…" : "Continuer →"}
+        {isSubmitting ? "Envoi en cours…" : "Soumettre la demande"}
       </Button>
     </FormPageLayout>
   );

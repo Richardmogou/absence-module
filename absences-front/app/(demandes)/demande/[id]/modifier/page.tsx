@@ -95,7 +95,7 @@ export default function ModifierPage({ params }: { params: Promise<{ id: string 
         nombreJours: isMaternite ? 98 : isMission ? (joursCalcules ?? null) : (data.nombreJours ? Number(data.nombreJours) : null),
       });
       setSuccess(true);
-      setTimeout(() => router.push(`/${id}`), 1500);
+      setTimeout(() => router.push(`/demande/${id}`), 1500);
     } catch (err: unknown) {
       const code = (err as { response?: { data?: { code?: string } } })
         ?.response?.data?.code;
@@ -241,7 +241,7 @@ export default function ModifierPage({ params }: { params: Promise<{ id: string 
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => router.push(`/${id}`)}
+                onClick={() => router.push(`/demande/${id}`)}
                 className="flex-1 h-12"
               >
                 Annuler

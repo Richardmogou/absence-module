@@ -221,7 +221,7 @@ export default async function AdminDashboardPage() {
           {toutes.slice(0, 10).map(d => {
             const statut = STATUT_CONFIG[d.statut] ?? { label: d.statut, color: "#6B7280", bg: "#F3F4F6", icon: HelpCircle };
             return (
-              <Link key={d.id} href={`/${d.id}`}
+              <Link key={d.id} href={`/demande/${d.id}`}
                 className="flex items-center justify-between rounded-lg border border-neutral-100 bg-neutral-50 px-4 py-3 hover:bg-neutral-100 transition-colors">
                 <div>
                   <p className="text-sm font-medium text-primary-500">

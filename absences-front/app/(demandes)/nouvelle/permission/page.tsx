@@ -1,16 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { FormField } from "@/components/FormField";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import FormPageLayout from "@/components/FormPageLayout";
 import apiClient from "@/lib/api/client";
 import { BackupSelector } from "@/components/BackupSelector";
-import { ArrowRight, Paperclip, Timer } from "lucide-react";
+import { Paperclip, Timer, FileText, FolderOpen } from "lucide-react";
+import { useSoumission } from "@/lib/hooks/useSoumission";
 
 interface MotifPermission {
   codeMotif: string;
@@ -29,21 +30,29 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 export default function PermissionPage() {
-  const router = useRouter();
   const [motifs, setMotifs]         = useState<MotifPermission[]>([]);
   const [loadingMotifs, setLoading] = useState(true);
-  const [erreurApi, setErreurApi]   = useState<string | null>(null);
+  const [localError, setLocalError]   = useState<string | null>(null);
 
   const {
     register, handleSubmit, watch, setValue,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
+
+  const {
+    soumettre,
+    apiError,
+    isSubmitting
+  } = useSoumission();
+
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [file, setFile] = useState<File | null>(null);
 
   useEffect(() => {
     apiClient
       .get("/api/v5/referentiel/bareme-permission")
       .then((r) => setMotifs(r.data))
-      .catch(() => setErreurApi("Impossible de charger les motifs. Rechargez la page."))
+      .catch(() => setLocalError("Impossible de charger les motifs. Rechargez la page."))
       .finally(() => setLoading(false));
   }, []);
 
@@ -53,9 +62,14 @@ export default function PermissionPage() {
   const justificatifRequis   = motifSelectionne?.justificatifRequis ?? false;
 
   async function onSubmit(data: FormData) {
-    setErreurApi(null);
-    try {
-      const res = await apiClient.post("/api/v5/demandes", {
+    setLocalError(null);
+    if (justificatifRequis && !file) {
+      setLocalError("Le justificatif est obligatoire pour ce motif.");
+      return;
+    }
+    
+    await soumettre(
+      {
         type:            "PERMISSION",
         dateDebut:       data.dateDebut,
         motifPermission: data.codeMotif,
@@ -63,22 +77,9 @@ export default function PermissionPage() {
         ...(estAutreMotif && data.nombreJours
           ? { nombreJours: Number(data.nombreJours) }
           : {}),
-      });
-      // justificatif requis → page upload dédiée, sinon → preview
-      router.push(justificatifRequis
-        ? `/${res.data.id}/justificatif`
-        : `/${res.data.id}/preview`
-      );
-    } catch (err: unknown) {
-      const code = (err as { response?: { data?: { code?: string } } })
-        ?.response?.data?.code;
-      if (code === "MOTIF_INCONNU")
-        setErreurApi("Ce motif n'est pas reconnu par le référentiel RH.");
-      else if (code === "MOTIF_REQUIS")
-        setErreurApi("Le motif de permission est obligatoire.");
-      else
-        setErreurApi("Une erreur est survenue. Veuillez réessayer.");
-    }
+      },
+      (justificatifRequis && file) ? { file, typePiece: "JUSTIFICATIF_PERMISSION" } : undefined
+    );
   }
 
   return (
@@ -89,7 +90,7 @@ export default function PermissionPage() {
       title="Permission"
       subtitle="Absence courte durée autorisée. Sélectionnez le motif réglementaire — la durée est fixée automatiquement par le barème RH."
       icon={
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-file-dots"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2" /><path d="M9 14v.01" /><path d="M12 14v.01" /><path d="M15 14v.01" /></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-file-dots"><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2" /><path d="M9 14v.01" /><path d="M12 14v.01" /><path d="M15 14v.01" /></svg>
       }
     >
       <FormField
@@ -101,7 +102,7 @@ export default function PermissionPage() {
       />
 
       {/* Select motif */}
-      <div className="flex flex-col gap-1.5">
+      <div className="flex flex-col gap-1.5 mt-4">
         <label htmlFor="codeMotif" className="text-sm font-medium text-neutral-700">
           Motif de permission
         </label>
@@ -127,7 +128,7 @@ export default function PermissionPage() {
 
       {/* Durée accordée automatiquement */}
       {motifSelectionne && !estAutreMotif && (
-        <div className="flex items-center justify-between rounded-lg border border-gold-200 bg-gold-50 px-4 py-3">
+        <div className="flex items-center justify-between rounded-lg border border-gold-200 bg-gold-50 px-4 py-3 mt-4">
           <div className="flex items-center gap-3">
             <Timer size={20} className="text-gold-600 flex-shrink-0" />
             <div>
@@ -150,19 +151,21 @@ export default function PermissionPage() {
 
       {/* Durée libre si AUTRE_MOTIF */}
       {estAutreMotif && (
-        <FormField
-          id="nombreJours"
-          label="Durée souhaitée (jours)"
-          type="number"
-          min="1"
-          placeholder="ex: 2"
-          error={errors.nombreJours}
-          {...register("nombreJours")}
-        />
+        <div className="mt-4">
+          <FormField
+            id="nombreJours"
+            label="Durée souhaitée (jours)"
+            type="number"
+            min="1"
+            placeholder="ex: 2"
+            error={errors.nombreJours}
+            {...register("nombreJours")}
+          />
+        </div>
       )}
 
       {/* Back-up optionnel */}
-      <div className="flex flex-col gap-1.5 mt-2">
+      <div className="flex flex-col gap-1.5 mt-4">
         <label className="text-sm font-medium text-neutral-700">
           Identifiant du Back-up (collègue de même grade)
         </label>
@@ -177,28 +180,54 @@ export default function PermissionPage() {
 
       {/* Info justificatif si requis */}
       {justificatifRequis && (
-        <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-          <Paperclip size={18} className="text-amber-600 flex-shrink-0 mt-0.5" />
-          <p className="text-xs text-amber-700 leading-relaxed">
-            Ce motif requiert un <strong>justificatif</strong>. Vous pourrez le déposer
-            à l&apos;étape suivante avant la soumission.
-          </p>
+        <div className="flex flex-col gap-2 mt-4">
+          <label className="text-sm font-medium text-neutral-700">Justificatif (Obligatoire)</label>
+          <div
+            className="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-6 text-center transition-colors cursor-pointer"
+            style={{
+              borderColor: file ? "#B8932A" : "#D1D5DB",
+              background:  file ? "#B8932A0A" : "#FAFAFA",
+            }}
+          >
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".pdf,.jpg,.jpeg,.png"
+              className="absolute inset-0 opacity-0 cursor-pointer"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            />
+            <div className="flex flex-col items-center gap-3 pointer-events-none">
+              {file ? (
+                <>
+                  <FileText size={32} style={{ color: "#B8932A" }} />
+                  <p className="text-sm font-semibold" style={{ color: "#B8932A" }}>{file.name}</p>
+                </>
+              ) : (
+                <>
+                  <FolderOpen size={32} className="text-neutral-400" />
+                  <p className="text-sm text-neutral-500">Glissez votre fichier ici ou cliquez pour parcourir</p>
+                </>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Erreur API */}
-      {erreurApi && (
-        <p className="text-xs text-secondary-500 font-medium">{erreurApi}</p>
+      {(apiError || localError) && (
+        <Alert variant="destructive" className="mt-4">
+          <AlertDescription>{apiError || localError}</AlertDescription>
+        </Alert>
       )}
+
 
       <Button
         type="button"
         disabled={isSubmitting || loadingMotifs}
-        className="h-12 text-base mt-2"
+        className="h-12 text-base mt-4 text-white"
         style={{ background: "#B8932A" }}
         onClick={handleSubmit(onSubmit)}
       >
-        {isSubmitting ? "Envoi en cours…" : <>Continuer <ArrowRight size={16} /></>}
+        {isSubmitting ? "Envoi en cours…" : "Soumettre la demande"}
       </Button>
     </FormPageLayout>
   );

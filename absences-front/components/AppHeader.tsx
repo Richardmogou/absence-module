@@ -12,6 +12,7 @@ import { federatedLogout } from "@/app/actions/auth";
 export default function AppHeader() {
   const { data: session } = useSession();
   const user = session?.user;
+  const userRoles = (session as any)?.roles || [];
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -41,10 +42,15 @@ export default function AppHeader() {
     { href: "/mon-espace", label: "Mon espace", icon: LayoutDashboard },
     { href: "/mes-demandes", label: "Mes demandes", icon: FolderOpen },
     { href: "/validation-file", label: "File validation", icon: FileCheck },
-    { href: "/analyste-rh", label: "Analyste RH", icon: Users },
-    { href: "/drh", label: "DRH", icon: Briefcase },
-    { href: "/admin/dashboard", label: "Admin", icon: Shield },
+    { href: "/analyste-rh", label: "Analyste RH", icon: Users, roles: ["ANALYSTE_RH", "ADMIN_RH"] },
+    { href: "/drh", label: "DRH", icon: Briefcase, roles: ["DRH", "ADMIN_RH"] },
+    { href: "/admin/dashboard", label: "Admin", icon: Shield, roles: ["ADMIN_RH"] },
   ];
+
+  const visibleLinks = NAV_LINKS.filter((link) => {
+    if (!link.roles) return true;
+    return link.roles.some((r) => userRoles.includes(r));
+  });
 
   // Le grade de l'utilisateur (à adapter selon les données de session disponibles)
   const userGrade = "Collaborateur";
@@ -112,7 +118,7 @@ export default function AppHeader() {
                   </div>
                   
                   <nav className="flex flex-col px-2">
-                    {NAV_LINKS.map((link) => (
+                    {visibleLinks.map((link) => (
                       <Link
                         key={link.href}
                         href={link.href}
@@ -140,17 +146,7 @@ export default function AppHeader() {
                 </div>
               )}
             </div>
-          ) : (
-            <Link href="/connexion">
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-primary-500/40 text-primary-500 hover:bg-primary-50 text-xs h-8"
-              >
-                Connexion
-              </Button>
-            </Link>
-          )}
+          ) : null}
         </div>
       </div>
 

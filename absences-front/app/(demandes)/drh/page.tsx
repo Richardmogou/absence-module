@@ -152,10 +152,10 @@ export default function DRHPage() {
                 {/* Actions */}
                 <div className="flex gap-3 flex-wrap pt-1">
                   <Button asChild size="sm" style={{ background: "#B8932A" }}>
-                    <Link href={`/${d.id}/validation-drh`}><Landmark size={14} /> Statuer</Link>
+                    <Link href={`/demande/${d.id}/validation-drh`}><Landmark size={14} /> Statuer</Link>
                   </Button>
                   <Button asChild size="sm" variant="outline">
-                    <Link href={`/${d.id}`}>Voir le détail</Link>
+                    <Link href={`/demande/${d.id}`}>Voir le détail</Link>
                   </Button>
                 </div>
               </div>

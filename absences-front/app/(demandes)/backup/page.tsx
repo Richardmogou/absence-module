@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,6 +21,8 @@ interface Absence {
   statut: string;
   demandeurIdentifiantExterne: string;
   backupIdentifiantExterne: string | null;
+  /** Vrai uniquement quand l'étape courante est l'étape Back-up de cet utilisateur. */
+  estMonTourDeValider?: boolean;
 }
 
 const TYPE_LABELS: Record<string, { label: string; icon: LucideIcon; color: string }> = {
@@ -47,18 +49,27 @@ const KENTE = "repeating-linear-gradient(90deg,#C41E22 0px,#C41E22 8px,#B8932A 8
 export default function BackupDashboardPage() {
   const [demandes, setDemandes]   = useState<Absence[]>([]);
   const [loading, setLoading]     = useState(true);
+  const [error, setError]         = useState(false);
 
-  useEffect(() => {
+  const chargerDemandes = useCallback(() => {
+    setLoading(true);
+    setError(false);
     apiClient
       .get("/api/v5/demandes/moi/backup")
-      .then(r => setDemandes(r.data))
+      // #3 : garde-fou si l'API ne renvoie pas un tableau (erreur enveloppée, pagination…)
+      .then(r => setDemandes(Array.isArray(r.data) ? r.data : []))
+      // #1 : on distingue « échec » de « aucune donnée »
+      .catch(() => setError(true))
       .finally(() => setLoading(false));
   }, []);
 
-  // Séparation : demandes nécessitant ma validation vs absences en cours où je suis Back-up actif
-  const aValider   = demandes.filter(d => d.statut === "EN_VALIDATION_ETAPE");
+  useEffect(() => { chargerDemandes(); }, [chargerDemandes]);
+
+  // Séparation : demandes où c'est vraiment MON tour de valider (étape Back-up) vs
+  // absences en cours où je suis Back-up actif vs le reste (catch-all → rien ne disparaît).
+  const aValider   = demandes.filter(d => d.estMonTourDeValider);
   const enCours    = demandes.filter(d => d.statut === "VALIDEE");
-  const historique = demandes.filter(d => !["EN_VALIDATION_ETAPE", "VALIDEE"].includes(d.statut));
+  const historique = demandes.filter(d => !d.estMonTourDeValider && d.statut !== "VALIDEE");
 
   return (
     <div className="flex flex-col gap-6 max-w-4xl mx-auto py-4">
@@ -127,11 +138,11 @@ export default function BackupDashboardPage() {
               <AlertTriangle size={18} className="text-amber-600 flex-shrink-0" />
               <p className="text-xs text-amber-700 leading-relaxed">
                 Ces demandes nécessitent votre validation en tant que Back-up <strong>avant</strong> de
-                poursuivre le circuit RH. Délai conseillé : <strong>2 jours ouvrés</strong>.
+                poursuivre le circuit RH. Délai conseillé : <strong>2 jours calendaires</strong>.
               </p>
             </div>
             {aValider.map(d => (
-              <DemandeCarte key={d.id} d={d} actionLabel={<><CheckCircle2 size={14} /> Valider en tant que Back-up</>} actionHref={`/${d.id}/validation`} highlight />
+              <DemandeCarte key={d.id} d={d} actionLabel={<><CheckCircle2 size={14} /> Valider en tant que Back-up</>} actionHref={`/demande/${d.id}/validation`} highlight />
             ))}
           </CardContent>
         </Card>
@@ -153,7 +164,7 @@ export default function BackupDashboardPage() {
               </p>
             </div>
             {enCours.map(d => (
-              <DemandeCarte key={d.id} d={d} actionLabel="Voir le détail" actionHref={`/${d.id}`} />
+              <DemandeCarte key={d.id} d={d} actionLabel="Voir le détail" actionHref={`/demande/${d.id}`} />
             ))}
           </CardContent>
         </Card>
@@ -167,14 +178,30 @@ export default function BackupDashboardPage() {
           </CardHeader>
           <CardContent className="flex flex-col gap-2">
             {historique.map(d => (
-              <DemandeCarte key={d.id} d={d} actionLabel="Voir" actionHref={`/${d.id}`} compact />
+              <DemandeCarte key={d.id} d={d} actionLabel="Voir" actionHref={`/demande/${d.id}`} compact />
             ))}
           </CardContent>
         </Card>
       )}
 
+      {/* État d'erreur (#1) */}
+      {!loading && error && (
+        <div className="flex flex-col items-center gap-4 py-16 rounded-xl border-2 border-dashed border-red-200 bg-red-50/40">
+          <AlertTriangle size={48} className="text-red-300" />
+          <div className="text-center">
+            <p className="font-heading text-lg font-semibold text-red-700">
+              Impossible de charger vos demandes Back-up
+            </p>
+            <p className="text-sm text-neutral-400 mt-1">
+              Une erreur s&apos;est produite. Vérifiez votre connexion, puis réessayez.
+            </p>
+          </div>
+          <Button variant="outline" onClick={chargerDemandes}>Réessayer</Button>
+        </div>
+      )}
+
       {/* État vide */}
-      {!loading && demandes.length === 0 && (
+      {!loading && !error && demandes.length === 0 && (
         <div className="flex flex-col items-center gap-4 py-16 rounded-xl border-2 border-dashed border-neutral-200">
           <Users size={48} className="text-neutral-300" />
           <div className="text-center">

@@ -3,17 +3,13 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useState, useRef } from "react";
 import { FormField } from "@/components/FormField";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import FormPageLayout from "@/components/FormPageLayout";
 import { BackupSelector } from "@/components/BackupSelector";
-import { AlertTriangle, Plane, FileText, FolderOpen } from "lucide-react";
-import Link from "next/link";
+import { Plane } from "lucide-react";
 import { useSoumission } from "@/lib/hooks/useSoumission";
-
-const DUREE_MIN_JOURS = 15;
 
 const schema = z
   .object({
@@ -41,7 +37,7 @@ function calculerJours(dateDebut: string, dateFin: string): number {
   return Math.max(0, diff);
 }
 
-export default function MissionLonguePage() {
+export default function MissionPage() {
   const {
     register, handleSubmit, watch, setValue,
     formState: { errors },
@@ -49,7 +45,6 @@ export default function MissionLonguePage() {
 
   const [dateDebut, dateFin] = watch(["dateDebut", "dateFin"]);
   const nombreJours = calculerJours(dateDebut, dateFin);
-  const dureeValide = nombreJours >= DUREE_MIN_JOURS;
 
   const {
     soumettre,
@@ -57,32 +52,19 @@ export default function MissionLonguePage() {
     isSubmitting
   } = useSoumission();
 
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [file, setFile] = useState<File | null>(null);
-  const [localError, setLocalError] = useState<string | null>(null);
-
   async function onSubmit(data: FormData) {
-    if (!dureeValide) return;
-    setLocalError(null);
-    if (!file) {
-      setLocalError("L'ordre de mission est obligatoire.");
-      return;
-    }
     const jours = calculerJours(data.dateDebut, data.dateFin);
-    await soumettre(
-      {
-        type:        "MISSION_LONGUE",
-        dateDebut:   data.dateDebut,
-        dateFin:     data.dateFin,
-        nombreJours: jours,
-        objetMission: data.objetMission,
-        motifMission: data.motifMission,
-        destination: data.destination,
-        categorie: data.categorie,
-        backupIdentifiantExterne: data.backupIdentifiantExterne,
-      },
-      file ? { file, typePiece: "ORDRE_DE_MISSION" } : undefined
-    );
+    await soumettre({
+      type:        "MISSION",
+      dateDebut:   data.dateDebut,
+      dateFin:     data.dateFin,
+      nombreJours: jours,
+      objetMission: data.objetMission,
+      motifMission: data.motifMission,
+      destination: data.destination,
+      categorie: data.categorie,
+      backupIdentifiantExterne: data.backupIdentifiantExterne,
+    });
   }
 
   return (
@@ -90,8 +72,8 @@ export default function MissionLonguePage() {
       image="/Image_africaine5_resize.png"
       accentColor="#2C2C2C"
       badge="Nouvelle demande"
-      title="Mission longue durée"
-      subtitle="Déplacement professionnel étendu (≥ 15 jours). Déclenche une validation renforcée incluant la Direction Générale pour les agents."
+      title="Mission"
+      subtitle="Déplacement professionnel classique. Un ordre de mission sera généré à l'issue des validations."
       icon={<Plane size={24} />}
     >
       <div className="grid grid-cols-2 gap-4">
@@ -113,41 +95,19 @@ export default function MissionLonguePage() {
 
       {nombreJours > 0 && (
         <div
-          className="flex items-center justify-between rounded-lg border px-4 py-3 transition-colors"
-          style={{
-            borderColor: dureeValide ? "#2C2C2C" : "#DC2626",
-            background:  dureeValide ? "#F6F6F6"  : "#FEF2F2",
-          }}
+          className="flex items-center justify-between rounded-lg border px-4 py-3 transition-colors border-[#2C2C2C] bg-[#F6F6F6]"
         >
           <div className="flex items-center gap-3">
-            {dureeValide
-              ? <Plane size={20} className="flex-shrink-0" style={{ color: "#2C2C2C" }} />
-              : <AlertTriangle size={20} className="flex-shrink-0" style={{ color: "#DC2626" }} />}
+            <Plane size={20} className="flex-shrink-0 text-[#2C2C2C]" />
             <div>
-              <p
-                className="text-xs uppercase tracking-wider font-ui font-semibold"
-                style={{ color: dureeValide ? "#2C2C2C" : "#DC2626" }}
-              >
+              <p className="text-xs uppercase tracking-wider font-ui font-semibold text-[#2C2C2C]">
                 Durée calculée
               </p>
-              <p
-                className="text-lg font-heading font-bold"
-                style={{ color: dureeValide ? "#2C2C2C" : "#DC2626" }}
-              >
+              <p className="text-lg font-heading font-bold text-[#2C2C2C]">
                 {nombreJours} jour{nombreJours > 1 ? "s" : ""}
               </p>
             </div>
           </div>
-          {!dureeValide && (
-            <div className="flex flex-col items-end gap-2">
-              <span className="text-xs text-secondary-600 font-medium">
-                Minimum {DUREE_MIN_JOURS} jours requis
-              </span>
-              <Link href="/nouvelle/mission" className="text-sm font-semibold text-primary-600 underline">
-                Passer en Mission Classique ?
-              </Link>
-            </div>
-          )}
         </div>
       )}
 
@@ -211,48 +171,16 @@ export default function MissionLonguePage() {
         )}
       </div>
 
-      <div className="flex flex-col gap-2 mt-4">
-        <label className="text-sm font-medium text-neutral-700">Ordre de mission (Obligatoire)</label>
-        <div
-          className="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-6 text-center transition-colors cursor-pointer"
-          style={{
-            borderColor: file ? "#2C2C2C" : "#D1D5DB",
-            background:  file ? "#2C2C2C0A" : "#FAFAFA",
-          }}
-        >
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".pdf,.jpg,.jpeg,.png"
-            className="absolute inset-0 opacity-0 cursor-pointer"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          />
-          <div className="flex flex-col items-center gap-3 pointer-events-none">
-            {file ? (
-              <>
-                <FileText size={32} style={{ color: "#2C2C2C" }} />
-                <p className="text-sm font-semibold" style={{ color: "#2C2C2C" }}>{file.name}</p>
-              </>
-            ) : (
-              <>
-                <FolderOpen size={32} className="text-neutral-400" />
-                <p className="text-sm text-neutral-500">Glissez votre fichier ici ou cliquez pour parcourir</p>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {(apiError || localError) && (
+      {apiError && (
         <Alert variant="destructive" className="mt-4">
-          <AlertDescription>{apiError || localError}</AlertDescription>
+          <AlertDescription>{apiError}</AlertDescription>
         </Alert>
       )}
 
 
       <Button
         type="button"
-        disabled={isSubmitting || !dureeValide}
+        disabled={isSubmitting}
         className="h-12 text-base mt-4"
         onClick={handleSubmit(onSubmit)}
       >

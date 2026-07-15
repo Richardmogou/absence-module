@@ -108,9 +108,9 @@ export default function ValidationFilePage() {
                 </div>
                 <div className="flex flex-col gap-2 items-end">
                   <Button asChild size="sm">
-                    <Link href={`/${d.id}/validation`}><CheckCircle2 size={14} /> Décider</Link>
+                    <Link href={`/demande/${d.id}/validation`}><CheckCircle2 size={14} /> Décider</Link>
                   </Button>
-                  <Link href={`/${d.id}`} className="inline-flex items-center gap-1 text-xs text-neutral-400 hover:underline">
+                  <Link href={`/demande/${d.id}`} className="inline-flex items-center gap-1 text-xs text-neutral-400 hover:underline">
                     Voir le détail <ArrowRight size={12} />
                   </Link>
                 </div>

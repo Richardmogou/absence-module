@@ -1,58 +1,37 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { congeAnnuelSchema, type CongeAnnuelData } from "@/lib/schemas/absence";
 import { FormField } from "@/components/FormField";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Checkbox } from "@/components/ui/checkbox";
 import FormPageLayout from "@/components/FormPageLayout";
-import apiClient from "@/lib/api/client";
 import { BackupSelector } from "@/components/BackupSelector";
+import { useSoumission } from "@/lib/hooks/useSoumission";
 
 export default function CongeAnnuelPage() {
-  const router = useRouter();
-  const [apiError, setApiError] = useState<string | null>(null);
-
   const {
     register,
     handleSubmit,
     watch,
     setValue,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<CongeAnnuelData>({ resolver: zodResolver(congeAnnuelSchema) });
 
-  const estPremiereFraction = watch("estPremiereFraction");
+  const {
+    soumettre,
+    apiError,
+    isSubmitting
+  } = useSoumission();
 
   async function onSubmit(data: CongeAnnuelData) {
-    setApiError(null);
-    try {
-      const res = await apiClient.post("/api/v5/demandes", {
-        type:                    "CONGE_ANNUEL",
-        dateDebut:               data.dateDebut,
-        dateFin:                 data.dateFin,
-        backupIdentifiantExterne: data.backupIdentifiantExterne,
-        numeroFraction:          data.numeroFraction ?? null,
-        estPremiereFraction:     data.estPremiereFraction ?? null,
-      });
-      router.push(`/${res.data.id}/preview`);
-    } catch (err: unknown) {
-      const status = (err as any)?.response?.status;
-      const code = (err as any)?.response?.data?.code;
-      const message = (err as any)?.response?.data?.message;
-      if (status === 401) {
-        setApiError("Votre session a expiré. Veuillez vous reconnecter.");
-      } else if (code === "CIRCUIT_NON_DETERMINE") {
-        setApiError("Votre grade ne correspond à aucun circuit de validation. Contactez l'administrateur RH.");
-      } else if (code === "DUREE_INSUFFISANTE_CONGE_ANNUEL" && message) {
-        setApiError(message);
-      } else {
-        setApiError("Une erreur est survenue lors de la création. Veuillez réessayer.");
-      }
-    }
+    await soumettre({
+      type: "CONGE_ANNUEL",
+      dateDebut: data.dateDebut,
+      dateFin: data.dateFin,
+      backupIdentifiantExterne: data.backupIdentifiantExterne,
+    });
   }
 
   return (
@@ -73,99 +52,99 @@ export default function CongeAnnuelPage() {
         </svg>
       }
     >
-      {/* Back-up obligatoire */}
-      <div className="flex flex-col gap-1.5 relative">
-        <label htmlFor="backupIdentifiantExterne" className="text-sm font-medium text-neutral-700">
-          Identifiant du Back-up (collègue de même grade)
-        </label>
-        
-        <BackupSelector 
-          value={watch("backupIdentifiantExterne")} 
-          onChange={(val) => setValue("backupIdentifiantExterne", val, { shouldValidate: true })}
-          placeholder="— Obligatoire : rechercher un Back-up —"
-        />
-        
-        {errors.backupIdentifiantExterne && (
-          <p className="text-xs text-secondary-500">{errors.backupIdentifiantExterne.message}</p>
-        )}
+      <div className="space-y-6">
+        {/* SECTION 1: BACK-UP */}
+        <div className="rounded-md border border-neutral-200 bg-white shadow-sm">
+          <div className="bg-neutral-50 px-4 py-2 border-b border-neutral-200 flex items-center justify-between rounded-t-md">
+            <h3 className="text-sm font-semibold text-neutral-800 uppercase tracking-wider">Délégation (Back-up)</h3>
+            <span className="text-[10px] font-bold text-neutral-500 bg-neutral-200/80 px-2 py-0.5 rounded tracking-wide">OBLIGATOIRE</span>
+          </div>
+          <div className="p-4 space-y-4">
+            <div className="flex flex-col gap-2 relative">
+              <label htmlFor="backupIdentifiantExterne" className="text-sm font-medium text-neutral-700">
+                Identifiant du Back-up (collègue de même grade)
+              </label>
+              <div className="w-full">
+                <BackupSelector 
+                  value={watch("backupIdentifiantExterne")} 
+                  onChange={(val) => setValue("backupIdentifiantExterne", val, { shouldValidate: true })}
+                  placeholder="Rechercher par nom ou matricule..."
+                />
+              </div>
+              {errors.backupIdentifiantExterne && (
+                <p className="text-xs text-red-600 font-medium mt-1">{errors.backupIdentifiantExterne.message}</p>
+              )}
+            </div>
+
+            <div className="flex items-start gap-3 rounded bg-neutral-50 border-l-4 border-neutral-400 px-4 py-3">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="text-neutral-500 mt-0.5 shrink-0">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+              <p className="text-sm text-neutral-700 leading-relaxed">
+                Le Back-up désigné assurera la continuité de service. Cette personne interviendra comme premier niveau d'approbation conformément aux procédures internes en vigueur.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 2: PERIODE */}
+        <div className="rounded-md border border-neutral-200 bg-white shadow-sm">
+          <div className="bg-neutral-50 px-4 py-2 border-b border-neutral-200 rounded-t-md">
+            <h3 className="text-sm font-semibold text-neutral-800 uppercase tracking-wider">Période d'absence</h3>
+          </div>
+          <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              id="dateDebut"
+              label="Date de début"
+              type="date"
+              error={errors.dateDebut}
+              {...register("dateDebut")}
+            />
+            <FormField
+              id="dateFin"
+              label="Date de fin"
+              type="date"
+              error={errors.dateFin}
+              {...register("dateFin")}
+            />
+          </div>
+        </div>
       </div>
 
-      {/* Info Back-up */}
-      <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
-        <span className="text-lg mt-0.5">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="icon icon-tabler icons-tabler-outline icon-tabler-users">
-            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-            <path d="M5 7a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
-            <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
-            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
-          </svg>
-        </span>
-        <p className="text-xs text-amber-700 leading-relaxed">
-          Le Back-up est un <strong>collègue de même grade</strong> qui assurera
-          la continuité de votre poste pendant votre absence.
-          Il devra valider votre demande en première étape du circuit.
-        </p>
-      </div>
-
-      {/* Dates */}
-      <div className="grid grid-cols-2 gap-4">
-        <FormField
-          id="dateDebut"
-          label="Date de début"
-          type="date"
-          error={errors.dateDebut}
-          {...register("dateDebut")}
-        />
-        <FormField
-          id="dateFin"
-          label="Date de fin"
-          type="date"
-          error={errors.dateFin}
-          {...register("dateFin")}
-        />
-      </div>
-
-      {/* Fraction — optionnel */}
-      <FormField
-        id="numeroFraction"
-        label="Numéro de fraction (optionnel)"
-        type="number"
-        min="1"
-        placeholder="ex : 1, 2, 3…"
-        error={errors.numeroFraction}
-        {...register("numeroFraction", { valueAsNumber: true })}
-      />
-
-      {/* Première fraction */}
-      <label className="flex items-center gap-3 cursor-pointer select-none">
-        <Checkbox
-          id="estPremiereFraction"
-          checked={estPremiereFraction ?? false}
-          onCheckedChange={(checked) =>
-            setValue("estPremiereFraction", checked === true)
-          }
-        />
-        <span className="text-sm font-medium text-neutral-700">
-          Il s’agit de ma première fraction de congé pour cet exercice
-        </span>
-      </label>
-
-      {/* Erreur API */}
       {apiError && (
-        <Alert variant="destructive">
-          <AlertDescription>{apiError}</AlertDescription>
+        <Alert variant="destructive" className="mt-6 rounded-md border-red-300 bg-red-50">
+          <AlertDescription className="text-[#C41E22] font-medium">{apiError}</AlertDescription>
         </Alert>
       )}
 
-      <Button
-        type="button"
-        disabled={isSubmitting}
-        className="h-12 text-base mt-2"
-        onClick={handleSubmit(onSubmit)}
-      >
-        {isSubmitting ? "Envoi en cours…" : "Continuer vers l’aperçu →"}
-      </Button>
+
+      {/* NAV BUTTONS */}
+      <div className="pt-6 flex justify-end items-center border-t border-neutral-200 mt-8">
+        <Button
+          type="button"
+          disabled={isSubmitting}
+          className="h-10 px-6 bg-[#C41E22] hover:bg-[#A0181C] text-white font-medium rounded-md shadow-sm transition-colors flex items-center gap-2"
+          onClick={handleSubmit(onSubmit)}
+        >
+          {isSubmitting ? (
+            <>
+              <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Traitement en cours...
+            </>
+          ) : (
+            <>
+              Soumettre la demande
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14" />
+                <path d="m12 5 7 7-7 7" />
+              </svg>
+            </>
+          )}
+        </Button>
+      </div>
     </FormPageLayout>
   );
 }

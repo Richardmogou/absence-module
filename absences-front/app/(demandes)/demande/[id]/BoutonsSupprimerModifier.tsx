@@ -40,7 +40,7 @@ export default function BoutonsSupprimerModifier({ id, peutModifier, peutSupprim
     <div className="flex flex-wrap items-center gap-3">
       {peutModifier && (
         <Button asChild variant="outline" className="gap-2">
-          <a href={`/${id}/modifier`}><Pencil size={14} /> Modifier</a>
+          <a href={`/demande/${id}/modifier`}><Pencil size={14} /> Modifier</a>
         </Button>
       )}
       {peutSupprimer && (

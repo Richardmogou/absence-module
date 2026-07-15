@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 
 // Routes publiques (sans connexion)
-const PUBLIC_PATHS = ["/", "/connexion", "/api/auth", "/non-autorise"];
+const PUBLIC_PATHS = ["/connexion", "/api/auth", "/non-autorise"];
 
 // Routes protégées par rôle : seuls les utilisateurs ayant AU MOINS UN des rôles listés peuvent y accéder
 const PROTECTED_ROUTES: { prefix: string; roles: string[] }[] = [
