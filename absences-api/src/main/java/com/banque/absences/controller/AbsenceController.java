@@ -119,8 +119,11 @@ public class AbsenceController {
     }
 
     @PostMapping("/{id}/instruction")
-    public ResponseEntity<DemandeAbsence> instruire(@PathVariable UUID id) {
-        return ResponseEntity.ok(instructionAnalysteRHService.instruire(id));
+    public ResponseEntity<DemandeAbsence> instruire(
+            @PathVariable UUID id,
+            @RequestBody(required = false) com.banque.absences.dto.InstructionRequest body) {
+        return ResponseEntity.ok(
+                instructionAnalysteRHService.instruire(id, body != null ? body.dateDebut() : null));
     }
 
     @PostMapping("/{id}/prolongation-maternite")
