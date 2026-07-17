@@ -1,5 +1,6 @@
 package com.banque.absences.integration;
 
+import com.banque.absences.testsupport.KeycloakAdminMock;
 import com.banque.absences.domain.DemandeAbsence;
 import com.banque.absences.domain.EtapeDemandeSnapshot;
 import com.banque.absences.domain.EtapeModeleCircuit;
@@ -172,31 +173,17 @@ class DGConditionnelIntegrationTest {
             }
         });
 
-        adminApiMockServer.setDispatcher(new Dispatcher() {
-            @Override @NotNull
-            public MockResponse dispatch(@NotNull RecordedRequest req) {
-                String path = req.getPath() == null ? "" : req.getPath();
+        adminApiMockServer.setDispatcher(KeycloakAdminMock.dispatcher(Map.of(
                 // Circuit Agent : agent -> manager -> chef
-                if (path.contains(AGENT_ID + "/manager"))
-                    return new MockResponse().setResponseCode(200)
-                            .addHeader("Content-Type", "text/plain").setBody(MANAGER_ID);
-                if (path.contains(MANAGER_ID + "/manager"))
-                    return new MockResponse().setResponseCode(200)
-                            .addHeader("Content-Type", "text/plain").setBody(CHEF_ID);
+                AGENT_ID,       KeycloakAdminMock.utilisateur().grade("AGENT").manager(MANAGER_ID),
+                MANAGER_ID,     KeycloakAdminMock.utilisateur().grade("MANAGER").manager(CHEF_ID),
+                CHEF_ID,        KeycloakAdminMock.utilisateur().grade("DA"),
                 // Circuit Manager : manager -> chef -> DG
-                if (path.contains(MANAGER_MLG_ID + "/manager"))
-                    return new MockResponse().setResponseCode(200)
-                            .addHeader("Content-Type", "text/plain").setBody(CHEF_MGR);
-                if (path.contains(CHEF_MGR + "/manager"))
-                    return new MockResponse().setResponseCode(200)
-                            .addHeader("Content-Type", "text/plain").setBody(DG_MGR_ID);
-                // Circuit Reseau : réseau du demandeur (requis par ROLE_FIXE_SCOPE_RESEAU)
-                if (path.contains(DA_ID + "/reseau"))
-                    return new MockResponse().setResponseCode(200)
-                            .addHeader("Content-Type", "text/plain").setBody(RESEAU);
-                return new MockResponse().setResponseCode(404);
-            }
-        });
+                MANAGER_MLG_ID, KeycloakAdminMock.utilisateur().grade("MANAGER").manager(CHEF_MGR),
+                CHEF_MGR,       KeycloakAdminMock.utilisateur().grade("DA").manager(DG_MGR_ID),
+                DG_MGR_ID,      KeycloakAdminMock.utilisateur().grade("DG"),
+                // Circuit Reseau : le réseau est un attribut, requis par ROLE_FIXE_SCOPE_RESEAU
+                DA_ID,          KeycloakAdminMock.utilisateur().grade("DA").reseau(RESEAU))));
 
         registry.add("keycloak.jwks-uri",
                 () -> jwksMockServer.url("/realms/afb/protocol/openid-connect/certs").toString());
@@ -463,7 +450,10 @@ class DGConditionnelIntegrationTest {
             } else if (s.getOrdre() == 1 || s.getOrdre() == 2) {
                 s.setMecanismeResolution(MecanismeResolution.HIERARCHIQUE);
             } else {
-                s.setMecanismeResolution(MecanismeResolution.ROLE_FIXE_SCOPE_RESEAU);
+                // Instruction RH / Validation DRH : hors circuit, exclues par leur RÔLE — le
+                // snapshot le porte, comme en production.
+                s.setMecanismeResolution(MecanismeResolution.ROLE_FIXE_GLOBAL);
+                s.setRoleHabilite(s.getOrdre() == 3 ? "ANALYSTE_RH" : "DRH");
             }
             snapshotRepo.saveAndFlush(s);
         }
@@ -487,7 +477,7 @@ class DGConditionnelIntegrationTest {
                 s.setMecanismeResolution(MecanismeResolution.HIERARCHIQUE);
                 s.setRoleHabilite("DG");
             } else {
-                s.setMecanismeResolution(MecanismeResolution.ROLE_FIXE_SCOPE_RESEAU);
+                s.setMecanismeResolution(MecanismeResolution.ROLE_FIXE_GLOBAL);
                 s.setRoleHabilite("ANALYSTE_RH");
             }
             snapshotRepo.saveAndFlush(s);
@@ -512,7 +502,7 @@ class DGConditionnelIntegrationTest {
                 s.setMecanismeResolution(MecanismeResolution.ROLE_FIXE_GLOBAL);
                 s.setRoleHabilite("DG");
             } else {
-                s.setMecanismeResolution(MecanismeResolution.ROLE_FIXE_SCOPE_RESEAU);
+                s.setMecanismeResolution(MecanismeResolution.ROLE_FIXE_GLOBAL);
                 s.setRoleHabilite("ANALYSTE_RH");
             }
             snapshotRepo.saveAndFlush(s);

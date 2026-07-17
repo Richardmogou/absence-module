@@ -1,5 +1,6 @@
 package com.banque.absences.integration;
 
+import com.banque.absences.testsupport.KeycloakAdminMock;
 import com.banque.absences.domain.DemandeAbsence;
 import com.banque.absences.domain.EtapeDemandeSnapshot;
 import com.banque.absences.domain.EtapeModeleCircuit;
@@ -137,19 +138,11 @@ class CircuitManagerNonMissionLongueTest {
         });
 
         // Resolution hierarchique : manager -> chef (N+1), chef -> DG (N+2)
-        adminApiMockServer.setDispatcher(new Dispatcher() {
-            @Override @NotNull
-            public MockResponse dispatch(@NotNull RecordedRequest req) {
-                String path = req.getPath() == null ? "" : req.getPath();
-                if (path.contains(MANAGER_ID + "/manager"))
-                    return new MockResponse().setResponseCode(200)
-                            .addHeader("Content-Type", "text/plain").setBody(CHEF_ID);
-                if (path.contains(CHEF_ID + "/manager"))
-                    return new MockResponse().setResponseCode(200)
-                            .addHeader("Content-Type", "text/plain").setBody(DG_ID);
-                return new MockResponse().setResponseCode(404);
-            }
-        });
+        // Chaîne hiérarchique : manager → chef de processus → DG.
+        adminApiMockServer.setDispatcher(KeycloakAdminMock.dispatcher(Map.of(
+                MANAGER_ID, KeycloakAdminMock.utilisateur().grade("MANAGER").manager(CHEF_ID),
+                CHEF_ID,    KeycloakAdminMock.utilisateur().grade("DA").manager(DG_ID),
+                DG_ID,      KeycloakAdminMock.utilisateur().grade("DG"))));
 
         registry.add("keycloak.jwks-uri",
                 () -> jwksMockServer.url("/realms/afb/protocol/openid-connect/certs").toString());
@@ -275,7 +268,7 @@ class CircuitManagerNonMissionLongueTest {
                 snap.setMecanismeResolution(MecanismeResolution.HIERARCHIQUE);
                 snap.setRoleHabilite("DG");
             } else {
-                snap.setMecanismeResolution(MecanismeResolution.ROLE_FIXE_SCOPE_RESEAU);
+                snap.setMecanismeResolution(MecanismeResolution.ROLE_FIXE_GLOBAL);
                 snap.setRoleHabilite("ANALYSTE_RH");
             }
             snapshotRepo.saveAndFlush(snap);

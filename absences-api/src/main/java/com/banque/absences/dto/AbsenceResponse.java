@@ -36,6 +36,17 @@ public class AbsenceResponse {
     /** Nom complet du demandeur résolu via Keycloak Admin — null si indisponible. */
     private String nomCompletDemandeur;
 
+    /**
+     * Champs enrichis pour la génération du document côté frontend (titre de congé).
+     * Résolus via Keycloak / snapshots uniquement dans le détail (findById → toResponse),
+     * null dans les réponses de liste. Reflètent les mêmes données que le PDF backend.
+     */
+    private String employeePosition;
+    private String employeeDepartment;
+    private String directManagerName;
+    private String hrSignatoryName;
+    private String analysteRhName;
+
     /** Back-up désigné par le demandeur — null si non renseigné. */
     private String backupIdentifiantExterne;
 
@@ -44,6 +55,12 @@ public class AbsenceResponse {
 
     /** URL du document de mise en congé généré après validation DRH. */
     private String documentMiseEnCongeUrl;
+
+    /** Champs spécifiques aux missions (classique et longue durée) */
+    private String objetMission;
+    private String motifMission;
+    private String destination;
+    private String categorie;
 
     /**
      * Vrai si l'utilisateur courant est le validateur pré-assigné à l'étape courante.

@@ -14,7 +14,11 @@ public record CreationDemandeRequest(
         @NotNull(message = "Le type d'absence est obligatoire")
         TypeAbsence type,
 
-        @NotNull(message = "La date de début est obligatoire")
+        /**
+         * Date de début. Obligatoire pour tous les types SAUF {@code CONGE_MATERNITE} :
+         * pour ce type, la date est fixée par l'analyste RH lors de l'instruction, puis
+         * le système calcule automatiquement la date de fin (+14 semaines) et 98 jours.
+         */
         LocalDate dateDebut,
 
         LocalDate dateFin,
@@ -29,8 +33,17 @@ public record CreationDemandeRequest(
         /** CONGE_ANNUEL uniquement — true si c'est la première fraction de l'exercice. */
         Boolean estPremiereFraction,
 
-        /** MISSION_LONGUE uniquement — objet ou informations complémentaires de la mission. */
+        /** MISSION et MISSION_LONGUE uniquement — objet ou informations complémentaires de la mission. */
         String objetMission,
+
+        /** MISSION et MISSION_LONGUE uniquement — justification ou motif détaillé de la mission. */
+        String motifMission,
+
+        /** MISSION et MISSION_LONGUE uniquement — ville ou pays de destination. */
+        String destination,
+
+        /** MISSION et MISSION_LONGUE uniquement — catégorie de la mission (ex: Terrain, Formation...). */
+        String categorie,
 
         /**
          * Identifiant Keycloak du collègue Back-up désigné par le demandeur.

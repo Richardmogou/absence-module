@@ -39,8 +39,7 @@ class DoublonDetectionServiceTest {
                 LocalDate.of(2026, 8, 15),
                 LocalDate.of(2026, 8, 20));
 
-        when(demandeAbsenceRepository.findByDemandeurIdentifiantExterneAndType(
-                "agent-1", TypeAbsence.CONGE_ANNUEL))
+        when(demandeAbsenceRepository.findByDemandeurIdentifiantExterne("agent-1"))
                 .thenReturn(List.of(existante));
 
         assertThat(service.detecterDoublon(nouvelle)).isTrue();
@@ -58,8 +57,7 @@ class DoublonDetectionServiceTest {
                 LocalDate.of(2026, 9, 15),
                 LocalDate.of(2026, 9, 20));
 
-        when(demandeAbsenceRepository.findByDemandeurIdentifiantExterneAndType(
-                "agent-1", TypeAbsence.CONGE_ANNUEL))
+        when(demandeAbsenceRepository.findByDemandeurIdentifiantExterne("agent-1"))
                 .thenReturn(List.of(existante));
 
         assertThat(service.detecterDoublon(nouvelle)).isFalse();

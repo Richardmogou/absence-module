@@ -19,15 +19,22 @@ public interface EtapeDemandeSnapshotRepository extends JpaRepository<EtapeDeman
 
     /**
      * Retourne les étapes intermédiaires d'une demande, ordonnées par position croissante.
-     * Exclut les étapes de type ROLE_FIXE_GLOBAL (Analyste RH et DRH)
-     * qui sont traitées séparément dans le workflow.
+     * Exclut l'instruction RH et la validation DRH, traitées séparément après le circuit.
+     *
+     * <p>L'exclusion porte sur le RÔLE, pas sur le mécanisme. Le filtre historique excluait
+     * {@code ROLE_FIXE_GLOBAL} au motif que ce mécanisme désignait « Analyste RH et DRH » — un
+     * raccourci vrai à l'origine, devenu faux quand V14 a implémenté la matrice d'approbation
+     * des missions : elle y déclare « Autorisation Directeur Général » et « Approbation PCA »
+     * en ROLE_FIXE_GLOBAL. Ces étapes étaient donc exclues du circuit et jamais sollicitées —
+     * une mission internationale partait en instruction RH sans l'autorisation du DG, et la
+     * mission d'un DG sans aucune approbation du PCA, sa seule étape d'approbation ayant
+     * disparu du flux.
      */
     @Query("""
             SELECT e FROM EtapeDemandeSnapshot e
             WHERE e.demandeId = :demandeId
-              AND (e.mecanismeResolution IS NULL
-               OR e.mecanismeResolution NOT IN
-                  (com.banque.absences.domain.MecanismeResolution.ROLE_FIXE_GLOBAL))
+              AND (e.roleHabilite IS NULL
+               OR e.roleHabilite NOT IN ('ANALYSTE_RH', 'DRH'))
             ORDER BY e.ordre ASC
             """)
     List<EtapeDemandeSnapshot> findIntermediairesOrdonnees(@Param("demandeId") UUID demandeId);

@@ -4,13 +4,13 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "demande_mission_longue")
-@DiscriminatorValue("MISSION_LONGUE")
+@Table(name = "demande_mission")
+@DiscriminatorValue("MISSION")
 @PrimaryKeyJoinColumn(name = "id")
 @Getter
 @Setter
 @NoArgsConstructor
-public class DemandeMissionLongue extends DemandeAbsence {
+public class DemandeMission extends DemandeAbsence {
 
     @Column(name = "objet_mission", length = 500)
     private String objetMission;

@@ -5,6 +5,7 @@ import com.banque.absences.repository.*;
 import com.banque.absences.security.KeycloakClaims;
 import com.banque.absences.service.CircuitDeterminationService;
 import com.banque.absences.service.DoublonDetectionService;
+import com.banque.absences.testsupport.KeycloakAdminMock;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
@@ -117,19 +118,11 @@ class CircuitAgentIntegrationTest {
             }
         });
 
-        adminApiMockServer.setDispatcher(new Dispatcher() {
-            @Override @NotNull
-            public MockResponse dispatch(@NotNull RecordedRequest req) {
-                String path = req.getPath() == null ? "" : req.getPath();
-                if (path.contains(AGENT_ID + "/manager"))
-                    return new MockResponse().setResponseCode(200)
-                            .addHeader("Content-Type", "text/plain").setBody(MANAGER_ID);
-                if (path.contains(MANAGER_ID + "/manager"))
-                    return new MockResponse().setResponseCode(200)
-                            .addHeader("Content-Type", "text/plain").setBody(CHEF_ID);
-                return new MockResponse().setResponseCode(404);
-            }
-        });
+        // Chaîne hiérarchique : agent → manager → chef de processus.
+        adminApiMockServer.setDispatcher(KeycloakAdminMock.dispatcher(Map.of(
+                AGENT_ID,   KeycloakAdminMock.utilisateur().grade("AGENT").manager(MANAGER_ID),
+                MANAGER_ID, KeycloakAdminMock.utilisateur().grade("MANAGER").manager(CHEF_ID),
+                CHEF_ID,    KeycloakAdminMock.utilisateur().grade("DA"))));
 
         registry.add("keycloak.jwks-uri",
                 () -> jwksMockServer.url("/realms/afb/protocol/openid-connect/certs").toString());
@@ -200,7 +193,12 @@ class CircuitAgentIntegrationTest {
             } else if (s.getOrdre() == 1 || s.getOrdre() == 2) {
                 s.setMecanismeResolution(MecanismeResolution.HIERARCHIQUE);
             } else {
-                s.setMecanismeResolution(MecanismeResolution.ROLE_FIXE_SCOPE_RESEAU);
+                // Instruction RH (3) et Validation DRH (4) : hors circuit, exclues par leur
+                // RÔLE. Comme en production, le snapshot porte le roleHabilite issu de la
+                // règle — sans lui, ces étapes redeviendraient intermédiaires et le chef de
+                // processus ne clôturerait jamais le circuit.
+                s.setMecanismeResolution(MecanismeResolution.ROLE_FIXE_GLOBAL);
+                s.setRoleHabilite(s.getOrdre() == 3 ? "ANALYSTE_RH" : "DRH");
             }
             snapshotRepo.saveAndFlush(s);
         }
@@ -263,7 +261,9 @@ class CircuitAgentIntegrationTest {
         ajouterEtape(circuit, 0, "Back-up hierarchique",   null,                                null);
         ajouterEtape(circuit, 1, "Manager Direct",          MecanismeResolution.HIERARCHIQUE,    1);
         ajouterEtape(circuit, 2, "Chef de Processus",       MecanismeResolution.HIERARCHIQUE,    2);
-        ajouterEtape(circuit, 3, "Instruction Analyste RH", MecanismeResolution.ROLE_FIXE_SCOPE_RESEAU, null);
+        // ROLE_FIXE_GLOBAL et non ROLE_FIXE_SCOPE_RESEAU : ce dernier compte comme étape
+        // intermédiaire, ce qui rejouerait la double validation supprimée par V12/V15.
+        ajouterEtape(circuit, 3, "Instruction Analyste RH", MecanismeResolution.ROLE_FIXE_GLOBAL, null);
         ajouterEtape(circuit, 4, "Validation DRH",          MecanismeResolution.ROLE_FIXE_GLOBAL, null);
 
         return circuit;

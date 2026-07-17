@@ -1,5 +1,6 @@
 package com.banque.absences.integration;
 
+import com.banque.absences.testsupport.KeycloakAdminMock;
 import com.banque.absences.domain.DemandeAbsence;
 import com.banque.absences.domain.EtapeDemandeSnapshot;
 import com.banque.absences.domain.EtapeModeleCircuit;
@@ -146,16 +147,9 @@ class CircuitReseauMissionLongueIntegrationTest {
         });
 
         // GET /users/{demandeurId}/reseau -> reseau-littoral (requis par ROLE_FIXE_SCOPE_RESEAU)
-        adminApiMockServer.setDispatcher(new Dispatcher() {
-            @Override @NotNull
-            public MockResponse dispatch(@NotNull RecordedRequest req) {
-                String path = req.getPath() == null ? "" : req.getPath();
-                if (path.contains(DA_ID + "/reseau"))
-                    return new MockResponse().setResponseCode(200)
-                            .addHeader("Content-Type", "text/plain").setBody(RESEAU);
-                return new MockResponse().setResponseCode(404);
-            }
-        });
+        // Le réseau est un attribut Keycloak du demandeur, requis par ROLE_FIXE_SCOPE_RESEAU.
+        adminApiMockServer.setDispatcher(KeycloakAdminMock.dispatcher(Map.of(
+                DA_ID, KeycloakAdminMock.utilisateur().grade("DA").reseau(RESEAU))));
 
         registry.add("keycloak.jwks-uri",
                 () -> jwksMockServer.url("/realms/afb/protocol/openid-connect/certs").toString());
@@ -282,7 +276,7 @@ class CircuitReseauMissionLongueIntegrationTest {
                 snap.setMecanismeResolution(MecanismeResolution.ROLE_FIXE_GLOBAL);
                 snap.setRoleHabilite("DG");
             } else {
-                snap.setMecanismeResolution(MecanismeResolution.ROLE_FIXE_SCOPE_RESEAU);
+                snap.setMecanismeResolution(MecanismeResolution.ROLE_FIXE_GLOBAL);
                 snap.setRoleHabilite("ANALYSTE_RH");
             }
             snapshotRepo.saveAndFlush(snap);

@@ -1,5 +1,6 @@
 package com.banque.absences.integration;
 
+import com.banque.absences.testsupport.KeycloakAdminMock;
 import com.banque.absences.security.KeycloakClaims;
 import com.banque.absences.service.DoublonDetectionService;
 import com.banque.absences.service.CircuitDeterminationService;
@@ -93,16 +94,9 @@ class EmployeTypeIntrouvableTest {
         });
 
         // L'API admin retourne [] pour tout grade → EmployeTypeIntrouvableException
-        adminApiMockServer.setDispatcher(new Dispatcher() {
-            @Override @NotNull
-            public MockResponse dispatch(@NotNull RecordedRequest req) {
-                String path = req.getPath() == null ? "" : req.getPath();
-                if (path.contains("/users") && path.contains("grade=GRADE_FANTOME"))
-                    return new MockResponse().setResponseCode(200)
-                            .addHeader("Content-Type", "application/json").setBody("[]");
-                return new MockResponse().setResponseCode(404);
-            }
-        });
+        // Realm sans aucun utilisateur : la recherche par grade renvoie une liste vide,
+        // donc aucun employé-type représentatif de GRADE_FANTOME.
+        adminApiMockServer.setDispatcher(KeycloakAdminMock.dispatcher(Map.of()));
 
         registry.add("keycloak.jwks-uri",
                 () -> jwksMockServer.url("/realms/afb/protocol/openid-connect/certs").toString());
@@ -132,6 +126,7 @@ class EmployeTypeIntrouvableTest {
                         .content("""
                                 {
                                   "nom": "Circuit Fantome",
+                                  "typeAbsenceCible": "CONGE_ANNUEL",
                                   "gradeDeclencheur": "GRADE_FANTOME",
                                   "etapesIntermediaires": [
                                     {
@@ -157,6 +152,7 @@ class EmployeTypeIntrouvableTest {
                         .content("""
                                 {
                                   "nom": "Circuit Fantome",
+                                  "typeAbsenceCible": "CONGE_ANNUEL",
                                   "gradeDeclencheur": "GRADE_FANTOME",
                                   "etapesIntermediaires": [
                                     {

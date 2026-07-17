@@ -17,3 +17,12 @@ keycloak:
   admin-api-base-url: http://localhost:0
   admin-client-id: test-client
   admin-client-secret: test-secret
+
+# Config MinIO factice : permet la construction du bean S3Client sans MinIO réel.
+# Le client AWS S3 ne fait aucun appel réseau à sa création (endpoint résolu à l'usage),
+# donc les tests qui n'uploadent pas de fichier démarrent le contexte sans MinIO.
+minio:
+  endpoint: http://localhost:9000
+  access-key: test-access-key
+  secret-key: test-secret-key
+  bucket: justificatifs-test

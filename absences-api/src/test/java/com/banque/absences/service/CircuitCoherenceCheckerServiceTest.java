@@ -24,7 +24,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestToUriTemplate;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 /**
@@ -74,23 +73,37 @@ class CircuitCoherenceCheckerServiceTest {
                 .thenReturn(List.of(etapeH, etapeRF));
     }
 
+    /**
+     * API Admin Keycloak standard : la recherche par attribut renvoie des UserRepresentation,
+     * et les attributs custom vivent sous {@code attributes: {"grade": ["..."]}} — pas de
+     * sous-ressource {@code /manager}, pas de valeur en texte brut.
+     */
+    private void attendRechercheParGrade(String grade, String idTrouve) {
+        mockServer.expect(requestTo(BASE_URL + "/users?q=grade:" + grade + "&max=1"))
+                  .andExpect(method(HttpMethod.GET))
+                  .andRespond(withSuccess("[{\"id\":\"" + idTrouve + "\"}]",
+                                          MediaType.APPLICATION_JSON));
+    }
+
+    private void attendUser(String id, String attribut, String valeur) {
+        mockServer.expect(requestTo(BASE_URL + "/users/" + id))
+                  .andExpect(method(HttpMethod.GET))
+                  .andRespond(withSuccess(
+                          "{\"id\":\"" + id + "\",\"attributes\":{\"" + attribut + "\":[\"" + valeur + "\"]}}",
+                          MediaType.APPLICATION_JSON));
+    }
+
     @Test
     @DisplayName("DA-ABSENCES-v5.0 — Directeur : doublon détecté entre étape HIERARCHIQUE (N+1→DG) et étape ROLE_FIXE_GLOBAL (DG)")
     void verifierCoherence_detecteDoublon_scenarioDirecteur() {
-        // resoudreEmployeTypeParGrade("DIRECTEUR") → ["id-paul-ateba"]
-        mockServer.expect(requestToUriTemplate(BASE_URL + "/users?grade={grade}&limit=1", "DIRECTEUR"))
-                  .andExpect(method(HttpMethod.GET))
-                  .andRespond(withSuccess("[\"id-paul-ateba\"]", MediaType.APPLICATION_JSON));
+        // resoudreEmployeTypeParGrade("DIRECTEUR") → [{"id":"id-paul-ateba"}]
+        attendRechercheParGrade("DIRECTEUR", "id-paul-ateba");
 
-        // resoudreHierarchique("id-paul-ateba", 1) → resoudreManagerDirect → "id-jean-mbarga"
-        mockServer.expect(requestTo(BASE_URL + "/users/id-paul-ateba/manager"))
-                  .andExpect(method(HttpMethod.GET))
-                  .andRespond(withSuccess("id-jean-mbarga", MediaType.TEXT_PLAIN));
+        // resoudreHierarchique("id-paul-ateba", 1) → attribut manager → "id-jean-mbarga"
+        attendUser("id-paul-ateba", "manager", "id-jean-mbarga");
 
-        // resoudreGradeParIdentifiant("id-jean-mbarga") → "DG"
-        mockServer.expect(requestTo(BASE_URL + "/users/id-jean-mbarga"))
-                  .andExpect(method(HttpMethod.GET))
-                  .andRespond(withSuccess("DG", MediaType.TEXT_PLAIN));
+        // resoudreGradeParIdentifiant("id-jean-mbarga") → attribut grade → "DG"
+        attendUser("id-jean-mbarga", "grade", "DG");
 
         Optional<DoublonDetecteResult> result =
                 service.verifierCoherence(circuitId, "DIRECTEUR");
@@ -104,18 +117,11 @@ class CircuitCoherenceCheckerServiceTest {
     @Test
     @DisplayName("Aucun doublon quand le grade résolu N+1 diffère du roleKeycloakCible de l'étape ROLE_FIXE")
     void verifierCoherence_aucunDoublon_gradesDifferents() {
-        mockServer.expect(requestToUriTemplate(BASE_URL + "/users?grade={grade}&limit=1", "DIRECTEUR"))
-                  .andExpect(method(HttpMethod.GET))
-                  .andRespond(withSuccess("[\"id-paul-ateba\"]", MediaType.APPLICATION_JSON));
-
-        mockServer.expect(requestTo(BASE_URL + "/users/id-paul-ateba/manager"))
-                  .andExpect(method(HttpMethod.GET))
-                  .andRespond(withSuccess("id-jean-mbarga", MediaType.TEXT_PLAIN));
+        attendRechercheParGrade("DIRECTEUR", "id-paul-ateba");
+        attendUser("id-paul-ateba", "manager", "id-jean-mbarga");
 
         // Le N+1 a grade "DIRECTEUR_GENERAL" ≠ "DG" → pas de doublon
-        mockServer.expect(requestTo(BASE_URL + "/users/id-jean-mbarga"))
-                  .andExpect(method(HttpMethod.GET))
-                  .andRespond(withSuccess("DIRECTEUR_GENERAL", MediaType.TEXT_PLAIN));
+        attendUser("id-jean-mbarga", "grade", "DIRECTEUR_GENERAL");
 
         Optional<DoublonDetecteResult> result =
                 service.verifierCoherence(circuitId, "DIRECTEUR");
@@ -127,7 +133,7 @@ class CircuitCoherenceCheckerServiceTest {
     @Test
     @DisplayName("Optional.empty() si resoudreEmployeTypeParGrade lève EmployeTypeIntrouvableException pour un grade inconnu")
     void verifierCoherence_leveException_gradeInconnu() {
-        mockServer.expect(requestToUriTemplate(BASE_URL + "/users?grade={grade}&limit=1", "GRADE_INCONNU"))
+        mockServer.expect(requestTo(BASE_URL + "/users?q=grade:GRADE_INCONNU&max=1"))
                   .andExpect(method(HttpMethod.GET))
                   .andRespond(withSuccess("[]", MediaType.APPLICATION_JSON));
 
