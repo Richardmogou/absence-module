@@ -1,10 +1,12 @@
 package com.banque.absences.service;
 
 import com.banque.absences.domain.AbsenceEvent;
+import com.banque.absences.domain.AuditOverrideStatut;
 import com.banque.absences.domain.MecanismeResolution;
 import com.banque.absences.domain.DemandeAbsence;
 import com.banque.absences.domain.DemandeCongeAnnuel;
 import com.banque.absences.domain.DemandeCongeMaladie;
+import com.banque.absences.domain.DemandeMission;
 import com.banque.absences.domain.DemandeMissionLongue;
 import com.banque.absences.domain.DemandeCongeMaternite;
 import com.banque.absences.domain.DemandePermission;
@@ -29,6 +31,7 @@ import com.banque.absences.dto.ValidationEtapeRequest.Decision;
 import com.banque.absences.exception.CircuitNonDetermineException;
 import com.banque.absences.exception.DoublonDetecteException;
 import com.banque.absences.repository.AbsenceRepository;
+import com.banque.absences.repository.AuditOverrideStatutRepository;
 import com.banque.absences.repository.DemandeAbsenceRepository;
 import com.banque.absences.repository.EtapeDemandeSnapshotRepository;
 import com.banque.absences.repository.EtapeModeleCircuitRepository;
@@ -70,6 +73,7 @@ public class AbsenceServiceImpl implements AbsenceService {
     private final EtapeModeleCircuitRepository etapeModeleCircuitRepository;
     private final EtapeDemandeSnapshotRepository etapeDemandeSnapshotRepository;
     private final ValidationRepository validationRepository;
+    private final AuditOverrideStatutRepository auditOverrideStatutRepository;
     private final JustificatifDocumentRepository justificatifDocumentRepository;
     private final DocumentMiseEnCongeService documentMiseEnCongeService;
     private final BaremePermissionService baremePermissionService;
@@ -90,6 +94,12 @@ public class AbsenceServiceImpl implements AbsenceService {
         String demandeurId = claimReaderService.identifiantUtilisateurCourant();
         DemandeAbsence demande;
 
+        // La date de début est obligatoire pour tous les types SAUF le congé maternité,
+        // dont la date est fixée par l'analyste RH lors de l'instruction.
+        if (dto.type() != TypeAbsence.CONGE_MATERNITE && dto.dateDebut() == null) {
+            throw new IllegalArgumentException("La date de début est obligatoire");
+        }
+
         // US-MLG-001 — Mission longue : durée intrinsèque >= 15 jours
         if (dto.type() == TypeAbsence.MISSION_LONGUE) {
             if (dto.nombreJours() == null || dto.nombreJours() < 15) {
@@ -102,6 +112,20 @@ public class AbsenceServiceImpl implements AbsenceService {
                     : dto.dateDebut().plusDays(dto.nombreJours() - 1));
             m.setNombreJours(dto.nombreJours());
             m.setObjetMission(dto.objetMission());
+            m.setMotifMission(dto.motifMission());
+            m.setDestination(dto.destination());
+            m.setCategorie(dto.categorie());
+            demande = m;
+        } else if (dto.type() == TypeAbsence.MISSION) {
+            DemandeMission m = new DemandeMission();
+            m.setDateFin(dto.dateFin() != null
+                    ? dto.dateFin()
+                    : dto.dateDebut().plusDays(dto.nombreJours() != null ? dto.nombreJours() - 1 : 0));
+            m.setNombreJours(dto.nombreJours());
+            m.setObjetMission(dto.objetMission());
+            m.setMotifMission(dto.motifMission());
+            m.setDestination(dto.destination());
+            m.setCategorie(dto.categorie());
             demande = m;
         } else if (dto.type() == TypeAbsence.PERMISSION) {
             int duree = baremePermissionService.appliquerBareme(dto.motifPermission());
@@ -111,9 +135,9 @@ public class AbsenceServiceImpl implements AbsenceService {
             p.setCodeMotif(dto.motifPermission());
             demande = p;
         } else if (dto.type() == TypeAbsence.CONGE_MATERNITE) {
+            // Pas de date à la création : l'analyste RH fixe la date de début lors de
+            // l'instruction, le système calcule alors la date de fin (+14 sem.) et 98 jours.
             DemandeCongeMaternite m = new DemandeCongeMaternite();
-            m.setDateFin(dto.dateDebut().plusWeeks(14));
-            m.setNombreJours(98);
             m.setEstProlongation(false);
             demande = m;
         } else if (dto.type() == TypeAbsence.CONGE_MALADIE) {
@@ -126,14 +150,23 @@ public class AbsenceServiceImpl implements AbsenceService {
             a.setDateFin(dto.dateFin());
             int joursOuvres = calculerJoursOuvres(dto.dateDebut(), dto.dateFin());
             
-            if (Boolean.TRUE.equals(dto.estPremiereFraction()) && joursOuvres < 12) {
+            int annee = dto.dateDebut().getYear();
+            long countFractions = demandeAbsenceRepository.findByDemandeurIdentifiantExterneAndType(demandeurId, TypeAbsence.CONGE_ANNUEL).stream()
+                    .filter(d -> d.getDateDebut() != null && d.getDateDebut().getYear() == annee)
+                    .filter(d -> d.getStatut() != StatutDemande.REJETEE && d.getStatut() != StatutDemande.REJETEE_PAR_LE_SYSTEME && d.getStatut() != StatutDemande.ANNULEE)
+                    .count();
+            
+            int numeroFractionCalcule = (int) (countFractions + 1);
+            boolean estPremiereFractionCalcule = (numeroFractionCalcule == 1);
+            
+            if (estPremiereFractionCalcule && joursOuvres < 12) {
                 throw new DureeInsuffisanteCongeAnnuelException(
-                        "La première fraction du congé annuel doit être d'au moins 12 jours ouvrés.");
+                        "La première fraction du congé annuel doit être d'au moins 12 jours calendaires.");
             }
             
             a.setNombreJours(joursOuvres);
-            a.setNumeroFraction(dto.numeroFraction());
-            a.setEstPremiereFraction(dto.estPremiereFraction());
+            a.setNumeroFraction(numeroFractionCalcule);
+            a.setEstPremiereFraction(estPremiereFractionCalcule);
             demande = a;
         }
 
@@ -154,13 +187,17 @@ public class AbsenceServiceImpl implements AbsenceService {
         DemandeAbsence demande = demandeAbsenceRepository.findById(demandeId)
                 .orElseThrow(() -> new EntityNotFoundException("Demande introuvable : " + demandeId));
         verifierOwnership(demande);
-        if (confirmDoublon) {
-            demande.setDoublonConfirme(true);
+
+        // Idempotence : si la demande est déjà soumise, on la retourne directement
+        if (demande.getStatut() == StatutDemande.EN_VALIDATION_ETAPE) {
+            return demande;
         }
 
-        if (doublonDetectionService.detecterDoublon(demande) && !demande.isDoublonConfirme()) {
+        // Politique de rejet STRICT : un doublon (période chevauchante) bloque la
+        // soumission, sans confirmation possible. Le paramètre confirmDoublon est ignoré.
+        if (doublonDetectionService.detecterDoublon(demande)) {
             throw new DoublonDetecteException(
-                    "Une demande similaire existe deja sur une periode proche");
+                    "Une demande similaire existe déjà sur cette période — soumission impossible");
         }
 
         ModeleCircuit circuit = circuitDeterminationService
@@ -231,6 +268,15 @@ public class AbsenceServiceImpl implements AbsenceService {
 
         DemandeAbsence demande = demandeAbsenceRepository.findById(demandeId)
                 .orElseThrow(() -> new EntityNotFoundException("Demande introuvable : " + demandeId));
+
+        // EX-3 — Garde de statut : une décision d'étape n'est légale qu'en EN_VALIDATION_ETAPE.
+        // Empêche l'endpoint générique /validation de finaliser une demande au stade DRH
+        // (contournement du contrôle de rôle DRH, du justificatif et du débit de solde).
+        if (demande.getStatut() != StatutDemande.EN_VALIDATION_ETAPE) {
+            throw new TransitionIllegaleException(
+                    "Une décision d'étape n'est possible qu'au statut EN_VALIDATION_ETAPE — statut actuel : "
+                            + demande.getStatut());
+        }
 
         if (decision == Decision.REJETER && (motif == null || motif.isBlank())) {
             throw new MotifRequisException("Un motif est requis pour tout rejet");
@@ -375,17 +421,12 @@ public class AbsenceServiceImpl implements AbsenceService {
         boolean estValidateurEtape = false;
         if (!estDemandeur && !estBackup && !estPrivilegie) {
             java.util.List<String> roles = claimReaderService.getRoles();
-            System.out.println("DEBUG findById - userId: " + userId + ", roles: " + roles);
             java.util.List<EtapeDemandeSnapshot> snaps = etapeDemandeSnapshotRepository.findByDemandeIdOrderByOrdreAsc(demande.getId());
-            for (EtapeDemandeSnapshot s : snaps) {
-                System.out.println("DEBUG snap: " + s.getLibelle() + ", validateur: " + s.getValidateurIdentifiantExterne() + ", mech: " + s.getMecanismeResolution() + ", roleHab: " + s.getRoleHabilite());
-            }
             estValidateurEtape = snaps
                     .stream()
                     .anyMatch(s -> userId.equals(s.getValidateurIdentifiantExterne()) ||
                             ((s.getMecanismeResolution() == com.banque.absences.domain.MecanismeResolution.ROLE_FIXE_GLOBAL || s.getMecanismeResolution() == com.banque.absences.domain.MecanismeResolution.DG_CONDITIONNEL)
                                     && roles.contains("ROLE_" + s.getRoleHabilite())));
-            System.out.println("DEBUG estValidateurEtape: " + estValidateurEtape);
         }
 
         if (!estDemandeur && !estBackup && !estPrivilegie && !estValidateurEtape) {
@@ -477,12 +518,35 @@ public class AbsenceServiceImpl implements AbsenceService {
                         demandeurIdentifiantExterne, exercice, 0, 0, 0));
     }
 
+    /**
+     * Forçage de statut par ADMIN_RH — encadré selon le CDCT EX-9 (§4.1.7-E) : cible VALIDEE
+     * interdite, motif obligatoire (porté par {@link StatutUpdateRequest}), et journalisation
+     * « qui / quand / ancien→nouveau / motif ».
+     */
     @Override
     @Transactional
     public AbsenceResponse updateStatut(UUID id, StatutUpdateRequest request) {
+        if (request.getStatut() == StatutDemande.VALIDEE) {
+            throw new OverrideCibleInterditeException(
+                    "Le forçage vers VALIDEE est interdit : cet endpoint ne débite pas le solde "
+                    + "et ne génère pas le document de mise en congé. Passer par /validation-drh.");
+        }
+
         DemandeAbsence demande = getOrThrow(id);
+        StatutDemande statutAncien = demande.getStatut();
         demande.setStatut(request.getStatut());
-        return toResponse(repository.save(demande));
+        DemandeAbsence sauvegardee = repository.save(demande);
+
+        AuditOverrideStatut audit = new AuditOverrideStatut();
+        audit.setDemandeId(id);
+        audit.setAuteurIdentifiantExterne(claimReaderService.identifiantUtilisateurCourant());
+        audit.setStatutAncien(statutAncien);
+        audit.setStatutNouveau(request.getStatut());
+        audit.setMotif(request.getMotif());
+        audit.setDateAction(LocalDateTime.now());
+        auditOverrideStatutRepository.save(audit);
+
+        return toResponse(sauvegardee);
     }
 
     @Override
@@ -535,6 +599,19 @@ public class AbsenceServiceImpl implements AbsenceService {
         demandeAbsenceRepository.save(demande);
 
         if (decision == Decision.VALIDER) {
+            // Enregistrer le validateur DRH sur son snapshot d'étape (barre de progression
+            // + nom du signataire dans le document). Miroir de l'instruction Analyste RH.
+            String validateurDrh = claimReaderService.identifiantUtilisateurCourant();
+            etapeDemandeSnapshotRepository.findByDemandeIdOrderByOrdreAsc(demandeId).stream()
+                    .filter(e -> "DRH".equals(e.getRoleHabilite()))
+                    .findFirst()
+                    .ifPresent(etape -> {
+                        etape.setValidateurIdentifiantExterne(validateurDrh);
+                        etape.setStatut(EtapeDemandeSnapshot.StatutEtape.VALIDEE);
+                        etape.setDateTraitement(java.time.LocalDateTime.now());
+                        etapeDemandeSnapshotRepository.save(etape);
+                    });
+
             // Débiter le solde pour les types concernés
             Set<TypeAbsence> typesAvecSolde = Set.of(TypeAbsence.CONGE_ANNUEL, TypeAbsence.PERMISSION);
             if (typesAvecSolde.contains(demande.getType()) && demande.getNombreJours() != null) {
@@ -651,16 +728,21 @@ public class AbsenceServiceImpl implements AbsenceService {
     }
 
     private int calculerJoursOuvres(LocalDate dateDebut, LocalDate dateFin) {
-        int joursOuvres = 0;
-        LocalDate date = dateDebut;
-        while (!date.isAfter(dateFin)) {
-            DayOfWeek dayOfWeek = date.getDayOfWeek();
-            if (dayOfWeek != DayOfWeek.SATURDAY && dayOfWeek != DayOfWeek.SUNDAY) {
-                joursOuvres++;
-            }
-            date = date.plusDays(1);
+        return (int) java.time.temporal.ChronoUnit.DAYS.between(dateDebut, dateFin) + 1;
+    }
+
+    /**
+     * Vrai si l'utilisateur (userId / roles) est habilité à valider l'étape courante donnée.
+     * Règle partagée entre le détail (toResponse) et les listes (toResponseBatch).
+     */
+    private boolean calculerMonTour(EtapeDemandeSnapshot snap, String userId, java.util.List<String> roles) {
+        if (snap == null) return false;
+        if (userId.equals(snap.getValidateurIdentifiantExterne())) return true;
+        if (snap.getMecanismeResolution() == MecanismeResolution.ROLE_FIXE_GLOBAL
+                || snap.getMecanismeResolution() == MecanismeResolution.DG_CONDITIONNEL) {
+            return roles.contains("ROLE_" + snap.getRoleHabilite());
         }
-        return joursOuvres;
+        return false;
     }
 
     private List<AbsenceResponse> toResponseBatch(List<DemandeAbsence> demandes) {
@@ -669,24 +751,38 @@ public class AbsenceServiceImpl implements AbsenceService {
         Map<UUID, List<JustificatifDocument>> byDemande = justificatifDocumentRepository
                 .findAllByDemandeIdIn(ids).stream()
                 .collect(Collectors.groupingBy(JustificatifDocument::getDemandeId));
-                
+
         List<EtapeDemandeSnapshot> snapshots = etapeDemandeSnapshotRepository.findByDemandeIdIn(ids);
-        Map<UUID, String> libellesEtapeCourante = demandes.stream()
-                .collect(Collectors.toMap(
-                        DemandeAbsence::getId,
-                        d -> snapshots.stream()
-                                .filter(s -> s.getDemandeId().equals(d.getId()) && s.getPosition() != null && s.getPosition().equals(d.getPositionEtapeCourante()))
-                                .map(EtapeDemandeSnapshot::getLibelle)
-                                .findFirst()
-                                .orElse(""),
-                        (v1, v2) -> v1
-                ));
+
+        // Snapshot de l'étape courante par demande (null toléré si introuvable)
+        Map<UUID, EtapeDemandeSnapshot> snapCourantByDemande = new java.util.HashMap<>();
+        for (DemandeAbsence d : demandes) {
+            snapshots.stream()
+                    .filter(s -> s.getDemandeId().equals(d.getId())
+                            && s.getPosition() != null
+                            && s.getPosition().equals(d.getPositionEtapeCourante()))
+                    .findFirst()
+                    .ifPresent(s -> snapCourantByDemande.put(d.getId(), s));
+        }
 
         Map<UUID, String> urlsDoc = documentMiseEnCongeRepository.findAllByDemandeIdIn(ids).stream()
                 .collect(Collectors.toMap(DocumentMiseEnConge::getDemandeId, DocumentMiseEnConge::getUrlDocument, (v1, v2) -> v1));
 
+        // Contexte utilisateur récupéré une seule fois — pas de N+1
+        String userId = claimReaderService.identifiantUtilisateurCourant();
+        java.util.List<String> roles = claimReaderService.getRoles();
+
         return demandes.stream()
-                .map(d -> buildResponse(d, byDemande.getOrDefault(d.getId(), List.of()), libellesEtapeCourante.get(d.getId()), urlsDoc.get(d.getId())))
+                .map(d -> {
+                    EtapeDemandeSnapshot snapCourant = snapCourantByDemande.get(d.getId());
+                    String libelle = snapCourant != null ? snapCourant.getLibelle() : "";
+                    AbsenceResponse resp = buildResponse(
+                            d, byDemande.getOrDefault(d.getId(), List.of()), libelle, urlsDoc.get(d.getId()));
+                    if (d.getStatut() == StatutDemande.EN_VALIDATION_ETAPE) {
+                        resp.setEstMonTourDeValider(calculerMonTour(snapCourant, userId, roles));
+                    }
+                    return resp;
+                })
                 .toList();
     }
 
@@ -714,16 +810,7 @@ public class AbsenceServiceImpl implements AbsenceService {
         if (d.getStatut() == StatutDemande.EN_VALIDATION_ETAPE) {
             String userId = claimReaderService.identifiantUtilisateurCourant();
             java.util.List<String> roles = claimReaderService.getRoles();
-            boolean monTour = snapCourant
-                    .map(s -> {
-                        if (userId.equals(s.getValidateurIdentifiantExterne())) return true;
-                        if (s.getMecanismeResolution() == MecanismeResolution.ROLE_FIXE_GLOBAL || s.getMecanismeResolution() == MecanismeResolution.DG_CONDITIONNEL) {
-                            return roles.contains("ROLE_" + s.getRoleHabilite());
-                        }
-                        return false;
-                    })
-                    .orElse(false);
-            response.setEstMonTourDeValider(monTour);
+            response.setEstMonTourDeValider(calculerMonTour(snapCourant.orElse(null), userId, roles));
         }
 
         // Progression du circuit
@@ -734,6 +821,30 @@ public class AbsenceServiceImpl implements AbsenceService {
                 .map(com.banque.absences.domain.Validation::getEtapeSnapshotId)
                 .collect(Collectors.toSet());
         response.setProgression(construireProgression(d, tousLesSnaps, etapesApprouvees));
+
+        // Champs enrichis pour le document frontend (poste, département, manager, signataires).
+        // Mêmes sources que DocumentMiseEnCongeService : Keycloak + snapshots d'étapes.
+        try {
+            String demandeurId = d.getDemandeurIdentifiantExterne();
+            hierarchicalChainResolver.resoudreGradeParIdentifiant(demandeurId)
+                    .ifPresent(response::setEmployeePosition);
+            hierarchicalChainResolver.resoudreReseau(demandeurId)
+                    .ifPresent(response::setEmployeeDepartment);
+            hierarchicalChainResolver.resoudreManagerDirect(demandeurId)
+                    .flatMap(hierarchicalChainResolver::resolveNomComplet)
+                    .ifPresent(response::setDirectManagerName);
+
+            for (EtapeDemandeSnapshot snap : tousLesSnaps) {
+                String valId = snap.getValidateurIdentifiantExterne();
+                if (valId == null) continue;
+                String role = snap.getRoleHabilite();
+                if ("ANALYSTE_RH".equals(role) && response.getAnalysteRhName() == null) {
+                    hierarchicalChainResolver.resolveNomComplet(valId).ifPresent(response::setAnalysteRhName);
+                } else if ("DRH".equals(role) && response.getHrSignatoryName() == null) {
+                    hierarchicalChainResolver.resolveNomComplet(valId).ifPresent(response::setHrSignatoryName);
+                }
+            }
+        } catch (Exception ignored) {}
 
         return response;
     }
@@ -834,6 +945,16 @@ public class AbsenceServiceImpl implements AbsenceService {
         if (d instanceof DemandeCongeAnnuel congeAnnuel) {
             builder.numeroFraction(congeAnnuel.getNumeroFraction())
                    .estPremiereFraction(congeAnnuel.getEstPremiereFraction());
+        } else if (d instanceof com.banque.absences.domain.DemandeMission m) {
+            builder.objetMission(m.getObjetMission())
+                   .motifMission(m.getMotifMission())
+                   .destination(m.getDestination())
+                   .categorie(m.getCategorie());
+        } else if (d instanceof com.banque.absences.domain.DemandeMissionLongue m) {
+            builder.objetMission(m.getObjetMission())
+                   .motifMission(m.getMotifMission())
+                   .destination(m.getDestination())
+                   .categorie(m.getCategorie());
         }
 
         builder.backupIdentifiantExterne(d.getBackupIdentifiantExterne());
