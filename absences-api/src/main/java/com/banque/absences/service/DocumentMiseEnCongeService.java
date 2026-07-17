@@ -14,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -37,6 +36,9 @@ public class DocumentMiseEnCongeService {
     private static final DateTimeFormatter FMT =
             DateTimeFormatter.ofPattern("dd/MM/yyyy").withZone(ZoneId.of("Africa/Abidjan"));
 
+    private static final int TENTATIVES_MAX = 3;
+    private static final long DELAI_INITIAL_MS = 2_000;
+
     private final DemandeAbsenceRepository      demandeAbsenceRepository;
     private final ValidationRepository          validationRepository;
     private final DocumentMiseEnCongeRepository documentMiseEnCongeRepository;
@@ -46,10 +48,49 @@ public class DocumentMiseEnCongeService {
     private final PdfService                    pdfService;
     private final HierarchicalChainResolver     hierarchicalChainResolver;
     private final EtapeDemandeSnapshotRepository etapeDemandeSnapshotRepository;
+    private final org.springframework.transaction.support.TransactionTemplate transactionTemplate;
 
+    /**
+     * Génération asynchrone avec reprise : la génération dépend de Keycloak (résolution des
+     * signataires) et de MinIO (upload) — une indisponibilité passagère perdait le document
+     * SANS AUCUN SIGNAL (échec avalé par l'exécuteur async). 3 tentatives espacées de
+     * 2 s / 4 s, puis un ERROR marqué {@code ALERTE_DOCUMENT_NON_GENERE} : c'est le motif
+     * sur lequel brancher la supervision — un document manquant est un incident RH, pas
+     * une ligne de log de debug. Chaque tentative a sa propre transaction : un échec ne
+     * laisse aucune écriture partielle.
+     */
     @Async
-    @Transactional
     public void genererDocumentMiseEnConge(UUID demandeId) {
+        RuntimeException derniereErreur = null;
+        for (int tentative = 1; tentative <= TENTATIVES_MAX; tentative++) {
+            try {
+                transactionTemplate.executeWithoutResult(tx -> generer(demandeId));
+                return;
+            } catch (RuntimeException e) {
+                derniereErreur = e;
+                log.warn("Génération du document de mise en congé échouée pour la demande {} "
+                        + "(tentative {}/{}) : {}", demandeId, tentative, TENTATIVES_MAX,
+                        e.getMessage());
+                if (tentative < TENTATIVES_MAX && !attendre(DELAI_INITIAL_MS << (tentative - 1))) {
+                    break;
+                }
+            }
+        }
+        log.error("ALERTE_DOCUMENT_NON_GENERE demande={} : génération abandonnée après {} tentatives",
+                demandeId, TENTATIVES_MAX, derniereErreur);
+    }
+
+    private boolean attendre(long millis) {
+        try {
+            Thread.sleep(millis);
+            return true;
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
+    }
+
+    private void generer(UUID demandeId) {
         DemandeAbsence demande = demandeAbsenceRepository.findById(demandeId)
                 .orElseThrow(() -> new EntityNotFoundException("Demande introuvable : " + demandeId));
         List<Validation> historique = validationRepository.findByDemandeId(demandeId);
