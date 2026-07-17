@@ -128,10 +128,14 @@ public class AbsenceServiceImpl implements AbsenceService {
             m.setCategorie(dto.categorie());
             demande = m;
         } else if (dto.type() == TypeAbsence.PERMISSION) {
-            int duree = baremePermissionService.appliquerBareme(dto.motifPermission());
+            int bareme = baremePermissionService.appliquerBareme(dto.motifPermission());
+            int joursOuvres = bareme == -1 ? exigerDureeOuvree(dto.nombreJours()) : bareme;
             DemandePermission p = new DemandePermission();
-            p.setDateFin(dto.dateFin());
-            p.setNombreJours(duree == -1 ? dto.nombreJours() : duree);
+            // La durée du barème s'exprime en jours ouvrés : la date de fin est CALCULÉE
+            // (début + N jours ouvrés, week-ends sautés), jamais reprise de la saisie —
+            // « 3 jours à compter de jeudi » finit lundi, pas samedi.
+            p.setDateFin(calculerDateFinOuvree(dto.dateDebut(), joursOuvres));
+            p.setNombreJours(joursOuvres);
             p.setCodeMotif(dto.motifPermission());
             demande = p;
         } else if (dto.type() == TypeAbsence.CONGE_MATERNITE) {
@@ -665,8 +669,18 @@ public class AbsenceServiceImpl implements AbsenceService {
                     "Seules les demandes BROUILLON ou REJETEE sont modifiables");
         }
         demande.setDateDebut(dto.dateDebut());
-        demande.setDateFin(dto.dateFin());
-        demande.setNombreJours(dto.nombreJours());
+        if (demande.getType() == TypeAbsence.PERMISSION) {
+            // Même règle qu'à la création : la fin d'une permission est calculée en jours
+            // ouvrés, la saisie ne peut pas la contredire.
+            int joursOuvres = dto.nombreJours() != null
+                    ? exigerDureeOuvree(dto.nombreJours())
+                    : demande.getNombreJours();
+            demande.setNombreJours(joursOuvres);
+            demande.setDateFin(calculerDateFinOuvree(dto.dateDebut(), joursOuvres));
+        } else {
+            demande.setDateFin(dto.dateFin());
+            demande.setNombreJours(dto.nombreJours());
+        }
         return demandeAbsenceRepository.save(demande);
     }
 
@@ -740,12 +754,43 @@ public class AbsenceServiceImpl implements AbsenceService {
     private int compterJoursOuvres(LocalDate dateDebut, LocalDate dateFin) {
         int jours = 0;
         for (LocalDate d = dateDebut; !d.isAfter(dateFin); d = d.plusDays(1)) {
-            DayOfWeek jour = d.getDayOfWeek();
-            if (jour != DayOfWeek.SATURDAY && jour != DayOfWeek.SUNDAY) {
+            if (estJourOuvre(d)) {
                 jours++;
             }
         }
         return jours;
+    }
+
+    /**
+     * Date de fin d'une période de {@code joursOuvres} jours ouvrés commençant à
+     * {@code dateDebut} : « 3 jours à compter de jeudi » rend le lundi suivant.
+     * Un début tombant un week-end ne consomme rien, le décompte démarre au
+     * premier jour ouvré.
+     */
+    private LocalDate calculerDateFinOuvree(LocalDate dateDebut, int joursOuvres) {
+        LocalDate date = dateDebut;
+        int comptes = estJourOuvre(date) ? 1 : 0;
+        while (comptes < joursOuvres) {
+            date = date.plusDays(1);
+            if (estJourOuvre(date)) {
+                comptes++;
+            }
+        }
+        return date;
+    }
+
+    private boolean estJourOuvre(LocalDate date) {
+        DayOfWeek jour = date.getDayOfWeek();
+        return jour != DayOfWeek.SATURDAY && jour != DayOfWeek.SUNDAY;
+    }
+
+    /** Garde la durée libre (motif AUTRES) dans un domaine sain : au moins 1 jour ouvré. */
+    private int exigerDureeOuvree(Integer nombreJours) {
+        if (nombreJours == null || nombreJours < 1) {
+            throw new IllegalArgumentException(
+                    "Le nombre de jours de la permission doit être d'au moins 1 jour ouvré");
+        }
+        return nombreJours;
     }
 
     /**
