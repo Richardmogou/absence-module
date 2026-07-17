@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Machine à états générique pilotée par le snapshot d'étapes.
@@ -25,6 +26,14 @@ public class AbsenceStateMachine {
 
     private final EtapeDemandeSnapshotRepository etapeDemandeSnapshotRepository;
     private final DGConditionnelService dgConditionnelService;
+
+    /** EX-8 — Un rejet système n'est légal que depuis un état non final. */
+    private static final Set<StatutDemande> ETATS_REJETABLES_SYSTEME = Set.of(
+            StatutDemande.BROUILLON,
+            StatutDemande.SOUMISE,
+            StatutDemande.EN_VALIDATION_ETAPE,
+            StatutDemande.EN_INSTRUCTION_ANALYSTE_RH,
+            StatutDemande.EN_VALIDATION_DRH);
 
     /**
      * Applique {@code event} sur {@code demande} en mutant son statut (et éventuellement
@@ -45,7 +54,11 @@ public class AbsenceStateMachine {
 
     private StatutDemande calculerTransition(DemandeAbsence demande, AbsenceEvent event) {
         if (event == AbsenceEvent.REJETER_SYSTEME) {
-            return StatutDemande.REJETEE_PAR_LE_SYSTEME;
+            // EX-8 — borné aux états non finaux (pas de rejet système d'une demande
+            // déjà VALIDEE / CLOTUREE / REJETEE, qui produirait une incohérence de solde).
+            return ETATS_REJETABLES_SYSTEME.contains(demande.getStatut())
+                    ? StatutDemande.REJETEE_PAR_LE_SYSTEME
+                    : null;
         }
 
         return switch (demande.getStatut()) {
