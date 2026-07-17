@@ -3,13 +3,13 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { FormField } from "@/components/FormField";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import FormPageLayout from "@/components/FormPageLayout";
 import { BackupSelector } from "@/components/BackupSelector";
-import { AlertTriangle, Plane, FileText, FolderOpen } from "lucide-react";
+import { AlertTriangle, Plane } from "lucide-react";
 import Link from "next/link";
 import { useSoumission } from "@/lib/hooks/useSoumission";
 
@@ -57,17 +57,11 @@ export default function MissionLonguePage() {
     isSubmitting
   } = useSoumission();
 
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [file, setFile] = useState<File | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
 
   async function onSubmit(data: FormData) {
     if (!dureeValide) return;
     setLocalError(null);
-    if (!file) {
-      setLocalError("L'ordre de mission est obligatoire.");
-      return;
-    }
     const jours = calculerJours(data.dateDebut, data.dateFin);
     await soumettre(
       {
@@ -81,7 +75,7 @@ export default function MissionLonguePage() {
         categorie: data.categorie,
         backupIdentifiantExterne: data.backupIdentifiantExterne,
       },
-      file ? { file, typePiece: "ORDRE_DE_MISSION" } : undefined
+      undefined
     );
   }
 
@@ -211,37 +205,7 @@ export default function MissionLonguePage() {
         )}
       </div>
 
-      <div className="flex flex-col gap-2 mt-4">
-        <label className="text-sm font-medium text-neutral-700">Ordre de mission (Obligatoire)</label>
-        <div
-          className="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-6 text-center transition-colors cursor-pointer"
-          style={{
-            borderColor: file ? "#2C2C2C" : "#D1D5DB",
-            background:  file ? "#2C2C2C0A" : "#FAFAFA",
-          }}
-        >
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".pdf,.jpg,.jpeg,.png"
-            className="absolute inset-0 opacity-0 cursor-pointer"
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          />
-          <div className="flex flex-col items-center gap-3 pointer-events-none">
-            {file ? (
-              <>
-                <FileText size={32} style={{ color: "#2C2C2C" }} />
-                <p className="text-sm font-semibold" style={{ color: "#2C2C2C" }}>{file.name}</p>
-              </>
-            ) : (
-              <>
-                <FolderOpen size={32} className="text-neutral-400" />
-                <p className="text-sm text-neutral-500">Glissez votre fichier ici ou cliquez pour parcourir</p>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
+
 
       {(apiError || localError) && (
         <Alert variant="destructive" className="mt-4">

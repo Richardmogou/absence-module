@@ -28,8 +28,8 @@ export default function DemandesLayout({ children, modal }: { children: React.Re
           top: "4px",
         }}
       />
-      <main className="relative z-10 mx-auto w-full max-w-container px-6 lg:px-8 py-4">
-        {children}
+      <main className="relative z-10 mx-auto w-full max-w-container px-6 lg:px-8 py-4 grid grid-cols-1 grid-rows-1 items-start">
+        <div className="col-start-1 row-start-1 w-full h-full">{children}</div>
         {modal}
       </main>
       

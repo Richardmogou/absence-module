@@ -29,7 +29,7 @@ export default function AppFooter() {
   return (
     <footer className="relative mt-auto overflow-hidden">
       {/* Bande kente haut */}
-      <div className="h-1 w-full" style={{ background: KENTE }} />
+      <div className="h-[2px] w-full" style={{ background: KENTE }} />
 
       {/* Fond avec image africaine très atténuée */}
       <div className="relative">

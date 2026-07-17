@@ -44,7 +44,7 @@ export default function AppHeader() {
     { href: "/validation-file", label: "File validation", icon: FileCheck },
     { href: "/analyste-rh", label: "Analyste RH", icon: Users, roles: ["ANALYSTE_RH", "ADMIN_RH"] },
     { href: "/drh", label: "DRH", icon: Briefcase, roles: ["DRH", "ADMIN_RH"] },
-    { href: "/admin/dashboard", label: "Admin", icon: Shield, roles: ["ADMIN_RH"] },
+    { href: "/dashboard", label: "Admin", icon: Shield, roles: ["ADMIN_RH"] },
   ];
 
   const visibleLinks = NAV_LINKS.filter((link) => {
@@ -152,7 +152,7 @@ export default function AppHeader() {
 
       {/* Bande kente décorative sur toute la largeur */}
       <div
-        className="absolute bottom-0 left-0 right-0 h-1 z-20"
+        className="absolute bottom-0 left-0 right-0 h-[2px] z-20"
         style={{
           background:
             "repeating-linear-gradient(90deg, #C41E22 0px, #C41E22 10px, #808080 10px, #808080 20px, #2C2C2C 20px, #2C2C2C 30px, #F5F5F5 30px, #F5F5F5 40px)",

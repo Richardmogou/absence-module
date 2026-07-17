@@ -10,12 +10,15 @@ interface RegleAffectation {
   mecanisme: string;
   roleKeycloakCible: string | null;
   profondeurHierarchique: number | null;
+  gradeDeclencheur: string | null;
+  priorite: number | null;
 }
 
 interface Etape {
   id: string;
   ordre: number;
   libelle: string;
+  delaiJours: number | null;
   estVerrouillable: boolean;
   regles: RegleAffectation[];
 }
@@ -79,6 +82,23 @@ const MECANISME_META: Record<string, { label: string; color: string; desc: strin
 
 const KENTE =
   "repeating-linear-gradient(90deg,#C41E22 0px,#C41E22 8px,#B8932A 8px,#B8932A 16px,#2C2C2C 16px,#2C2C2C 24px,#F5F5F5 24px,#F5F5F5 32px)";
+
+/** Décrit la cible concrète d'une règle selon son mécanisme (colonne « Cible » du tableau). */
+function cibleRegle(r: RegleAffectation): string {
+  switch (r.mecanisme) {
+    case "HIERARCHIQUE":
+      return r.profondeurHierarchique != null ? `N+${r.profondeurHierarchique}` : "Hiérarchie";
+    case "ROLE_FIXE_SCOPE_RESEAU":
+    case "ROLE_FIXE_GLOBAL":
+      return r.roleKeycloakCible ?? "—";
+    case "DG_CONDITIONNEL":
+      return r.gradeDeclencheur ? `Grade ${r.gradeDeclencheur}` : "DG";
+    case "BACKUP":
+      return "Backup désigné";
+    default:
+      return "—";
+  }
+}
 
 export default async function CircuitDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -148,86 +168,93 @@ export default async function CircuitDetailPage({ params }: { params: Promise<{ 
         </div>
       </div>
 
-      {/* Étapes */}
+      {/* Étapes — tableau matriciel étape × règles */}
       <div className="flex flex-col gap-3">
         <h2 className="font-heading text-lg font-bold text-primary-500">
           Étapes de validation · {circuit.etapes?.length ?? 0} au total
         </h2>
 
         {circuit.etapes && circuit.etapes.length > 0 ? (
-          <div className="flex flex-col gap-3">
-            {circuit.etapes.map((etape, i) => {
-              const premiereRegle = etape.regles?.[0];
-              const meta = premiereRegle
-                ? (MECANISME_META[premiereRegle.mecanisme] ?? {
-                    label: premiereRegle.mecanisme,
-                    color: "#6B7280",
-                    desc:  "",
-                  })
-                : { label: "—", color: "#6B7280", desc: "" };
+          <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-sm">
+            <table className="w-full text-sm border-collapse">
+              <thead>
+                <tr className="bg-neutral-50 border-b border-neutral-200 text-xxs uppercase tracking-wider text-neutral-400 font-ui">
+                  <th className="text-center font-semibold px-3 py-2.5 w-12">#</th>
+                  <th className="text-left font-semibold px-3 py-2.5">Étape</th>
+                  <th className="text-left font-semibold px-3 py-2.5">Mécanisme</th>
+                  <th className="text-left font-semibold px-3 py-2.5">Cible</th>
+                  <th className="text-center font-semibold px-3 py-2.5 w-16">Priorité</th>
+                  <th className="text-center font-semibold px-3 py-2.5 w-16">Délai</th>
+                </tr>
+              </thead>
+              <tbody>
+                {circuit.etapes.map((etape, i) => {
+                  const regles = etape.regles?.length ? etape.regles : [null];
+                  return regles.map((regle, j) => {
+                    const meta = regle
+                      ? (MECANISME_META[regle.mecanisme] ?? { label: regle.mecanisme, color: "#6B7280", desc: "" })
+                      : { label: "—", color: "#6B7280", desc: "" };
+                    const premiereLigne = j === 0;
+                    return (
+                      <tr
+                        key={etape.id + "-" + j}
+                        className={`border-b border-neutral-100 last:border-0 ${
+                          etape.estVerrouillable ? "bg-green-50/40" : ""
+                        }`}
+                      >
+                        {/* Colonnes niveau ÉTAPE — fusionnées sur toutes les règles */}
+                        {premiereLigne && (
+                          <>
+                            <td rowSpan={regles.length} className="text-center align-top px-3 py-3">
+                              <span
+                                className="inline-flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold text-white"
+                                style={{ background: meta.color }}
+                              >
+                                {i + 1}
+                              </span>
+                            </td>
+                            <td rowSpan={regles.length} className="align-top px-3 py-3">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-semibold text-primary-500">{etape.libelle}</span>
+                                {etape.estVerrouillable && (
+                                  <span className="inline-flex items-center gap-1 text-xxs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-semibold">
+                                    <Lock size={10} /> Verrouillé
+                                  </span>
+                                )}
+                              </div>
+                              {regles.length > 1 && (
+                                <span className="text-xxs text-neutral-400">{regles.length} règles</span>
+                              )}
+                            </td>
+                          </>
+                        )}
 
-              return (
-                <div key={etape.id} className="flex items-stretch gap-4">
-                  {/* Connecteur vertical */}
-                  <div className="flex flex-col items-center gap-0">
-                    <div
-                      className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white flex-shrink-0"
-                      style={{ background: meta.color }}
-                    >
-                      {i + 1}
-                    </div>
-                    {i < (circuit.etapes?.length ?? 0) - 1 && (
-                      <div className="w-px flex-1 my-1" style={{ background: meta.color + "40" }} />
-                    )}
-                  </div>
-
-                  {/* Carte étape */}
-                  <div className={`flex-1 rounded-lg border px-4 py-3 mb-2 ${
-                    etape.estVerrouillable
-                      ? "border-green-200 bg-green-50"
-                      : "border-neutral-200 bg-white"
-                  }`}>
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-semibold text-sm text-primary-500">
-                            {etape.libelle}
-                          </span>
-                          {etape.estVerrouillable && (
-                            <span className="inline-flex items-center gap-1 text-xxs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-semibold">
-                              <Lock size={10} /> Verrouillé
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 flex-wrap">
+                        {/* Colonnes niveau RÈGLE */}
+                        <td className="px-3 py-3">
                           <span
-                            className="text-xxs px-2 py-0.5 rounded font-semibold"
+                            className="text-xxs px-2 py-0.5 rounded font-semibold whitespace-nowrap"
                             style={{ background: meta.color + "18", color: meta.color }}
                           >
                             {meta.label}
                           </span>
-                          {meta.desc && (
-                            <span className="text-xxs text-neutral-400">{meta.desc}</span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Détails règle */}
-                      {premiereRegle && (
-                        <div className="text-xxs text-neutral-400 font-mono text-right flex-shrink-0">
-                          {premiereRegle.profondeurHierarchique != null && (
-                            <div>N+{premiereRegle.profondeurHierarchique}</div>
-                          )}
-                          {premiereRegle.roleKeycloakCible && (
-                            <div>{premiereRegle.roleKeycloakCible}</div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                        </td>
+                        <td className="px-3 py-3 font-mono text-xs text-neutral-600">
+                          {regle ? cibleRegle(regle) : "—"}
+                        </td>
+                        <td className="text-center px-3 py-3 text-neutral-500">
+                          {regle?.priorite ?? "—"}
+                        </td>
+                        {premiereLigne && (
+                          <td rowSpan={regles.length} className="text-center align-top px-3 py-3 text-neutral-500">
+                            {etape.delaiJours != null ? `${etape.delaiJours}j` : "—"}
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  });
+                })}
+              </tbody>
+            </table>
           </div>
         ) : (
           <p className="text-sm text-neutral-400 italic">Aucune étape définie.</p>
