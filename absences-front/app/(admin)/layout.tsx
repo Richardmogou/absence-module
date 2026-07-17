@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import { Settings } from "lucide-react";
 
 const KENTE =
   "repeating-linear-gradient(90deg,#C41E22 0px,#C41E22 8px,#B8932A 8px,#B8932A 16px,#2C2C2C 16px,#2C2C2C 24px,#F5F5F5 24px,#F5F5F5 32px)";
@@ -44,10 +45,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <div className="relative z-10 mx-auto max-w-container px-6 sm:px-10 h-full flex items-center justify-between gap-6 py-6">
           <div className="flex items-center gap-4">
             <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center text-lg flex-shrink-0"
+              className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
               style={{ background: "rgba(184,147,42,0.18)", backdropFilter: "blur(6px)" }}
             >
-              ⚙️
+              <Settings size={20} className="text-gold-300" />
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-2 mb-0.5">

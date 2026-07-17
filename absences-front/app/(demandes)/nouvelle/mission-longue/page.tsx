@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,8 +8,10 @@ import { FormField } from "@/components/FormField";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import FormPageLayout from "@/components/FormPageLayout";
-import apiClient from "@/lib/api/client";
 import { BackupSelector } from "@/components/BackupSelector";
+import { AlertTriangle, Plane } from "lucide-react";
+import Link from "next/link";
+import { useSoumission } from "@/lib/hooks/useSoumission";
 
 const DUREE_MIN_JOURS = 15;
 
@@ -18,27 +19,16 @@ const schema = z
   .object({
     dateDebut: z.string().min(1, "La date de départ est obligatoire"),
     dateFin:   z.string().min(1, "La date de retour est obligatoire"),
-    motif:     z.string().max(500).optional(),
+    objetMission: z.string().min(1, "L'objet de la mission est obligatoire").max(500),
+    motifMission: z.string().min(1, "La justification est obligatoire").max(1000),
+    destination: z.string().min(1, "La destination est obligatoire").max(200),
+    categorie: z.string().min(1, "La catégorie est obligatoire"),
     backupIdentifiantExterne: z.string().optional(),
   })
   .refine((d) => new Date(d.dateFin) >= new Date(d.dateDebut), {
     message: "La date de retour doit être après la date de départ",
     path: ["dateFin"],
-  })
-  .refine(
-    (d) => {
-      if (!d.dateDebut || !d.dateFin) return true;
-      const diff = Math.ceil(
-        (new Date(d.dateFin).getTime() - new Date(d.dateDebut).getTime()) /
-          (1000 * 60 * 60 * 24)
-      ) + 1;
-      return diff >= DUREE_MIN_JOURS;
-    },
-    {
-      message: `La mission doit durer au minimum ${DUREE_MIN_JOURS} jours`,
-      path: ["dateFin"],
-    }
-  );
+  });
 
 type FormData = z.infer<typeof schema>;
 
@@ -52,42 +42,41 @@ function calculerJours(dateDebut: string, dateFin: string): number {
 }
 
 export default function MissionLonguePage() {
-  const router = useRouter();
-  const [apiError, setApiError] = useState<string | null>(null);
-
   const {
     register, handleSubmit, watch, setValue,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   const [dateDebut, dateFin] = watch(["dateDebut", "dateFin"]);
   const nombreJours = calculerJours(dateDebut, dateFin);
   const dureeValide = nombreJours >= DUREE_MIN_JOURS;
 
+  const {
+    soumettre,
+    apiError,
+    isSubmitting
+  } = useSoumission();
+
+  const [localError, setLocalError] = useState<string | null>(null);
+
   async function onSubmit(data: FormData) {
-    setApiError(null);
+    if (!dureeValide) return;
+    setLocalError(null);
     const jours = calculerJours(data.dateDebut, data.dateFin);
-    try {
-      const res = await apiClient.post("/api/v5/demandes", {
+    await soumettre(
+      {
         type:        "MISSION_LONGUE",
         dateDebut:   data.dateDebut,
         dateFin:     data.dateFin,
         nombreJours: jours,
-        objetMission: data.motif ?? null,
+        objetMission: data.objetMission,
+        motifMission: data.motifMission,
+        destination: data.destination,
+        categorie: data.categorie,
         backupIdentifiantExterne: data.backupIdentifiantExterne,
-      });
-      // MISSION_LONGUE est dans TYPES_AVEC_JUSTIFICATIF → dépôt ordre de mission requis
-      router.push(`/${res.data.id}/justificatif`);
-    } catch (err: unknown) {
-      const code = (err as { response?: { data?: { code?: string } } })
-        ?.response?.data?.code;
-      if (code === "DUREE_INSUFFISANTE_MISSION_LONGUE")
-        setApiError(`La mission doit durer au minimum ${DUREE_MIN_JOURS} jours.`);
-      else if (code === "CIRCUIT_NON_DETERMINE")
-        setApiError("Votre grade ne correspond à aucun circuit configuré. Contactez l'administrateur RH.");
-      else
-        setApiError("Une erreur est survenue. Veuillez réessayer.");
-    }
+      },
+      undefined
+    );
   }
 
   return (
@@ -97,7 +86,7 @@ export default function MissionLonguePage() {
       badge="Nouvelle demande"
       title="Mission longue durée"
       subtitle="Déplacement professionnel étendu (≥ 15 jours). Déclenche une validation renforcée incluant la Direction Générale pour les agents."
-      icon="✈️"
+      icon={<Plane size={24} />}
     >
       <div className="grid grid-cols-2 gap-4">
         <FormField
@@ -116,7 +105,6 @@ export default function MissionLonguePage() {
         />
       </div>
 
-      {/* Calcul durée en temps réel */}
       {nombreJours > 0 && (
         <div
           className="flex items-center justify-between rounded-lg border px-4 py-3 transition-colors"
@@ -126,7 +114,9 @@ export default function MissionLonguePage() {
           }}
         >
           <div className="flex items-center gap-3">
-            <span className="text-xl">{dureeValide ? "✈️" : "⚠️"}</span>
+            {dureeValide
+              ? <Plane size={20} className="flex-shrink-0" style={{ color: "#2C2C2C" }} />
+              : <AlertTriangle size={20} className="flex-shrink-0" style={{ color: "#DC2626" }} />}
             <div>
               <p
                 className="text-xs uppercase tracking-wider font-ui font-semibold"
@@ -143,23 +133,66 @@ export default function MissionLonguePage() {
             </div>
           </div>
           {!dureeValide && (
-            <span className="text-xs text-secondary-600 font-medium">
-              Minimum {DUREE_MIN_JOURS} jours requis
-            </span>
+            <div className="flex flex-col items-end gap-2">
+              <span className="text-xs text-secondary-600 font-medium">
+                Minimum {DUREE_MIN_JOURS} jours requis
+              </span>
+              <Link href="/nouvelle/mission" className="text-sm font-semibold text-primary-600 underline">
+                Passer en Mission Classique ?
+              </Link>
+            </div>
           )}
         </div>
       )}
 
+      <div className="flex flex-col gap-1.5 mt-2">
+        <label htmlFor="categorie" className="text-sm font-medium text-neutral-700">Catégorie de la mission</label>
+        <select
+          id="categorie"
+          className="h-10 w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          {...register("categorie")}
+        >
+          <option value="">Sélectionnez une catégorie</option>
+          <option value="Terrain/Commerciale">Missions terrain / commerciales</option>
+          <option value="Supervision/Audit">Missions supervision / audit</option>
+          <option value="Formations/Séminaires">Formations et séminaires</option>
+          <option value="Réunions institutionnelles">Réunions institutionnelles</option>
+          <option value="Représentation externe">Représentation externe</option>
+          <option value="Autre">Autre</option>
+        </select>
+        {errors.categorie && <p className="text-xs text-secondary-500">{errors.categorie.message}</p>}
+      </div>
+
       <FormField
-        id="motif"
-        label="Objet / informations complémentaires (optionnel)"
-        placeholder="ex: Formation réglementaire UEMOA — Dakar"
-        error={errors.motif}
-        {...register("motif")}
+        id="destination"
+        label="Ville / Pays de destination"
+        placeholder="ex: Douala"
+        error={errors.destination}
+        {...register("destination")}
       />
 
-      {/* Back-up optionnel */}
+      <FormField
+        id="objetMission"
+        label="Objet de la mission"
+        placeholder="ex: Formation réglementaire"
+        error={errors.objetMission}
+        {...register("objetMission")}
+      />
+
       <div className="flex flex-col gap-1.5 mt-2">
+        <label htmlFor="motifMission" className="text-sm font-medium text-neutral-700">Justification / Motif détaillé</label>
+        <textarea
+          id="motifMission"
+          rows={3}
+          className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+          placeholder="Détaillez les raisons de cette mission..."
+          {...register("motifMission")}
+        />
+        {errors.motifMission && <p className="text-xs text-secondary-500">{errors.motifMission.message}</p>}
+      </div>
+
+      {/* Back-up optionnel */}
+      <div className="flex flex-col gap-1.5 mt-4">
         <label className="text-sm font-medium text-neutral-700">
           Identifiant du Back-up (collègue de même grade)
         </label>
@@ -172,37 +205,22 @@ export default function MissionLonguePage() {
         )}
       </div>
 
-      {/* Info ordre de mission */}
-      <div className="flex items-start gap-3 rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-3">
-        <span className="text-lg mt-0.5">📎</span>
-        <p className="text-xs text-neutral-600 leading-relaxed">
-          Un <strong>ordre de mission</strong> vous sera demandé à l&apos;étape suivante.
-          Préparez-le en format PDF ou image.
-        </p>
-      </div>
 
-      {/* Avertissement DG */}
-      <div className="flex items-start gap-3 rounded-lg border border-primary-200 bg-primary-50 px-4 py-3">
-        <span className="text-lg mt-0.5">⚠️</span>
-        <p className="text-xs text-primary-600 leading-relaxed">
-          Les missions longue durée nécessitent une{" "}
-          <strong>validation Direction Générale</strong> en plus du circuit RH standard.
-        </p>
-      </div>
 
-      {apiError && (
-        <Alert variant="destructive">
-          <AlertDescription>{apiError}</AlertDescription>
+      {(apiError || localError) && (
+        <Alert variant="destructive" className="mt-4">
+          <AlertDescription>{apiError || localError}</AlertDescription>
         </Alert>
       )}
+
 
       <Button
         type="button"
         disabled={isSubmitting || !dureeValide}
-        className="h-12 text-base mt-2"
+        className="h-12 text-base mt-4"
         onClick={handleSubmit(onSubmit)}
       >
-        {isSubmitting ? "Envoi en cours…" : "Continuer →"}
+        {isSubmitting ? "Envoi en cours…" : "Soumettre la demande"}
       </Button>
     </FormPageLayout>
   );

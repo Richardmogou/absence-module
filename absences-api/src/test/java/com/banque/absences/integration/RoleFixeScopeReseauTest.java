@@ -1,5 +1,6 @@
 package com.banque.absences.integration;
 
+import com.banque.absences.testsupport.KeycloakAdminMock;
 import com.banque.absences.domain.DemandeAbsence;
 import com.banque.absences.domain.EtapeDemandeSnapshot;
 import com.banque.absences.domain.EtapeModeleCircuit;
@@ -132,23 +133,14 @@ class RoleFixeScopeReseauTest {
             }
         });
 
-        // API admin : résolution du réseau d'un demandeur tiers via GET /users/{id}/reseau
-        adminApiMockServer.setDispatcher(new Dispatcher() {
-            @Override @NotNull
-            public MockResponse dispatch(@NotNull RecordedRequest req) {
-                String path = req.getPath() == null ? "" : req.getPath();
-                if (path.contains(DA_RESEAU_A_ID + "/reseau"))
-                    return new MockResponse().setResponseCode(200)
-                            .addHeader("Content-Type", "text/plain").setBody(RESEAU_A);
-                if (path.contains(DA_RESEAU_B_ID + "/reseau"))
-                    return new MockResponse().setResponseCode(200)
-                            .addHeader("Content-Type", "text/plain").setBody(RESEAU_B);
-                // DA sans réseau : 404 → Optional.empty() → ReseauNonRenseigneException
-                if (path.contains(DA_SANS_RESEAU_ID + "/reseau"))
-                    return new MockResponse().setResponseCode(404);
-                return new MockResponse().setResponseCode(404);
-            }
-        });
+        // API admin : le réseau d'un demandeur tiers se lit dans l'attribut `reseau` de sa
+        // UserRepresentation (GET /users/{id}) — il n'y a pas de sous-ressource /reseau.
+        // DA_SANS_RESEAU_ID n'est volontairement pas déclaré : 404 → Optional.empty()
+        // → ReseauNonRenseigneException, le cas 3.
+        adminApiMockServer.setDispatcher(KeycloakAdminMock.dispatcher(Map.of(
+                DA_RESEAU_A_ID, KeycloakAdminMock.utilisateur().grade("DA").reseau(RESEAU_A),
+                DA_RESEAU_B_ID, KeycloakAdminMock.utilisateur().grade("DA").reseau(RESEAU_B),
+                DR_RESEAU_A_ID, KeycloakAdminMock.utilisateur().grade("DR").reseau(RESEAU_A))));
 
         registry.add("keycloak.jwks-uri",
                 () -> jwksMockServer.url("/realms/afb/protocol/openid-connect/certs").toString());

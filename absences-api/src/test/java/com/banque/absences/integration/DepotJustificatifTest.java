@@ -7,6 +7,7 @@ import com.banque.absences.repository.DemandeAbsenceRepository;
 import com.banque.absences.security.KeycloakClaims;
 import com.banque.absences.service.CircuitDeterminationService;
 import com.banque.absences.service.DoublonDetectionService;
+import com.banque.absences.service.MinioStorageService;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.crypto.RSASSASigner;
@@ -29,11 +30,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Date;
@@ -43,6 +46,10 @@ import java.util.UUID;
 
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -62,18 +69,23 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class DepotJustificatifTest {
 
     private static final String ANALYSTE_ID = "analyste-rh-cm-001";
+    /** Propriétaire de la demande : seul lui peut déposer son justificatif (verifierOwnership). */
+    private static final String DEMANDEUR_ID = "da-cm-001";
 
     private static MockWebServer jwksMockServer;
     private static MockWebServer adminApiMockServer;
     private static RSAKey rsaKey;
 
     private String tokenAnalyste;
+    private String tokenDemandeur;
 
     @Autowired private MockMvc                  mockMvc;
     @Autowired private DemandeAbsenceRepository demandeRepo;
 
     @MockBean private DoublonDetectionService    doublonService;
     @MockBean private CircuitDeterminationService circuitService;
+    /** Le téléversement réel exigerait un MinIO joignable : on ne teste pas le stockage ici. */
+    @MockBean private MinioStorageService        minioStorageService;
 
     @DynamicPropertySource
     static void injecterUrls(DynamicPropertyRegistry registry) throws Exception {
@@ -116,7 +128,8 @@ class DepotJustificatifTest {
 
     @BeforeAll
     void initTokens() throws Exception {
-        tokenAnalyste = buildJwt(ANALYSTE_ID, "ANALYSTE_RH", List.of("EMPLOYE", "ANALYSTE_RH"));
+        tokenAnalyste  = buildJwt(ANALYSTE_ID,  "ANALYSTE_RH", List.of("EMPLOYE", "ANALYSTE_RH"));
+        tokenDemandeur = buildJwt(DEMANDEUR_ID, "DA",          List.of("EMPLOYE"));
     }
 
     @AfterAll
@@ -131,16 +144,23 @@ class DepotJustificatifTest {
         // Insertion directe d'une demande en attente d'instruction
         UUID demandeId = creerDemandeEnInstruction();
 
-        // Étape 1 : POST /justificatif -> 201
-        mockMvc.perform(post("/api/v5/demandes/" + demandeId + "/justificatif")
-                        .header("Authorization", "Bearer " + tokenAnalyste)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "typePiece": "Certificat medical",
-                                  "urlFichier": "https://storage.banque.com/docs/certificat.pdf"
-                                }
-                                """))
+        // Étape 1 : POST /justificatif -> 201.
+        // L'endpoint consomme du multipart/form-data : le client téléverse le fichier, et
+        // c'est le serveur qui produit l'URL de stockage — elle n'est plus fournie par
+        // l'appelant comme dans l'ancien contrat JSON.
+        MockMultipartFile fichier = new MockMultipartFile(
+                "fichier", "certificat.pdf", MediaType.APPLICATION_PDF_VALUE,
+                "contenu-pdf-factice".getBytes(StandardCharsets.UTF_8));
+
+        when(minioStorageService.uploader(any(), eq("Certificat medical"), eq(demandeId)))
+                .thenReturn("https://storage.banque.com/docs/" + demandeId + "/certificat.pdf");
+
+        // Le dépôt est fait par le demandeur — verifierOwnership n'autorise que le
+        // propriétaire de la demande. L'analyste, lui, instruit (étape 2).
+        mockMvc.perform(multipart("/api/v5/demandes/" + demandeId + "/justificatif")
+                        .file(fichier)
+                        .param("typePiece", "Certificat medical")
+                        .header("Authorization", "Bearer " + tokenDemandeur))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id", notNullValue()))
                 .andExpect(jsonPath("$.typePiece", is("Certificat medical")))

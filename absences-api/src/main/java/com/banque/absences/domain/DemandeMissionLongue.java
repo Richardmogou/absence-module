@@ -14,4 +14,13 @@ public class DemandeMissionLongue extends DemandeAbsence {
 
     @Column(name = "objet_mission", length = 500)
     private String objetMission;
+
+    @Column(name = "motif_mission", length = 1000)
+    private String motifMission;
+
+    @Column(name = "destination", length = 200)
+    private String destination;
+
+    @Column(name = "categorie", length = 100)
+    private String categorie;
 }

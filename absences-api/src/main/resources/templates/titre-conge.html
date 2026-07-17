@@ -5,15 +5,18 @@
   <title>Titre de congé</title>
 
   <style>
+    /* Marges de page : côtés à 0 pour un en-tête / pied de page bord à bord.
+       Le corps de texte récupère ses marges latérales via .content { padding }. */
     @page {
       size: A4;
-      margin: 15mm 15mm;
+      margin: 0 0 15mm 0;
     }
 
     body {
       font-family: Arial, Helvetica, sans-serif;
       font-size: 14px;
       color: #000;
+      margin: 0;
     }
 
     .container {
@@ -28,14 +31,13 @@
       font-size: 80px;
       font-weight: bold;
       color: #e5e7eb;
-      opacity: 0.15;
       z-index: 0;
-      pointer-events: none;
     }
 
     .content {
       position: relative;
       z-index: 1;
+      padding: 0 15mm;
     }
 
     .header {
@@ -107,11 +109,23 @@
     }
 
     .footer-note {
-      margin-top: 20px;
+      position: fixed;
+      bottom: 15px;
+      left: 0;
+      right: 0;
       font-size: 9px;
       font-style: italic;
       text-align: center;
       color: #555;
+    }
+
+    /* Bande Kente : PNG 40x6 repete (les degrades CSS ne sont pas supportes
+       par openhtmltopdf). L'URL est injectee via th:style sur chaque element. */
+    .kente-band {
+      height: 6px;
+      width: 100%;
+      background-repeat: repeat-x;
+      background-position: left center;
     }
   </style>
 </head>
@@ -126,8 +140,18 @@
   <div class="content">
 
     <!-- Header -->
-    <div class="header">
-      <img th:src="${company_logo}" alt="Logo entreprise" style="height: 60px; max-width: 200px;" />
+    <div class="header" style="position: relative; height: 85px; background-color: #F6F6F6; margin: 0 -15mm 40px -15mm; overflow: hidden;">
+      
+      <!-- Zone droite avec background image (data URI injecté par le service — cf. header_background) -->
+      <div th:style="|position: absolute; top: 0; right: 0; bottom: 0; left: 240px; background-image: url('${header_background}'); background-size: cover; background-position: center;|"></div>
+
+      <!-- Zone logo avec fond blanc strict -->
+      <div style="position: absolute; top: 0; left: 0; bottom: 0; width: 240px; background-color: #ffffff;">
+        <img th:src="${company_logo}" alt="Logo entreprise" style="position: absolute; top: 10px; left: 15px; height: 60px; max-width: 200px;" />
+      </div>
+
+      <!-- Bande Kente au bas du header -->
+      <div class="kente-band" th:style="|position: absolute; bottom: 0; left: 0; right: 0; background-image: url('${kente_band}');|"></div>
     </div>
 
     <!-- Title -->
@@ -182,44 +206,52 @@
     </div>
 
     <!-- Body -->
-    <div class="section">
+    <!-- Body -->
+    <div class="section" style="margin-top: 30px; line-height: 1.6; text-align: justify;">
       <p>
-        Il est accordé à l'employé(e) susmentionné(e) un(e) <span th:text="${absence_type}"></span> pour la période suivante :
+        La Direction des Ressources Humaines atteste par le présent document que <strong>l'employé(e) susmentionné(e)</strong> est officiellement autorisé(e) à suspendre temporairement son activité professionnelle pour motif de <strong><span th:text="${absence_type}"></span></strong>.
       </p>
 
       <p>
-        <strong>Du :</strong> <span th:text="${date_debut}"></span><br/>
-        <strong>Au :</strong> <span th:text="${date_fin}"></span><br/>
-        <strong>Date de reprise :</strong> <span th:text="${date_reprise}"></span>
+        Cette autorisation d'absence couvre la période allant du <strong><span th:text="${date_debut}"></span></strong> au <strong><span th:text="${date_fin}"></span></strong> inclus (représentant un total de <strong><span th:text="${nombre_jours}"></span> jours calendaires</strong>), durant laquelle l'employé(e) a déclaré jouir de ce congé à la localisation suivante : <strong><span th:text="${lieu_jouissance}"></span></strong>, avant une reprise formelle des fonctions fixée au <strong><span th:text="${date_reprise}"></span></strong> aux horaires habituels de travail.
       </p>
 
       <p>
-        <strong>Nombre de jours :</strong> <span th:text="${nombre_jours}"></span>
-      </p>
-      
-      <p>
-        <strong>Lieu de jouissance :</strong> <span th:text="${lieu_jouissance}"></span>
+        En cas de force majeure nécessitant une modification de ces dates, l'employé(e) est tenu(e) d'en informer immédiatement sa hiérarchie ainsi que la Direction des Ressources Humaines.
       </p>
 
       <p>
-        Ce titre de congé fait foi pour valoir ce que de droit, et a été validé selon le circuit d'approbation en vigueur.
+        Nous certifions que cette demande a suivi l'intégralité du circuit d'approbation réglementaire de l'entreprise. Elle a été examinée et validée par le supérieur hiérarchique direct ainsi que par les autorités compétentes, conformément aux dispositions internes en vigueur.
+      </p>
+
+      <p>
+        En foi de quoi, le présent titre de congé est délivré pour servir et valoir ce que de droit.
       </p>
     </div>
 
     <!-- Signature -->
-    <div class="signature">
-      <p>
+    <div class="signature" style="margin-top: 40px; text-align: right;">
+      <p style="margin-bottom: 20px;">
         Fait à <span th:text="${document_location}"></span>,
         le <span th:text="${document_date}"></span>
       </p>
-      <div class="sign">
-        <p class="title" th:text="${hr_signatory_title}"></p>
-        <p class="name" th:text="${hr_signatory_name}"></p>
-      </div>
+      <table style="width: 100%; border: none;">
+        <tr>
+          <td style="width: 50%; text-align: left; vertical-align: top; border: none;">
+            <p class="title" style="font-size: 12px; margin: 0;">L'Analyste RH</p>
+            <p class="name" style="font-size: 14px; font-weight: bold; margin-top: 40px;" th:text="${analyste_rh_name}"></p>
+          </td>
+          <td style="width: 50%; text-align: right; vertical-align: top; border: none;">
+            <p class="title" style="font-size: 12px; margin: 0;" th:text="${hr_signatory_title}"></p>
+            <p class="name" style="font-size: 14px; font-weight: bold; margin-top: 40px;" th:text="${hr_signatory_name}"></p>
+          </td>
+        </tr>
+      </table>
     </div>
 
     <!-- Footer -->
     <div class="footer-note">
+      <div class="kente-band" th:style="|margin-bottom: 10px; border-radius: 2px; background-image: url('${kente_band}');|"></div>
       Document généré automatiquement par le système INTRA-ABS - Non modifiable
       <br/>
       Généré le <span th:text="${generation_timestamp}"></span>

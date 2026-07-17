@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import apiClient from "@/lib/api/client";
+import { Trash2 } from "lucide-react";
 
 export function BoutonSupprimerCircuit({ circuitId }: { circuitId: string }) {
   const router  = useRouter();
@@ -52,7 +53,7 @@ export function BoutonSupprimerCircuit({ circuitId }: { circuitId: string }) {
       className="text-neutral-400 hover:text-secondary-500"
       onClick={() => setConfirm(true)}
     >
-      🗑
+      <Trash2 size={16} />
     </Button>
   );
 }

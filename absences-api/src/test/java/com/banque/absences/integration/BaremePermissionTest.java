@@ -140,7 +140,9 @@ class BaremePermissionTest {
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.statut", is("BROUILLON")))
-                .andExpect(jsonPath("$.nombreJours", is(1)));
+                .andExpect(jsonPath("$.nombreJours", is(1)))
+                // Lundi 05/10 + 1 jour ouvré : la fin est calculée par le système.
+                .andExpect(jsonPath("$.dateFin", is("2026-10-05")));
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -163,7 +165,33 @@ class BaremePermissionTest {
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.statut", is("BROUILLON")))
-                .andExpect(jsonPath("$.nombreJours", is(3)));
+                .andExpect(jsonPath("$.nombreJours", is(3)))
+                // Mardi 06/10 + 3 jours ouvrés : mar, mer, jeu.
+                .andExpect(jsonPath("$.dateFin", is("2026-10-08")));
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Cas 3 — la période enjambe un week-end : la fin saute au lundi
+    // ─────────────────────────────────────────────────────────────────────────
+
+    @Test
+    @DisplayName("Cas 3 — PERMISSION 3 jours à compter d'un jeudi : la fin calculée tombe le lundi")
+    void cas3_periodeEnjambeWeekend_finAuLundi() throws Exception {
+        mockMvc.perform(post("/api/v5/demandes")
+                        .header("Authorization", "Bearer " + tokenDa)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "type": "PERMISSION",
+                                  "dateDebut": "2026-10-08",
+                                  "motifPermission": "AUTRES",
+                                  "nombreJours": 3
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.nombreJours", is(3)))
+                // Jeudi 08/10 (1), vendredi 09/10 (2), week-end sauté, lundi 12/10 (3).
+                .andExpect(jsonPath("$.dateFin", is("2026-10-12")));
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

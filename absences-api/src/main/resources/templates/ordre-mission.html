@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Ordre de Mission</title>
+
+  <style>
+    /* Marges de page : côtés à 0 pour un en-tête / pied de page bord à bord.
+       Le corps de texte récupère ses marges latérales via .content { padding }. */
+    @page {
+      size: A4;
+      margin: 0 0 15mm 0;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 14px;
+      color: #000;
+      margin: 0;
+    }
+
+    .container {
+      position: relative;
+    }
+
+    .watermark {
+      position: fixed;
+      top: 55%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-60deg);
+      font-size: 80px;
+      font-weight: bold;
+      color: #e5e7eb;
+      z-index: 0;
+    }
+
+    .content {
+      position: relative;
+      z-index: 1;
+      padding: 0 15mm;
+    }
+
+    .header {
+      margin-bottom: 40px;
+    }
+
+    .header img {
+      height: 60px;
+      max-width: 200px;
+    }
+
+    .title {
+      text-align: center;
+      margin-bottom: 22px;
+    }
+
+    .title h1 {
+      font-size: 18px;
+      font-weight: normal;
+      margin: 0;
+    }
+
+    .title h2 {
+      font-size: 20px;
+      font-weight: bold;
+      margin-top: 10px;
+      text-transform: uppercase;
+    }
+
+    .section {
+      margin-top: 14px;
+    }
+
+    .section p {
+      line-height: 1.4;
+      margin-bottom: 8px;
+      text-align: justify;
+    }
+
+    .section h3 {
+      margin: 8px 0 4px;
+      font-size: 14px;
+    }
+
+    table.info-table {
+      border: none;
+      width: 100%;
+      margin-bottom: 6px;
+    }
+
+    table.info-table td {
+      border: none;
+      padding-bottom: 4px;
+      vertical-align: top;
+    }
+
+    .col-label {
+      width: 180px;
+      font-weight: bold;
+    }
+
+    .col-sep {
+      width: 20px;
+    }
+
+    .signature {
+      margin-top: 18px;
+      text-align: right;
+    }
+
+    .signature p {
+      text-align: right;
+    }
+
+    .signature .title {
+      font-size: 12px;
+      text-align: right;
+    }
+
+    .signature .name {
+      font-size: 14px;
+      font-weight: bold;
+      margin-top: 5px;
+      text-align: right;
+    }
+
+    .footer-note {
+      position: fixed;
+      bottom: 15px;
+      left: 0;
+      right: 0;
+      font-size: 9px;
+      font-style: italic;
+      text-align: center;
+      color: #555;
+    }
+
+    /* Bande Kente : PNG 40x6 repete (les degrades CSS ne sont pas supportes
+       par openhtmltopdf). L'URL est injectee via th:style sur chaque element. */
+    .kente-band {
+      height: 6px;
+      width: 100%;
+      background-repeat: repeat-x;
+      background-position: left center;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <!-- Watermark -->
+  <div class="watermark">INTRA-ABS</div>
+
+  <div class="content">
+
+    <!-- Header -->
+    <div class="header" style="position: relative; height: 85px; background-color: #F6F6F6; margin: 0 -15mm 20px -15mm; overflow: hidden;">
+      <!-- Zone droite avec background image (data URI injecté par le service — cf. header_background) -->
+      <div th:style="|position: absolute; top: 0; right: 0; bottom: 0; left: 240px; background-image: url('${header_background}'); background-size: cover; background-position: center;|"></div>
+      <!-- Zone logo avec fond blanc strict -->
+      <div style="position: absolute; top: 0; left: 0; bottom: 0; width: 240px; background-color: #ffffff;">
+        <img th:src="${company_logo}" alt="Logo entreprise" style="position: absolute; top: 10px; left: 15px; height: 60px; max-width: 200px;" />
+      </div>
+      <!-- Bande Kente au bas du header -->
+      <div class="kente-band" th:style="|position: absolute; bottom: 0; left: 0; right: 0; background-image: url('${kente_band}');|"></div>
+    </div>
+
+    <!-- Title -->
+    <div class="title">
+      <h1 th:text="${issuing_department}"></h1>
+      <h2>ORDRE DE MISSION</h2>
+    </div>
+
+    <div class="section" style="margin-top: 12px; line-height: 1.45; text-align: justify;">
+      <p>
+        La Direction Générale et la Direction des Ressources Humaines certifient par le présent document que <strong>l'employé(e) désigné(e) ci-dessous</strong> est formellement mandaté(e) pour accomplir une mission officielle, conformément aux dispositions et détails énoncés ci-après :
+      </p>
+    </div>
+
+    <!-- Employee Information -->
+    <div class="section">
+      <table class="info-table">
+        <tr>
+          <td class="col-label">Nom et prénom</td>
+          <td class="col-sep">:</td>
+          <td th:text="${employee_full_name}"></td>
+        </tr>
+        <tr>
+          <td class="col-label">Matricule</td>
+          <td class="col-sep">:</td>
+          <td th:text="${employee_matricule}"></td>
+        </tr>
+        <tr>
+          <td class="col-label">Poste</td>
+          <td class="col-sep">:</td>
+          <td th:text="${employee_position} ?: 'Non renseigné'"></td>
+        </tr>
+        <tr>
+          <td class="col-label">Département</td>
+          <td class="col-sep">:</td>
+          <td th:text="${employee_department} ?: 'Non renseigné'"></td>
+        </tr>
+        <tr>
+          <td class="col-label">Manager direct</td>
+          <td class="col-sep">:</td>
+          <td th:text="${direct_manager_name} ?: 'Non renseigné'"></td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Mission Details -->
+    <div class="section">
+      <h3>Détails de la mission</h3>
+      <table class="info-table">
+        <tr>
+          <td class="col-label">Destination</td>
+          <td class="col-sep">:</td>
+          <td th:text="${destination} ?: 'Non renseignée'"></td>
+        </tr>
+        <tr>
+          <td class="col-label">Catégorie</td>
+          <td class="col-sep">:</td>
+          <td th:text="${categorie} ?: 'Non renseignée'"></td>
+        </tr>
+        <tr>
+          <td class="col-label">Objet de la mission</td>
+          <td class="col-sep">:</td>
+          <td th:text="${objet_mission} ?: 'Non renseigné'"></td>
+        </tr>
+        <tr>
+          <td class="col-label">Motif / Justification</td>
+          <td class="col-sep">:</td>
+          <td th:text="${motif_mission} ?: 'Non renseigné'"></td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Période -->
+    <div class="section">
+      <h3>Période et durée</h3>
+      <table class="info-table">
+        <tr>
+          <td class="col-label">Date de départ</td>
+          <td class="col-sep">:</td>
+          <td th:text="${date_debut}"></td>
+        </tr>
+        <tr>
+          <td class="col-label">Date de retour</td>
+          <td class="col-sep">:</td>
+          <td th:text="${date_fin}"></td>
+        </tr>
+        <tr>
+          <td class="col-label">Durée de la mission</td>
+          <td class="col-sep">:</td>
+          <td><span th:text="${nombre_jours}"></span> jour(s)</td>
+        </tr>
+      </table>
+
+      <p style="margin-top: 12px; line-height: 1.45; text-align: justify;">
+        Ce déplacement professionnel a fait l'objet d'un examen approfondi et a recueilli l'ensemble des validations hiérarchiques et administratives requises par les procédures internes de l'entreprise. En vertu de cet ordre de mission, les frais inhérents à ce déplacement seront pris en charge par l'entreprise, dans le strict respect du barème et des directives en vigueur.
+      </p>
+    </div>
+
+    <!-- Signature -->
+    <div class="signature">
+      <p>
+        Fait à <span th:text="${document_location}"></span>,
+        le <span th:text="${document_date}"></span>
+      </p>
+      <div class="sign">
+        <p class="title" th:text="${hr_signatory_title}"></p>
+        <p class="name" th:text="${hr_signatory_name}"></p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer-note">
+      <div class="kente-band" th:style="|margin-bottom: 10px; border-radius: 2px; background-image: url('${kente_band}');|"></div>
+      Document généré automatiquement par le système INTRA-ABS - Non modifiable
+      <br/>
+      Généré le <span th:text="${generation_timestamp}"></span>
+    </div>
+
+  </div>
+</div>
+
+</body>
+</html>

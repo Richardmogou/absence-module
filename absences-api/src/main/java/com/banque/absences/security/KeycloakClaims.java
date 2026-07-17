@@ -20,6 +20,9 @@ public final class KeycloakClaims {
     /** Claim portant le réseau/agence de rattachement de l'employé. */
     public static final String CLAIM_RESEAU  = "reseau";
 
+    /** Claim portant l'unité (département) de l'employé. */
+    public static final String CLAIM_UNITE   = "unite";
+
     /** Claim portant l'identifiant du manager hiérarchique direct. */
     public static final String CLAIM_MANAGER = "manager";
 

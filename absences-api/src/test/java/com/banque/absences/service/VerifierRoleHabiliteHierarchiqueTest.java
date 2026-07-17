@@ -80,6 +80,7 @@ class VerifierRoleHabiliteHierarchiqueTest {
                 mock(com.banque.absences.repository.EtapeModeleCircuitRepository.class),
                 snapshotRepo,
                 validationRepo,
+                mock(com.banque.absences.repository.AuditOverrideStatutRepository.class),
                 mock(com.banque.absences.repository.JustificatifDocumentRepository.class),
                 mock(DocumentMiseEnCongeService.class),
                 mock(BaremePermissionService.class),
@@ -91,7 +92,8 @@ class VerifierRoleHabiliteHierarchiqueTest {
                 mock(com.banque.absences.repository.SoldeCongeRepository.class),
                 mock(SoldeCongeService.class),
                 mock(SystemeHabilitations.class),
-                mock(MinioStorageService.class)
+                mock(MinioStorageService.class),
+                mock(com.banque.absences.repository.DocumentMiseEnCongeRepository.class)
         );
 
         // ── Demande EN_VALIDATION_ETAPE, position 1 (étape Manager) ─────────
@@ -132,9 +134,13 @@ class VerifierRoleHabiliteHierarchiqueTest {
         when(claimReader.identifiantUtilisateurCourant()).thenReturn(MANAGER_OK);
 
         // MockRestServiceServer : agent-test-001 → manager-test-007
-        mockServer.expect(requestTo(BASE_URL + "/users/" + AGENT_ID + "/manager"))
+        // API Admin Keycloak standard : GET /users/{id} → UserRepresentation JSON,
+        // l'attribut `manager` porte l'identifiant du N+1 (cf. HierarchicalChainResolver).
+        mockServer.expect(requestTo(BASE_URL + "/users/" + AGENT_ID))
                   .andExpect(method(HttpMethod.GET))
-                  .andRespond(withSuccess(MANAGER_OK, MediaType.TEXT_PLAIN));
+                  .andRespond(withSuccess(
+                          "{\"id\":\"" + AGENT_ID + "\",\"attributes\":{\"manager\":[\"" + MANAGER_OK + "\"]}}",
+                          MediaType.APPLICATION_JSON));
 
         // State machine incrémente la position
         doAnswer(inv -> {
@@ -161,9 +167,13 @@ class VerifierRoleHabiliteHierarchiqueTest {
         when(claimReader.identifiantUtilisateurCourant()).thenReturn(MANAGER_KO);
 
         // MockRestServiceServer : agent-test-001 → manager-test-007 (pas manager-test-099)
-        mockServer.expect(requestTo(BASE_URL + "/users/" + AGENT_ID + "/manager"))
+        // API Admin Keycloak standard : GET /users/{id} → UserRepresentation JSON,
+        // l'attribut `manager` porte l'identifiant du N+1 (cf. HierarchicalChainResolver).
+        mockServer.expect(requestTo(BASE_URL + "/users/" + AGENT_ID))
                   .andExpect(method(HttpMethod.GET))
-                  .andRespond(withSuccess(MANAGER_OK, MediaType.TEXT_PLAIN));
+                  .andRespond(withSuccess(
+                          "{\"id\":\"" + AGENT_ID + "\",\"attributes\":{\"manager\":[\"" + MANAGER_OK + "\"]}}",
+                          MediaType.APPLICATION_JSON));
 
         assertThatThrownBy(() ->
                 service.enregistrerDecisionEtape(DEMANDE_ID, Decision.VALIDER, null))

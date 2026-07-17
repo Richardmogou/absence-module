@@ -148,8 +148,9 @@ class DecisionDRHTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.statut", is("VALIDEE")));
 
-        // SQL : document généré de façon asynchrone — on attend jusqu'à 3 s
-        await().atMost(3, TimeUnit.SECONDS)
+        // SQL : document généré de façon asynchrone — on attend jusqu'à 15 s
+        // (la génération PDF embarque logo + fond + bande Kente en base64, plus lente à froid).
+        await().atMost(15, TimeUnit.SECONDS)
                 .untilAsserted(() -> {
                     Long count = jdbcTemplate.queryForObject(
                             "SELECT count(*) FROM document_mise_en_conge WHERE demande_id = ?",

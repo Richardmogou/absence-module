@@ -57,6 +57,7 @@ class EnregistrerDecisionEtapeTest {
                 mock(com.banque.absences.repository.EtapeModeleCircuitRepository.class),
                 snapshotRepo,
                 validationRepo,
+                mock(com.banque.absences.repository.AuditOverrideStatutRepository.class),
                 mock(com.banque.absences.repository.JustificatifDocumentRepository.class),
                 mock(DocumentMiseEnCongeService.class),
                 mock(BaremePermissionService.class),
@@ -68,7 +69,8 @@ class EnregistrerDecisionEtapeTest {
                 mock(com.banque.absences.repository.SoldeCongeRepository.class),
                 mock(SoldeCongeService.class),
                 mock(SystemeHabilitations.class),
-                mock(MinioStorageService.class)
+                mock(MinioStorageService.class),
+                mock(com.banque.absences.repository.DocumentMiseEnCongeRepository.class)
         );
 
         // Demande EN_VALIDATION_ETAPE, position 0, unité DAKAR

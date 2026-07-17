@@ -40,6 +40,14 @@ const demandes = [
     accentLight: "rgba(44,44,44,0.85)",
   },
   {
+    href: "/nouvelle/mission",
+    label: "Mission classique",
+    description: "Déplacement professionnel court",
+    image: "/Image_africaine6_resize.png",
+    accent: "#1A1A2E",
+    accentLight: "rgba(26,26,46,0.85)",
+  },
+  {
     href: "/nouvelle/conge-maternite",
     label: "Congé maternité",
     description: "Congé naissance & maternité",
@@ -62,89 +70,12 @@ export default function HomePage() {
       {/* ══════════════════════════════════════
           HERO — plein écran avec parallax visuel
           ══════════════════════════════════════ */}
-      <section className="relative overflow-hidden" style={{ minHeight: "380px" }}>
-        {/* Image africaine principale */}
-        <Image
-          src="/Image_africaine6_resize.png"
-          alt=""
-          aria-hidden="true"
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover object-center scale-105"
-        />
-        {/* Overlay multicouche : sombre à gauche, rouge AFB à droite */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "linear-gradient(110deg, rgba(26,26,46,0.93) 0%, rgba(44,44,44,0.75) 45%, rgba(196,30,34,0.45) 100%)",
-          }}
-        />
-        {/* Motif géométrique subtil */}
-        <div
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage:
-              "repeating-linear-gradient(45deg, #B8932A 0px, #B8932A 1px, transparent 1px, transparent 40px)",
-          }}
-        />
-
-        {/* Contenu hero */}
-        <div className="relative z-10 h-full flex flex-col items-start justify-center px-8 sm:px-16 py-16 gap-5"
-          style={{ minHeight: "380px" }}>
-          {/* Badge */}
-          <div className="flex items-center gap-2">
-            <div className="h-px w-8 bg-gold-400" />
-            <span className="text-xxs text-gold-300 tracking-[0.25em] uppercase font-ui">
-              Portail RH — Africa Financial Bank
-            </span>
-          </div>
-
-          <h1 className="font-heading text-5xl sm:text-6xl font-bold text-white leading-tight max-w-xl">
-            Gérez vos{" "}
-            <span
-              className="relative inline-block"
-              style={{ color: "#EDD05D" }}
-            >
-              absences
-              {/* Soulignement or */}
-              <span
-                className="absolute bottom-0 left-0 right-0 h-0.5"
-                style={{ background: "linear-gradient(90deg, #D4A017, #B8932A)" }}
-              />
-            </span>
-            <br />en toute sérénité
-          </h1>
-
-          <p className="text-neutral-300 text-base max-w-md font-ui">
-            Soumettez, suivez et gérez toutes vos demandes depuis un espace
-            unifié, sécurisé et validé par votre hiérarchie.
-          </p>
-
-          {/* Statistiques fictives — crédibilité institutionnelle */}
-          <div className="flex gap-8 mt-2">
-            {[
-              { value: "5", label: "Types de congé" },
-              { value: "24h", label: "Délai de traitement" },
-              { value: "100%", label: "Dématérialisé" },
-            ].map((s) => (
-              <div key={s.label} className="flex flex-col">
-                <span className="font-heading text-2xl font-bold text-gold-300">{s.value}</span>
-                <span className="text-xxs text-neutral-400 tracking-wider uppercase">{s.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Bande kente en bas du hero */}
-        <div className="absolute bottom-0 left-0 right-0 h-1.5" style={{ background: KENTE }} />
-      </section>
+     
 
       {/* ══════════════════════════════════════
           SECTION TITRE
           ══════════════════════════════════════ */}
-      <section className="bg-white/70 backdrop-blur-sm border-b border-neutral-200 px-8 sm:px-16 py-8">
+      <section className="bg-white/70 backdrop-blur-sm border-b border-neutral-200 px-6 lg:px-8 py-8">
         <div className="mx-auto max-w-container flex items-end justify-between gap-4">
           <div>
             <p className="text-xxs text-secondary-500 tracking-[0.2em] uppercase font-ui mb-1">
@@ -163,17 +94,16 @@ export default function HomePage() {
       {/* ══════════════════════════════════════
           GRILLE DES CARTES D'ABSENCE
           ══════════════════════════════════════ */}
-      <section className="flex-1 px-8 sm:px-16 py-10">
+      <section className="flex-1 px-6 lg:px-8 py-10">
         <div className="mx-auto max-w-container">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
 
-            {/* 4 premières cartes en grille */}
-            {demandes.slice(0, 4).map((d) => (
+            {demandes.slice(0, 5).map((d) => (
               <AbsenceCard key={d.href} {...d} />
             ))}
 
-            {/* 5ème carte + bloc décoratif côte à côte sur large */}
-            <AbsenceCard {...demandes[4]} />
+            {/* 6ème carte + bloc décoratif côte à côte sur large */}
+            <AbsenceCard {...demandes[5]} />
 
             {/* Bloc admin — discret */}
             <div className="flex flex-col justify-between rounded-lg border border-neutral-200 bg-white/80 p-6 shadow-card">
@@ -204,7 +134,7 @@ export default function HomePage() {
       {/* ══════════════════════════════════════
           FOOTER DÉCORATIF
           ══════════════════════════════════════ */}
-      <footer className="px-8 sm:px-16 py-6 bg-white/50">
+      <footer className="px-6 lg:px-8 py-6 bg-white/50">
         <div className="mx-auto max-w-container flex items-center gap-4">
           <div className="flex-1 h-px"
             style={{ background: "linear-gradient(90deg, transparent, #B8932A)" }} />

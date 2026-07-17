@@ -1,5 +1,6 @@
 package com.banque.absences.integration;
 
+import com.banque.absences.testsupport.KeycloakAdminMock;
 import com.banque.absences.repository.EtapeModeleCircuitRepository;
 import com.banque.absences.security.KeycloakClaims;
 import com.banque.absences.service.CircuitDeterminationService;
@@ -107,25 +108,10 @@ class DoublonValidateurDirecteurTest {
         });
 
         // Chaîne hiérarchique : DIRECTEUR → id-paul-ateba → N+1 id-jean-mbarga → grade DG
-        adminApiMockServer.setDispatcher(new Dispatcher() {
-            @Override @NotNull
-            public MockResponse dispatch(@NotNull RecordedRequest req) {
-                String path = req.getPath() == null ? "" : req.getPath();
-                if (path.contains("/users") && path.contains("grade=DIRECTEUR"))
-                    return new MockResponse().setResponseCode(200)
-                            .addHeader("Content-Type", "application/json")
-                            .setBody("[\"id-paul-ateba\"]");
-                if (path.equals("/users/id-paul-ateba/manager"))
-                    return new MockResponse().setResponseCode(200)
-                            .addHeader("Content-Type", "text/plain")
-                            .setBody("id-jean-mbarga");
-                if (path.equals("/users/id-jean-mbarga"))
-                    return new MockResponse().setResponseCode(200)
-                            .addHeader("Content-Type", "text/plain")
-                            .setBody("DG");
-                return new MockResponse().setResponseCode(404);
-            }
-        });
+        // Employé-type du grade DIRECTEUR, dont le N+1 est un DG : le doublon attendu.
+        adminApiMockServer.setDispatcher(KeycloakAdminMock.dispatcher(Map.of(
+                "id-paul-ateba",  KeycloakAdminMock.utilisateur().grade("DIRECTEUR").manager("id-jean-mbarga"),
+                "id-jean-mbarga", KeycloakAdminMock.utilisateur().grade("DG"))));
 
         registry.add("keycloak.jwks-uri",
                 () -> jwksMockServer.url("/realms/afb/protocol/openid-connect/certs").toString());
@@ -155,6 +141,7 @@ class DoublonValidateurDirecteurTest {
                         .content("""
                                 {
                                   "nom": "Directeur",
+                                  "typeAbsenceCible": "CONGE_ANNUEL",
                                   "gradeDeclencheur": "DIRECTEUR",
                                   "etapesIntermediaires": [
                                     {"mecanismeResolution": "HIERARCHIQUE",    "roleHabilite": "N1"},
@@ -182,6 +169,7 @@ class DoublonValidateurDirecteurTest {
                         .content("""
                                 {
                                   "nom": "Directeur v2",
+                                  "typeAbsenceCible": "CONGE_ANNUEL",
                                   "gradeDeclencheur": "DIRECTEUR",
                                   "etapesIntermediaires": [
                                     {"mecanismeResolution": "HIERARCHIQUE",    "roleHabilite": "N1"},
@@ -210,10 +198,13 @@ class DoublonValidateurDirecteurTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estModeleNomme", is(true)));
 
-        // 3. Vérification en base : 3 étapes (N1-HIERARCHIQUE, ANALYSTE_RH, DRH),
-        //    sans la ROLE_FIXE_GLOBAL DG supprimée
+        // 3. Vérification en base : seule l'étape N1-HIERARCHIQUE subsiste.
+        //    Le circuit n'a jamais porté d'étapes ANALYSTE_RH/DRH : la création ne pose que
+        //    les étapes intermédiaires du payload (elles viennent de V15 pour les circuits
+        //    standard). Restent donc les 2 étapes demandées, moins la ROLE_FIXE_GLOBAL DG
+        //    supprimée par la résolution.
         var etapes = etapeRepo.findByModeleCircuitIdOrderByOrdreAsc(circuitId);
-        assertThat(etapes).hasSize(3);
+        assertThat(etapes).hasSize(1);
 
         // L'étape ROLE_FIXE DG supprimée n'existe plus en base
         boolean dgRoleFixePresentEnBase = etapes.stream()
@@ -225,11 +216,11 @@ class DoublonValidateurDirecteurTest {
                 .as("L'étape ROLE_FIXE_GLOBAL DG ne doit plus exister en base après SUPPRIMER")
                 .isFalse();
 
-        // Les deux étapes verrouillées ANALYSTE_RH et DRH sont présentes
+        // L'étape hiérarchique N1, elle, est conservée : SUPPRIMER ne retire que la redondante.
         List<String> libelles = etapes.stream()
                 .map(com.banque.absences.domain.EtapeModeleCircuit::getLibelle)
                 .toList();
-        assertThat(libelles).contains("ANALYSTE_RH", "DRH");
+        assertThat(libelles).containsExactly("N1");
     }
 
     // ── Helper ────────────────────────────────────────────────────────────────

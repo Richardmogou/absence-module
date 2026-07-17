@@ -11,6 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FormField } from "@/components/FormField";
 import { Label } from "@/components/ui/label";
 import apiClient from "@/lib/api/client";
+import { ArrowRight, Link2, Lock, X } from "lucide-react";
 
 // ── Schéma ─────────────────────────────────────────────────────────────────
 
@@ -177,7 +178,7 @@ function EtapeFields({
         onClick={() => remove(index)}
         className="mt-6 text-neutral-400 hover:text-secondary-500 opacity-0 group-hover/step:opacity-100 transition-opacity flex-shrink-0"
       >
-        ✕
+        <X size={16} />
       </Button>
     </div>
   );
@@ -314,10 +315,10 @@ export default function NouveauCircuitPage() {
 
           <div className="flex flex-col gap-5">
             <div
-              className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl"
+              className="w-14 h-14 rounded-xl flex items-center justify-center"
               style={{ background: "rgba(255,255,255,0.10)", backdropFilter: "blur(8px)" }}
             >
-              🔗
+              <Link2 size={26} className="text-gold-300" />
             </div>
             <h2 className="font-heading text-4xl font-bold text-white leading-tight">
               Nouveau circuit de validation
@@ -352,7 +353,7 @@ export default function NouveauCircuitPage() {
               className="rounded-lg px-4 py-3 text-xs text-neutral-300 font-ui leading-relaxed"
               style={{ background: "rgba(255,255,255,0.07)" }}
             >
-              🔒 Tout circuit se termine obligatoirement par <strong className="text-gold-300">ANALYSTE_RH</strong> puis <strong className="text-gold-300">DRH</strong>. Ces étapes sont verrouillées.
+              <Lock size={12} className="inline mr-1 -mt-0.5" /> Tout circuit se termine obligatoirement par <strong className="text-gold-300">ANALYSTE_RH</strong> puis <strong className="text-gold-300">DRH</strong>. Ces étapes sont verrouillées.
             </div>
           </div>
 
@@ -525,8 +526,8 @@ export default function NouveauCircuitPage() {
             <div className="flex items-center gap-2 p-3 rounded-lg bg-neutral-50 border border-dashed border-neutral-200">
               <span className="text-xs text-neutral-400">… puis automatiquement :</span>
               {["ANALYSTE_RH", "DRH"].map((r) => (
-                <span key={r} className="px-2 py-0.5 rounded text-xxs font-semibold bg-green-100 text-green-700 border border-green-200">
-                  🔒 {r}
+                <span key={r} className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xxs font-semibold bg-green-100 text-green-700 border border-green-200">
+                  <Lock size={10} /> {r}
                 </span>
               ))}
             </div>
@@ -541,7 +542,7 @@ export default function NouveauCircuitPage() {
                 Annuler
               </Button>
               <Button type="submit" disabled={isSubmitting} className="flex-1 h-12 text-base">
-                {isSubmitting ? "Création en cours…" : "Créer le circuit →"}
+                {isSubmitting ? "Création en cours…" : <>Créer le circuit <ArrowRight size={16} /></>}
               </Button>
             </div>
           </form>

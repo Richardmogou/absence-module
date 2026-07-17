@@ -71,6 +71,43 @@ class DGConditionnelServiceTest {
         assertThat(service.necessiteInjection(demande)).isFalse();
     }
 
+    @Test
+    @DisplayName("Circuit comportant déjà une étape DG -> pas d'injection (pas de double DG)")
+    void circuitAvecEtapeDG_pasInjection() {
+        UUID demandeId = UUID.randomUUID();
+        DemandeAbsence demande = demandeMissionLongueAgent(demandeId, 2);
+
+        EtapeDemandeSnapshot etapeDg = new EtapeDemandeSnapshot();
+        etapeDg.setRoleHabilite("DG");
+        when(repository.findByDemandeIdOrderByOrdreAsc(demandeId))
+                .thenReturn(java.util.List.of(etapeDg));
+
+        assertThat(service.necessiteInjection(demande)).isFalse();
+    }
+
+    @Test
+    @DisplayName("Mission longue de moins de 15 jours -> pas d'injection")
+    void missionLongueMoinsDe15Jours_pasInjection() {
+        UUID demandeId = UUID.randomUUID();
+        DemandeAbsence demande = demandeMissionLongueAgent(demandeId, 2);
+        demande.setNombreJours(14);
+
+        assertThat(service.necessiteInjection(demande)).isFalse();
+    }
+
+    @Test
+    @DisplayName("Mission longue de 15 jours pile -> injection (seuil inclusif)")
+    void missionLongueExactement15Jours_necessiteInjection() {
+        UUID demandeId = UUID.randomUUID();
+        DemandeAbsence demande = demandeMissionLongueAgent(demandeId, 2);
+        demande.setNombreJours(15);
+        when(repository.findByDemandeIdAndMecanisme(demandeId, MecanismeResolution.DG_CONDITIONNEL))
+                .thenReturn(Optional.empty());
+
+        assertThat(service.necessiteInjection(demande)).isTrue();
+    }
+
+    /** Mission longue de 20 jours : au-dessus du seuil des 15 jours qui déclenche le DG. */
     private static DemandeAbsence demandeMissionLongueAgent(UUID id, int position) {
         DemandeAbsence d = new DemandeMissionLongue();
         try {
@@ -82,6 +119,7 @@ class DGConditionnelServiceTest {
         }
         d.setCircuitNom("AGENT");
         d.setType(TypeAbsence.MISSION_LONGUE);
+        d.setNombreJours(20);
         d.setPositionEtapeCourante(position);
         return d;
     }

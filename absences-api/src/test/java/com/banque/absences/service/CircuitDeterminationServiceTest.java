@@ -57,11 +57,11 @@ class CircuitDeterminationServiceTest {
         circuitReseau  = creerCircuit("Circuit Réseau — Congé Annuel");
 
         // Mapping grade → circuit (RG-11)
-        stub("AGENT",          Optional.of(regles(circuitAgent)));
-        stub("MANAGER",        Optional.of(regles(circuitManager)));
-        stub("CHEF_PROCESSUS", Optional.of(regles(circuitReseau)));
-        stub("DA",             Optional.of(regles(circuitReseau)));
-        stub("STAGIAIRE",      Optional.empty());
+        stub("AGENT",          List.of(regles(circuitAgent)));
+        stub("MANAGER",        List.of(regles(circuitManager)));
+        stub("CHEF_PROCESSUS", List.of(regles(circuitReseau)));
+        stub("DA",             List.of(regles(circuitReseau)));
+        stub("STAGIAIRE",      List.of());
     }
 
     @AfterEach
@@ -124,8 +124,9 @@ class CircuitDeterminationServiceTest {
         return regle;
     }
 
-    private void stub(String grade, Optional<RegleAffectation> resultat) {
-        when(regleRepo.findFirstByGradeDeclencheurOrderByPrioriteAsc(grade)).thenReturn(resultat);
+    private void stub(String grade, List<RegleAffectation> resultat) {
+        // Le service retombe sur le fallback grade-only (type null + réseau absent).
+        when(regleRepo.findByGradeGlobal(grade)).thenReturn(resultat);
     }
 
     private static void injecterGrade(String grade) {

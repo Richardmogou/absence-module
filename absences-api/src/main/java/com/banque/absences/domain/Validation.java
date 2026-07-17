@@ -46,6 +46,13 @@ public class Validation {
     private String delegantIdentifiantExterne;
 
     public enum DecisionValidation {
-        APPROUVEE, REJETEE, DELEGUEE
+        APPROUVEE,
+        REJETEE,
+        DELEGUEE,
+        /**
+         * Instruction du dossier par l'analyste RH — distincte d'APPROUVEE : l'analyste
+         * renseigne la demande et la transmet, il ne se prononce pas sur son bien-fondé.
+         */
+        INSTRUITE
     }
 }

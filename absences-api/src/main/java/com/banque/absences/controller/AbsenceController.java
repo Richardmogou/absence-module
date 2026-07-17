@@ -21,6 +21,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
@@ -65,8 +66,10 @@ public class AbsenceController {
     }
 
     @GetMapping("/a-valider")
-    public List<AbsenceResponse> demandesAValider() {
-        return service.findDemandesAValider();
+    public List<AbsenceResponse> demandesAValider(
+            @RequestParam(name = "limite", defaultValue = "50") int limite) {
+        // Réponse inchangée (tableau JSON) : seul le volume est borné [1, 200].
+        return service.findDemandesAValider(Math.min(Math.max(limite, 1), 200));
     }
 
     @GetMapping("/moi/solde")
@@ -95,6 +98,7 @@ public class AbsenceController {
     }
 
     @PatchMapping("/{id}/statut")
+    @PreAuthorize("hasRole('ADMIN_RH')")
     public AbsenceResponse updateStatut(@PathVariable UUID id,
                                         @Valid @RequestBody StatutUpdateRequest request) {
         return service.updateStatut(id, request);
@@ -117,8 +121,11 @@ public class AbsenceController {
     }
 
     @PostMapping("/{id}/instruction")
-    public ResponseEntity<DemandeAbsence> instruire(@PathVariable UUID id) {
-        return ResponseEntity.ok(instructionAnalysteRHService.instruire(id));
+    public ResponseEntity<DemandeAbsence> instruire(
+            @PathVariable UUID id,
+            @RequestBody(required = false) com.banque.absences.dto.InstructionRequest body) {
+        return ResponseEntity.ok(
+                instructionAnalysteRHService.instruire(id, body != null ? body.dateDebut() : null));
     }
 
     @PostMapping("/{id}/prolongation-maternite")

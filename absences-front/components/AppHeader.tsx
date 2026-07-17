@@ -12,6 +12,7 @@ import { federatedLogout } from "@/app/actions/auth";
 export default function AppHeader() {
   const { data: session } = useSession();
   const user = session?.user;
+  const userRoles = (session as any)?.roles || [];
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -41,17 +42,22 @@ export default function AppHeader() {
     { href: "/mon-espace", label: "Mon espace", icon: LayoutDashboard },
     { href: "/mes-demandes", label: "Mes demandes", icon: FolderOpen },
     { href: "/validation-file", label: "File validation", icon: FileCheck },
-    { href: "/analyste-rh", label: "Analyste RH", icon: Users },
-    { href: "/drh", label: "DRH", icon: Briefcase },
-    { href: "/admin/dashboard", label: "Admin", icon: Shield },
+    { href: "/analyste-rh", label: "Analyste RH", icon: Users, roles: ["ANALYSTE_RH", "ADMIN_RH"] },
+    { href: "/drh", label: "DRH", icon: Briefcase, roles: ["DRH", "ADMIN_RH"] },
+    { href: "/dashboard", label: "Admin", icon: Shield, roles: ["ADMIN_RH"] },
   ];
+
+  const visibleLinks = NAV_LINKS.filter((link) => {
+    if (!link.roles) return true;
+    return link.roles.some((r) => userRoles.includes(r));
+  });
 
   // Le grade de l'utilisateur (à adapter selon les données de session disponibles)
   const userGrade = "Collaborateur";
 
   return (
     <header className="sticky top-0 z-50 shadow-modal">
-      {/* Fond global avec image et opacité (sans backdrop-blur) */}
+      
       <div
         className="absolute inset-0 opacity-10"
         style={{
@@ -60,46 +66,47 @@ export default function AppHeader() {
           backgroundPosition: "center",
         }}
       ></div>
-      <div className="absolute inset-0 bg-primary-500/95 -z-10" />
+      <div className="absolute inset-0 bg-white/30 backdrop-blur-sm -z-10" />
 
-      <div className="relative z-10 mx-auto flex max-w-container items-stretch justify-between">
+      <div className="relative z-10 w-full flex items-stretch justify-between px-4">
         
         {/* Section Logo avec fond blanc étendu vers la gauche */}
-        <div className="relative flex items-center bg-white px-4 py-2 pr-6">
-          {/* Extension du fond blanc vers l'infini à gauche */}
-          <div className="absolute top-0 bottom-0 right-full w-[50vw] bg-white" />
+        <div className="relative flex items-center bg-white px-4 py-2">
+          {/* Extension du fond blanc vers la gauche (réduite) */}
+          <div className="absolute top-0 bottom-0 right-full w-14 bg-white" />
           
           <Link href="/" className="relative z-10 flex items-center">
             <Image
               src="/header/logo_afb.png"
               alt="AFB — Banque"
-              width={120}
+              width={0}
               height={40}
-              className="h-10 w-auto"
+              sizes="100vw"
+              style={{ width: "auto", height: "40px" }}
               priority
             />
           </Link>
         </div>
 
         {/* Zone utilisateur & Menu */}
-        <div className="flex items-center px-6 py-3">
+        <div className="flex items-center px-4 py-2">
           {user ? (
             <div className="relative" ref={menuRef}>
               {/* Bouton de profil déclenchant le menu */}
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="flex items-center gap-3 px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors focus:outline-none"
+                className="flex items-center gap-3 px-3 py-1.5 rounded-lg hover:bg-neutral-100 transition-colors focus:outline-none"
               >
                 <div className="flex flex-col items-end">
-                  <span className="text-sm font-semibold text-white leading-tight">
+                  <span className="text-sm font-semibold text-primary-500 leading-tight">
                     {user.name ?? user.email?.split('@')[0]}
                   </span>
-                  <span className="text-xxs text-gold-300 font-ui uppercase tracking-wider">
+                  <span className="text-xxs text-neutral-500 font-ui uppercase tracking-wider">
                     {userGrade}
                   </span>
                 </div>
-                <UserCircle className="w-8 h-8 text-white/90" strokeWidth={1.5} />
-                <ChevronDown className={`w-4 h-4 text-white/70 transition-transform ${isMenuOpen ? "rotate-180" : ""}`} />
+                <UserCircle className="w-8 h-8 text-primary-500" strokeWidth={1.5} />
+                <ChevronDown className={`w-4 h-4 text-primary-500/70 transition-transform ${isMenuOpen ? "rotate-180" : ""}`} />
               </button>
 
               {/* Menu déroulant */}
@@ -111,7 +118,7 @@ export default function AppHeader() {
                   </div>
                   
                   <nav className="flex flex-col px-2">
-                    {NAV_LINKS.map((link) => (
+                    {visibleLinks.map((link) => (
                       <Link
                         key={link.href}
                         href={link.href}
@@ -139,26 +146,16 @@ export default function AppHeader() {
                 </div>
               )}
             </div>
-          ) : (
-            <Link href="/connexion">
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-white/40 text-white hover:bg-white/10 text-xs h-8"
-              >
-                Connexion
-              </Button>
-            </Link>
-          )}
+          ) : null}
         </div>
       </div>
 
       {/* Bande kente décorative sur toute la largeur */}
       <div
-        className="absolute bottom-0 left-0 right-0 h-1 z-20"
+        className="absolute bottom-0 left-0 right-0 h-[2px] z-20"
         style={{
           background:
-            "repeating-linear-gradient(90deg, #C41E22 0px, #C41E22 10px, #B8932A 10px, #B8932A 20px, #2C2C2C 20px, #2C2C2C 30px, #F5F5F5 30px, #F5F5F5 40px)",
+            "repeating-linear-gradient(90deg, #C41E22 0px, #C41E22 10px, #808080 10px, #808080 20px, #2C2C2C 20px, #2C2C2C 30px, #F5F5F5 30px, #F5F5F5 40px)",
         }}
       />
     </header>

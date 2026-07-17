@@ -7,18 +7,23 @@ import com.banque.absences.service.JustificatifRequisException;
 import com.banque.absences.service.ModificationImpossibleException;
 import com.banque.absences.service.MotifInconnuException;
 import com.banque.absences.service.MotifRequisException;
+import com.banque.absences.service.OverrideCibleInterditeException;
 import com.banque.absences.service.ProlongationNonAutoriseeException;
 import com.banque.absences.service.ReseauNonRenseigneException;
 import com.banque.absences.service.SuppressionImpossibleException;
 import com.banque.absences.service.TransitionIllegaleException;
 import com.banque.absences.service.ValidateurNonAutoriseException;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -103,6 +108,17 @@ public class GlobalExceptionHandler {
                 .body(new ApiError("MOTIF_INCONNU", e.getMessage()));
     }
 
+    /**
+     * CDCT EX-9 — cible de forçage refusée. 422 et non 409 TRANSITION_ILLEGALE : la cible est
+     * interdite sur cet endpoint quel que soit l'état de la demande, ce n'est pas un conflit
+     * d'état.
+     */
+    @ExceptionHandler(OverrideCibleInterditeException.class)
+    public ResponseEntity<ApiError> handleOverrideCibleInterdite(OverrideCibleInterditeException e) {
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
+                .body(new ApiError("OVERRIDE_CIBLE_INTERDITE", e.getMessage()));
+    }
+
     @ExceptionHandler(ReseauNonRenseigneException.class)
     public ResponseEntity<ApiError> handleReseauNonRenseigne(ReseauNonRenseigneException e) {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
@@ -149,6 +165,39 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleEtapeVerrouillee(EtapeVerrouilleeException e) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(new ApiError("ETAPE_VERROUILLEE", e.getMessage()));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiError> handleIllegalArgument(IllegalArgumentException e) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiError("REQUETE_INVALIDE", e.getMessage()));
+    }
+
+    /**
+     * Échec de validation du payload (@Valid @RequestBody) : sans ce handler, Spring
+     * renvoie sa réponse 400 par défaut, sans champ {@code code}, ce qui empêche le
+     * front d'afficher un message précis. On agrège ici les messages des champs invalides.
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException e) {
+        String message = e.getBindingResult().getFieldErrors().stream()
+                .map(FieldError::getDefaultMessage)
+                .collect(Collectors.joining(" ; "));
+        if (message.isBlank()) {
+            message = "Le formulaire contient des champs invalides.";
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiError("VALIDATION_ERREUR", message));
+    }
+
+    /**
+     * Entité introuvable (ex : demande référencée lors de la soumission ou de l'ajout
+     * d'un justificatif). Sans ce handler, l'exception remonte en 500 sans {@code code}.
+     */
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ApiError> handleEntityNotFound(EntityNotFoundException e) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiError("DEMANDE_INTROUVABLE", e.getMessage()));
     }
 
     public record ApiError(String code, String message) {

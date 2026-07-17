@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { BoutonSupprimerCircuit } from "./BoutonSupprimerCircuit";
 import { BoutonToggleActif } from "./BoutonToggleActif";
 import { serverApiClient } from "@/lib/api/server-client";
+import { CheckCircle2, Link2, PauseCircle, Settings } from "lucide-react";
 
 interface RegleAffectation {
   mecanisme: string;
@@ -89,9 +90,9 @@ export default async function CircuitsPage() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "Circuits actifs",   value: actifs.length,   color: "#059669", icon: "✅" },
-          { label: "Circuits inactifs", value: inactifs.length, color: "#6B7280", icon: "⏸" },
-          { label: "Étapes totales",    value: totalEtapes,     color: "#C41E22", icon: "🔗" },
+          { label: "Circuits actifs",   value: actifs.length,   color: "#059669", icon: CheckCircle2 },
+          { label: "Circuits inactifs", value: inactifs.length, color: "#6B7280", icon: PauseCircle },
+          { label: "Étapes totales",    value: totalEtapes,     color: "#C41E22", icon: Link2 },
         ].map(s => (
           <div key={s.label} className="relative overflow-hidden rounded-xl border border-neutral-200 bg-white px-5 py-4">
             <div className="flex items-start justify-between">
@@ -99,7 +100,7 @@ export default async function CircuitsPage() {
                 <p className="text-xxs text-neutral-400 uppercase tracking-wider font-ui">{s.label}</p>
                 <p className="font-heading text-3xl font-bold mt-1" style={{ color: s.color }}>{s.value}</p>
               </div>
-              <span className="text-2xl">{s.icon}</span>
+              <s.icon size={22} style={{ color: s.color }} />
             </div>
             <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: s.color }} />
           </div>
@@ -109,7 +110,7 @@ export default async function CircuitsPage() {
       {/* Liste circuits */}
       {circuits.length === 0 ? (
         <div className="flex flex-col items-center gap-4 py-16 rounded-xl border-2 border-dashed border-neutral-200">
-          <span className="text-5xl">🔗</span>
+          <Link2 size={48} className="text-neutral-300" />
           <p className="font-heading text-lg font-semibold text-primary-500">Aucun circuit configuré</p>
           <Button asChild><Link href="/circuits/nouveau">+ Créer un circuit</Link></Button>
         </div>
@@ -150,7 +151,7 @@ export default async function CircuitsPage() {
                     <div className="flex gap-2 flex-shrink-0 items-center">
                       <BoutonToggleActif circuitId={circuit.id} actif={circuit.actif} />
                       <Button asChild size="sm" variant="outline">
-                        <Link href={`/circuits/${circuit.id}`}>⚙️ Détail</Link>
+                        <Link href={`/circuits/${circuit.id}`}><Settings size={14} /> Détail</Link>
                       </Button>
                       <BoutonSupprimerCircuit circuitId={circuit.id} />
                     </div>

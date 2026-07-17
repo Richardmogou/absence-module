@@ -2,6 +2,7 @@ package com.banque.absences.integration;
 
 import com.banque.absences.repository.EtapeModeleCircuitRepository;
 import com.banque.absences.repository.ModeleCircuitRepository;
+import com.banque.absences.domain.EtapeModeleCircuit;
 import com.banque.absences.security.KeycloakClaims;
 import com.banque.absences.service.CircuitDeterminationService;
 import com.banque.absences.service.DoublonDetectionService;
@@ -138,6 +139,7 @@ class CircuitAdminTest {
                         .content("""
                                 {
                                   "nom": "Circuit invalide",
+                                  "typeAbsenceCible": "CONGE_ANNUEL",
                                   "gradeDeclencheur": "DA",
                                   "etapesIntermediaires": [
                                     {
@@ -152,18 +154,28 @@ class CircuitAdminTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Cas 2 — Circuit valide : ANALYSTE_RH + DRH ajoutés automatiquement
+    // Cas 2 — Circuit valide : seules les étapes intermédiaires demandées sont créées
     // ─────────────────────────────────────────────────────────────────────────
 
+    /**
+     * La création ne pose QUE les étapes intermédiaires du payload.
+     *
+     * <p>Ce test exigeait auparavant que {@code creerCircuit} ajoute d'office une étape
+     * ANALYSTE_RH et une étape DRH verrouillées. Ce n'est plus le comportement : ces étapes
+     * sont posées par migration (V15) sur les circuits standard, et la machine à états les
+     * traite hors du flux intermédiaire. Les injecter à la création reviendrait à les
+     * dupliquer.
+     */
     @Test
-    @DisplayName("Cas 2 — Circuit valide : étapes fixes ANALYSTE_RH et DRH en fin, estVerrouillable=true")
-    void cas2_circuitValide_etapesFixesAjoutees() throws Exception {
+    @DisplayName("Cas 2 — Circuit valide : seules les étapes intermédiaires du payload sont créées")
+    void cas2_circuitValide_seulesEtapesIntermediairesCreees() throws Exception {
         String response = mockMvc.perform(post("/api/v5/admin/circuits")
                         .header("Authorization", "Bearer " + tokenAdmin)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
                                   "nom": "Circuit test ADM-001",
+                                  "typeAbsenceCible": "CONGE_ANNUEL",
                                   "gradeDeclencheur": "DA",
                                   "etapesIntermediaires": [
                                     {
@@ -181,24 +193,17 @@ class CircuitAdminTest {
                 new com.fasterxml.jackson.databind.ObjectMapper()
                         .readTree(response).get("id").asText());
 
-        // 3 étapes au total : 1 intermédiaire + ANALYSTE_RH + DRH
+        // Une seule étape : celle du payload. Aucune étape fixe n'est injectée.
         var etapes = etapeRepo.findByModeleCircuitIdOrderByOrdreAsc(circuitId);
-        assertThat(etapes).hasSize(3);
+        assertThat(etapes).hasSize(1);
 
-        // Les deux dernières étapes sont verrouillées
-        var analysteRh = etapes.get(1);
-        var drh        = etapes.get(2);
+        var intermediaire = etapes.get(0);
+        assertThat(intermediaire.getOrdre()).isZero();
+        assertThat(intermediaire.isEstVerrouillable()).isFalse();
 
-        assertThat(analysteRh.getLibelle()).isEqualTo("ANALYSTE_RH");
-        assertThat(analysteRh.isEstVerrouillable()).isTrue();
-        assertThat(analysteRh.getOrdre()).isEqualTo(1);
-
-        assertThat(drh.getLibelle()).isEqualTo("DRH");
-        assertThat(drh.isEstVerrouillable()).isTrue();
-        assertThat(drh.getOrdre()).isEqualTo(2);
-
-        // DRH est bien à N+1 par rapport à ANALYSTE_RH
-        assertThat(drh.getOrdre()).isEqualTo(analysteRh.getOrdre() + 1);
+        // Garde-fou : aucune étape RH/DRH n'est ajoutée d'office par la création.
+        assertThat(etapes).extracting(EtapeModeleCircuit::getLibelle)
+                .doesNotContain("ANALYSTE_RH", "DRH");
     }
 
     // ── Helper ────────────────────────────────────────────────────────────────

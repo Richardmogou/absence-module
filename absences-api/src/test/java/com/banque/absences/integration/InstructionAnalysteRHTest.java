@@ -1,5 +1,10 @@
 package com.banque.absences.integration;
 
+import com.banque.absences.repository.ValidationRepository;
+import com.banque.absences.repository.EtapeDemandeSnapshotRepository;
+import com.banque.absences.domain.Validation;
+import com.banque.absences.domain.MecanismeResolution;
+import com.banque.absences.domain.EtapeDemandeSnapshot;
 import com.banque.absences.domain.DemandeCongeAnnuel;
 import com.banque.absences.domain.DemandeMissionLongue;
 import com.banque.absences.domain.JustificatifDocument;
@@ -43,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -73,6 +79,8 @@ class InstructionAnalysteRHTest {
     @Autowired private MockMvc                        mockMvc;
     @Autowired private DemandeAbsenceRepository       demandeRepo;
     @Autowired private JustificatifDocumentRepository justificatifRepo;
+    @Autowired private EtapeDemandeSnapshotRepository snapshotRepo;
+    @Autowired private ValidationRepository           validationRepo;
 
     @MockBean private DoublonDetectionService    doublonService;
     @MockBean private CircuitDeterminationService circuitService;
@@ -144,18 +152,64 @@ class InstructionAnalysteRHTest {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Cas 2 — MISSION_LONGUE sans justificatif -> 409 JUSTIFICATIF_REQUIS
+    // Journalisation de l'instruction (qui / quand / quoi)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * L'instruction doit laisser une trace durable dans `validation`, pas seulement sur le
+     * snapshot d'étape : c'est ici que l'analyste RH fixe la date de début d'un congé
+     * maternité, donc sa durée. La décision est INSTRUITE et non APPROUVEE — l'analyste
+     * renseigne le dossier, il ne se prononce pas sur son bien-fondé.
+     */
+    @Test
+    @DisplayName("Instruction : une ligne INSTRUITE est journalisée avec son auteur et son horodatage")
+    void instruction_journaliseDecisionInstruite() throws Exception {
+        UUID demandeId = creerDemandeEnInstruction(TypeAbsence.CONGE_ANNUEL);
+        UUID etapeRhId = creerEtapeAnalysteRh(demandeId);
+
+        mockMvc.perform(post("/api/v5/demandes/" + demandeId + "/instruction")
+                        .header("Authorization", "Bearer " + tokenAnalyste))
+                .andExpect(status().isOk());
+
+        List<Validation> journal = validationRepo.findByDemandeIdOrderByDateDecisionAsc(demandeId);
+        assertThat(journal).hasSize(1);
+
+        Validation trace = journal.get(0);
+        assertThat(trace.getDecision()).isEqualTo(Validation.DecisionValidation.INSTRUITE);
+        assertThat(trace.getValidateurIdentifiantExterne()).isEqualTo(ANALYSTE_ID);
+        assertThat(trace.getEtapeSnapshotId()).isEqualTo(etapeRhId);
+        assertThat(trace.getDateDecision()).isNotNull();
+    }
+
+    /**
+     * Sans étape ANALYSTE_RH, aucune ligne orpheline n'est écrite : la FK
+     * validation.etape_snapshot_id est NOT NULL.
+     */
+    @Test
+    @DisplayName("Instruction sans étape ANALYSTE_RH : aucune ligne de journal orpheline")
+    void instruction_sansEtapeRh_neJournalisePas() throws Exception {
+        UUID demandeId = creerDemandeEnInstruction(TypeAbsence.CONGE_ANNUEL);
+
+        mockMvc.perform(post("/api/v5/demandes/" + demandeId + "/instruction")
+                        .header("Authorization", "Bearer " + tokenAnalyste))
+                .andExpect(status().isOk());
+
+        assertThat(validationRepo.findByDemandeIdOrderByDateDecisionAsc(demandeId)).isEmpty();
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Cas 2 — MISSION_LONGUE sans justificatif -> 200 EN_VALIDATION_DRH
     // ─────────────────────────────────────────────────────────────────────────
 
     @Test
-    @DisplayName("Cas 2 — MISSION_LONGUE sans justificatif : instruction bloquee -> 409 JUSTIFICATIF_REQUIS")
-    void cas2_missionLongue_sansJustificatif_409() throws Exception {
+    @DisplayName("Cas 2 - MISSION_LONGUE sans justificatif : instruction autorisee -> EN_VALIDATION_DRH")
+    void cas2_missionLongue_sansJustificatif_transmis() throws Exception {
         UUID demandeId = creerDemandeEnInstruction(TypeAbsence.MISSION_LONGUE);
 
         mockMvc.perform(post("/api/v5/demandes/" + demandeId + "/instruction")
                         .header("Authorization", "Bearer " + tokenAnalyste))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.code", is("JUSTIFICATIF_REQUIS")));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statut", is("EN_VALIDATION_DRH")));
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -175,6 +229,18 @@ class InstructionAnalysteRHTest {
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    /** Étape « Instruction RH » telle que posée par V15 : ROLE_FIXE_GLOBAL + rôle ANALYSTE_RH. */
+    private UUID creerEtapeAnalysteRh(UUID demandeId) {
+        EtapeDemandeSnapshot etape = new EtapeDemandeSnapshot();
+        etape.setDemandeId(demandeId);
+        etape.setOrdre(3);
+        etape.setPosition(3);
+        etape.setLibelle("Instruction RH");
+        etape.setMecanismeResolution(MecanismeResolution.ROLE_FIXE_GLOBAL);
+        etape.setRoleHabilite("ANALYSTE_RH");
+        return snapshotRepo.saveAndFlush(etape).getId();
+    }
 
     private UUID creerDemandeEnInstruction(TypeAbsence type) {
         if (type == TypeAbsence.MISSION_LONGUE) {
