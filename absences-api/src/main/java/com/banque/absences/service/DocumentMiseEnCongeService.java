@@ -6,6 +6,7 @@ import com.banque.absences.domain.DocumentMiseEnConge;
 import com.banque.absences.domain.Validation;
 import com.banque.absences.repository.DemandeAbsenceRepository;
 import com.banque.absences.repository.DocumentMiseEnCongeRepository;
+import com.banque.absences.repository.EtapeDemandeSnapshotRepository;
 import com.banque.absences.repository.ValidationRepository;
 import com.banque.absences.service.pdf.PdfService;
 import jakarta.persistence.EntityNotFoundException;
@@ -44,6 +45,7 @@ public class DocumentMiseEnCongeService {
     private final S3Client                      s3Client;
     private final PdfService                    pdfService;
     private final HierarchicalChainResolver     hierarchicalChainResolver;
+    private final EtapeDemandeSnapshotRepository etapeDemandeSnapshotRepository;
 
     @Async
     @Transactional
@@ -61,6 +63,24 @@ public class DocumentMiseEnCongeService {
         } catch (Exception e) {
             log.warn("Impossible de charger le logo", e);
             variables.put("company_logo", "");
+        }
+
+        // Image de fond du header en Base64.
+        try (java.io.InputStream is = new org.springframework.core.io.ClassPathResource("templates/img/background_header_light.png").getInputStream()) {
+            String base64 = java.util.Base64.getEncoder().encodeToString(is.readAllBytes());
+            variables.put("header_background", "data:image/png;base64," + base64);
+        } catch (Exception e) {
+            log.warn("Impossible de charger l'image de fond du header", e);
+            variables.put("header_background", "");
+        }
+
+        // Bande Kente (rouge/gris/noir/clair) en Base64.
+        try (java.io.InputStream is = new org.springframework.core.io.ClassPathResource("templates/img/kente-band.png").getInputStream()) {
+            String base64 = java.util.Base64.getEncoder().encodeToString(is.readAllBytes());
+            variables.put("kente_band", "data:image/png;base64," + base64);
+        } catch (Exception e) {
+            log.warn("Impossible de charger la la bande Kente", e);
+            variables.put("kente_band", "");
         }
 
         // Champs de base
@@ -91,20 +111,49 @@ public class DocumentMiseEnCongeService {
         variables.put("document_location", "Abidjan");
         variables.put("document_date", FMT.format(Instant.now()));
         
-        // Trouver la dernière validation (qui est celle de la DRH ou du dernier valideur)
-        String drhName = "La Direction";
-        if (!historique.isEmpty()) {
-            String valId = historique.get(historique.size() - 1).getValidateurIdentifiantExterne();
-            drhName = hierarchicalChainResolver.resolveNomComplet(valId).orElse(valId);
+        // Trouver Analyste RH et DRH
+        String drhName = "";
+        String analysteName = "";
+        
+        List<com.banque.absences.domain.EtapeDemandeSnapshot> etapes = etapeDemandeSnapshotRepository.findByDemandeIdOrderByOrdreAsc(demandeId);
+        
+        // Analyste RH
+        com.banque.absences.domain.EtapeDemandeSnapshot etapeAnalyste = etapes.stream()
+                .filter(e -> "ANALYSTE_RH".equals(e.getRoleHabilite())).findFirst().orElse(null);
+        if (etapeAnalyste != null && etapeAnalyste.getValidateurIdentifiantExterne() != null) {
+            analysteName = hierarchicalChainResolver.resolveNomComplet(etapeAnalyste.getValidateurIdentifiantExterne()).orElse(etapeAnalyste.getValidateurIdentifiantExterne());
+        }
+        
+        // DRH
+        com.banque.absences.domain.EtapeDemandeSnapshot etapeDrh = etapes.stream()
+                .filter(e -> "DRH".equals(e.getRoleHabilite())).findFirst().orElse(null);
+        if (etapeDrh != null && etapeDrh.getValidateurIdentifiantExterne() != null) {
+            drhName = hierarchicalChainResolver.resolveNomComplet(etapeDrh.getValidateurIdentifiantExterne()).orElse(etapeDrh.getValidateurIdentifiantExterne());
         }
                 
         variables.put("hr_signatory_title", "Le Directeur des Ressources Humaines");
         variables.put("hr_signatory_name", drhName);
+        variables.put("analyste_rh_name", analysteName);
         
         DateTimeFormatter tsFmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss").withZone(ZoneId.of("Africa/Abidjan"));
         variables.put("generation_timestamp", tsFmt.format(Instant.now()));
 
-        byte[] pdfBytes = pdfService.generatePdf("titre-conge", variables);
+        String templateName = "titre-conge";
+        if (demande instanceof com.banque.absences.domain.DemandeMission m) {
+            templateName = "ordre-mission";
+            variables.put("destination", m.getDestination());
+            variables.put("objet_mission", m.getObjetMission());
+            variables.put("motif_mission", m.getMotifMission());
+            variables.put("categorie", m.getCategorie());
+        } else if (demande instanceof com.banque.absences.domain.DemandeMissionLongue m) {
+            templateName = "ordre-mission";
+            variables.put("destination", m.getDestination());
+            variables.put("objet_mission", m.getObjetMission());
+            variables.put("motif_mission", m.getMotifMission());
+            variables.put("categorie", m.getCategorie());
+        }
+
+        byte[] pdfBytes = pdfService.generatePdf(templateName, variables);
 
         String numero    = genererNumeroUnique();
         String objectKey = "documents-mise-en-conge/" + demandeId + "/" + numero + ".pdf";

@@ -77,11 +77,11 @@ export function buildTitreCongeHtml(data: TitreCongeData, origin: string): strin
     .doc-header img { display: block; width: 100%; }
 
     /* Pied de page FIXE : collé en bas de chaque page, bord à bord.
-       Bande Kente à hauteur réduite (2mm) + mention. */
+       Bande Kente à hauteur réduite (0.2mm) + mention. */
     .doc-footer {
       position: fixed; bottom: 0; left: 0; right: 0;
     }
-    .doc-footer img { display: block; width: 100%; height: 2mm; }
+    .doc-footer img { display: block; width: 100%; height: 0.2mm; }
     .doc-footer .note {
       font-size: 9px; font-style: italic; color: #555; line-height: 1.4;
       text-align: center; padding: 1.5mm 6mm 2mm;
