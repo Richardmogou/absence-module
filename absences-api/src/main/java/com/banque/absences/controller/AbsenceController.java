@@ -66,8 +66,10 @@ public class AbsenceController {
     }
 
     @GetMapping("/a-valider")
-    public List<AbsenceResponse> demandesAValider() {
-        return service.findDemandesAValider();
+    public List<AbsenceResponse> demandesAValider(
+            @RequestParam(name = "limite", defaultValue = "50") int limite) {
+        // Réponse inchangée (tableau JSON) : seul le volume est borné [1, 200].
+        return service.findDemandesAValider(Math.min(Math.max(limite, 1), 200));
     }
 
     @GetMapping("/moi/solde")

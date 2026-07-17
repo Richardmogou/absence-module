@@ -41,7 +41,7 @@ public interface AbsenceService {
 
     List<AbsenceResponse> findByBackup(String backupIdentifiantExterne);
 
-    List<AbsenceResponse> findDemandesAValider();
+    List<AbsenceResponse> findDemandesAValider(int limite);
 
     SoldeCongeResponse findSoldeByDemandeur(String demandeurIdentifiantExterne);
 

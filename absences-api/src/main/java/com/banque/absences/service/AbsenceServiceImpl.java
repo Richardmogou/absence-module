@@ -488,22 +488,37 @@ public class AbsenceServiceImpl implements AbsenceService {
     }
 
     @Override
-    public List<AbsenceResponse> findDemandesAValider() {
+    public List<AbsenceResponse> findDemandesAValider(int limite) {
         String validateurId = claimReaderService.identifiantUtilisateurCourant();
         List<String> roles = claimReaderService.getRoles();
         if (roles == null || roles.isEmpty()) {
             roles = List.of("NONE");
         }
         String reseau = claimReaderService.lireClaimReseau().orElse("NONE");
-        List<DemandeAbsence> demandes = new java.util.ArrayList<>(repository.findDemandesAValider(validateurId, roles, reseau));
-        
+
+        // File de travail bornée : chaque source est limitée en SQL, puis l'union est
+        // re-triée FIFO et plafonnée. Charger les files entières (des milliers de lignes
+        // sous charge) puis les mapper en mémoire a produit le p95 de 9,6 s mesuré au
+        // test de performance sur cet endpoint.
+        org.springframework.data.domain.Pageable page =
+                org.springframework.data.domain.PageRequest.of(0, limite);
+        List<DemandeAbsence> demandes = new java.util.ArrayList<>(
+                repository.findDemandesAValider(validateurId, roles, reseau, page));
+
         if (roles.contains("ROLE_ANALYSTE_RH")) {
-            demandes.addAll(repository.findByStatut(StatutDemande.EN_INSTRUCTION_ANALYSTE_RH));
+            demandes.addAll(repository.findByStatutOrderByCreatedAtAsc(
+                    StatutDemande.EN_INSTRUCTION_ANALYSTE_RH, page));
         }
         if (roles.contains("ROLE_DRH")) {
-            demandes.addAll(repository.findByStatut(StatutDemande.EN_VALIDATION_DRH));
+            demandes.addAll(repository.findByStatutOrderByCreatedAtAsc(
+                    StatutDemande.EN_VALIDATION_DRH, page));
         }
-        
+
+        demandes.sort(java.util.Comparator.comparing(DemandeAbsence::getCreatedAt,
+                java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())));
+        if (demandes.size() > limite) {
+            demandes = demandes.subList(0, limite);
+        }
         return toResponseBatch(demandes);
     }
 
