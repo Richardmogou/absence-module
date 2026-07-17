@@ -25,3 +25,10 @@ Thumbs.db
 
 # ── Documents confidentiels (non versionnés) ──
 Organigramme_AFB_*.pdf
+/Audit_Et_Conception_Absences.md
+/CDCT_ABSENCES_Cahier_Des_Charges_Technique.md
+/DC_ABSENCES_v5_0_Document_Conception_Technique.md
+/Titre_de_conge.docx
+
+# ── Projet voisin hébergé dans ce dossier ─────
+/Regul/
