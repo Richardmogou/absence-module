@@ -143,12 +143,12 @@ public class AbsenceServiceImpl implements AbsenceService {
         } else if (dto.type() == TypeAbsence.CONGE_MALADIE) {
             DemandeCongeMaladie m = new DemandeCongeMaladie();
             m.setDateFin(dto.dateFin());
-            m.setNombreJours(calculerJoursOuvres(dto.dateDebut(), dto.dateFin()));
+            m.setNombreJours(calculerJoursCalendaires(dto.dateDebut(), dto.dateFin()));
             demande = m;
         } else {
             DemandeCongeAnnuel a = new DemandeCongeAnnuel();
             a.setDateFin(dto.dateFin());
-            int joursOuvres = calculerJoursOuvres(dto.dateDebut(), dto.dateFin());
+            int joursCalendaires = calculerJoursCalendaires(dto.dateDebut(), dto.dateFin());
             
             int annee = dto.dateDebut().getYear();
             long countFractions = demandeAbsenceRepository.findByDemandeurIdentifiantExterneAndType(demandeurId, TypeAbsence.CONGE_ANNUEL).stream()
@@ -159,12 +159,12 @@ public class AbsenceServiceImpl implements AbsenceService {
             int numeroFractionCalcule = (int) (countFractions + 1);
             boolean estPremiereFractionCalcule = (numeroFractionCalcule == 1);
             
-            if (estPremiereFractionCalcule && joursOuvres < 12) {
+            if (estPremiereFractionCalcule && joursCalendaires < 12) {
                 throw new DureeInsuffisanteCongeAnnuelException(
                         "La première fraction du congé annuel doit être d'au moins 12 jours calendaires.");
             }
             
-            a.setNombreJours(joursOuvres);
+            a.setNombreJours(joursCalendaires);
             a.setNumeroFraction(numeroFractionCalcule);
             a.setEstPremiereFraction(estPremiereFractionCalcule);
             demande = a;
@@ -698,9 +698,13 @@ public class AbsenceServiceImpl implements AbsenceService {
         Set<TypeAbsence> typesAvecSolde = Set.of(TypeAbsence.CONGE_ANNUEL, TypeAbsence.PERMISSION);
         if (typesAvecSolde.contains(demande.getType())) {
             // US-GES-004 : le jour du retour effectif reste consommé, il n'est pas recrédité —
-            // d'où l'écart exclusif, et non calculerJoursOuvres qui compte les deux bornes.
-            int joursNonConsommes = (int) java.time.temporal.ChronoUnit.DAYS
-                    .between(dateRetourEffective, demande.getDateFin());
+            // d'où le décompte sur (retour, fin]. L'unité suit celle du débit : les congés
+            // annuels sont exprimés en jours calendaires, les permissions (barème) en jours
+            // ouvrés — recréditer une permission en calendaire rendrait les week-ends au solde.
+            int joursNonConsommes = demande.getType() == TypeAbsence.PERMISSION
+                    ? compterJoursOuvres(dateRetourEffective.plusDays(1), demande.getDateFin())
+                    : (int) java.time.temporal.ChronoUnit.DAYS
+                            .between(dateRetourEffective, demande.getDateFin());
             if (joursNonConsommes > 0) {
                 soldeCongeService.recrediter(
                         demande.getDemandeurIdentifiantExterne(),
@@ -727,8 +731,21 @@ public class AbsenceServiceImpl implements AbsenceService {
                 .orElseThrow(() -> new EntityNotFoundException("Demande introuvable : " + id));
     }
 
-    private int calculerJoursOuvres(LocalDate dateDebut, LocalDate dateFin) {
+    /** Jours calendaires, bornes incluses — l'unité des congés (annuel, maladie, missions). */
+    private int calculerJoursCalendaires(LocalDate dateDebut, LocalDate dateFin) {
         return (int) java.time.temporal.ChronoUnit.DAYS.between(dateDebut, dateFin) + 1;
+    }
+
+    /** Jours ouvrés (hors samedi/dimanche), bornes incluses — l'unité du barème des permissions. */
+    private int compterJoursOuvres(LocalDate dateDebut, LocalDate dateFin) {
+        int jours = 0;
+        for (LocalDate d = dateDebut; !d.isAfter(dateFin); d = d.plusDays(1)) {
+            DayOfWeek jour = d.getDayOfWeek();
+            if (jour != DayOfWeek.SATURDAY && jour != DayOfWeek.SUNDAY) {
+                jours++;
+            }
+        }
+        return jours;
     }
 
     /**

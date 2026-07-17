@@ -1,6 +1,7 @@
 package com.banque.absences.integration;
 
 import com.banque.absences.domain.DemandeCongeAnnuel;
+import com.banque.absences.domain.DemandePermission;
 import com.banque.absences.domain.SoldeConge;
 import com.banque.absences.domain.StatutDemande;
 import com.banque.absences.domain.TypeAbsence;
@@ -138,8 +139,9 @@ class RetourAnticipeTest {
     void retourAnticipe_congeAnnuel_recreditQuatreJours() throws Exception {
         int exercice = LocalDate.now().getYear();
 
-        // ── Solde initial : 10 jours pris ────────────────────────────────────
-        SoldeConge solde = new SoldeConge();
+        // ── Solde initial : 10 jours pris (upsert : les deux tests partagent l'agent) ──
+        SoldeConge solde = soldeRepo.findByEmployeIdentifiantExterneAndExercice(AGENT_ID, exercice)
+                .orElseGet(SoldeConge::new);
         solde.setEmployeIdentifiantExterne(AGENT_ID);
         solde.setExercice(exercice);
         solde.setJoursAcquis(30);
@@ -169,7 +171,61 @@ class RetourAnticipeTest {
                 .isEqualTo(4);
     }
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // Permission : le recrédit se compte en jours OUVRÉS, l'unité du barème
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Permission de 3 jours ouvrés du jeudi 06/08 au lundi 10/08, retour effectif le
+     * vendredi 07/08. Jours non consommés après le retour : samedi et dimanche ne comptent
+     * pas, seul le lundi 10/08 est recrédité. Un décompte calendaire rendrait 3 jours —
+     * la totalité du débit alors qu'un jour a été consommé.
+     */
+    @Test
+    @DisplayName("Retour anticipé PERMISSION le 07/08 sur période 06/08-10/08 : recrédit 1 jour ouvré")
+    void retourAnticipe_permission_recreditUnJourOuvre() throws Exception {
+        int exercice = LocalDate.now().getYear();
+
+        SoldeConge solde = soldeRepo.findByEmployeIdentifiantExterneAndExercice(AGENT_ID, exercice)
+                .orElseGet(SoldeConge::new);
+        solde.setEmployeIdentifiantExterne(AGENT_ID);
+        solde.setExercice(exercice);
+        solde.setJoursAcquis(30);
+        solde.setJoursPris(3);
+        solde.setJoursRestants(27);
+        int joursPrisAvant = soldeRepo.saveAndFlush(solde).getJoursPris();
+
+        UUID demandeId = creerPermissionValidee();
+
+        mockMvc.perform(post("/api/v5/demandes/" + demandeId + "/retour-anticipe")
+                        .header("Authorization", "Bearer " + tokenAgent)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"dateRetourEffective\": \"2026-08-07\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statut", is("CLOTUREE")));
+
+        SoldeConge soldeApres = soldeRepo.findByEmployeIdentifiantExterneAndExercice(
+                AGENT_ID, exercice).orElseThrow();
+
+        assertThat(joursPrisAvant - soldeApres.getJoursPris())
+                .as("Le recrédit doit être de 1 jour ouvré (le lundi 10/08 uniquement)")
+                .isEqualTo(1);
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private UUID creerPermissionValidee() {
+        DemandePermission demande = new DemandePermission();
+        demande.setDemandeurIdentifiantExterne(AGENT_ID);
+        demande.setUniteIdentifiantExterne("UNITE-RETOUR-001");
+        demande.setType(TypeAbsence.PERMISSION);
+        demande.setDateDebut(LocalDate.of(2026, 8, 6));
+        demande.setDateFin(LocalDate.of(2026, 8, 10));
+        demande.setNombreJours(3);
+        demande.setCodeMotif("AUTRES");
+        demande.setStatut(StatutDemande.VALIDEE);
+        return demandeRepo.saveAndFlush(demande).getId();
+    }
 
     private UUID creerDemandeValidee() {
         DemandeCongeAnnuel demande = new DemandeCongeAnnuel();
