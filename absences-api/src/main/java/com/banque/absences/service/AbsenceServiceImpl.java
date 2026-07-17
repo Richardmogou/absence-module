@@ -620,7 +620,10 @@ public class AbsenceServiceImpl implements AbsenceService {
 
         Set<TypeAbsence> typesAvecSolde = Set.of(TypeAbsence.CONGE_ANNUEL, TypeAbsence.PERMISSION);
         if (typesAvecSolde.contains(demande.getType())) {
-            int joursNonConsommes = calculerJoursOuvres(dateRetourEffective, demande.getDateFin());
+            // US-GES-004 : le jour du retour effectif reste consommé, il n'est pas recrédité —
+            // d'où l'écart exclusif, et non calculerJoursOuvres qui compte les deux bornes.
+            int joursNonConsommes = (int) java.time.temporal.ChronoUnit.DAYS
+                    .between(dateRetourEffective, demande.getDateFin());
             if (joursNonConsommes > 0) {
                 soldeCongeService.recrediter(
                         demande.getDemandeurIdentifiantExterne(),
