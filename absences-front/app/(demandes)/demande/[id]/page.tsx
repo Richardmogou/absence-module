@@ -52,6 +52,11 @@ interface Absence {
     urlFichier: string;
     deposeLe: string;
   }[];
+  documentsMiseEnConge?: {
+    numero: string;
+    urlDocument: string;
+    genereLe: string;
+  }[];
   documentMiseEnCongeUrl?: string;
   objetMission?: string;
   motifMission?: string;
@@ -391,7 +396,34 @@ export default async function AbsenceDetailPage({
           )}
 
           {/* ── Document de Mise en Congé (Titre de congé) ── */}
-          {absence.documentMiseEnCongeUrl && (
+          {absence.documentsMiseEnConge && absence.documentsMiseEnConge.length > 0 ? (
+            <div className="flex flex-col gap-4">
+              {absence.documentsMiseEnConge.map((doc, idx) => (
+                <Card key={doc.numero} className="rounded-3xl shadow-md border-gold-200 bg-gradient-to-br from-gold-50 to-white">
+                  <CardContent className="p-6 flex flex-col gap-4">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-2xl bg-gold-100 flex items-center justify-center text-gold-600 shadow-inner">
+                        <FileCheck size={24} />
+                      </div>
+                      <div>
+                        <p className="text-base font-bold text-gold-900">
+                          {idx === 0 ? "Titre de congé (Pré-validé)" : "Titre de congé (Validé DRH)"}
+                        </p>
+                        <p className="text-xs text-gold-700 mt-1">Généré le {new Date(doc.genereLe).toLocaleDateString('fr-FR')} à {new Date(doc.genereLe).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</p>
+                      </div>
+                    </div>
+                    <BoutonsDocumentTitreConge
+                      minioUrl={formatMinioUrl(doc.urlDocument)}
+                      data={titreCongeData}
+                    />
+                    <p className="text-[11px] text-gold-700/80 leading-snug">
+                      <strong>Serveur</strong> : PDF officiel archivé lors de l'étape.
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : absence.documentMiseEnCongeUrl && (
             <Card className="rounded-3xl shadow-md border-gold-200 bg-gradient-to-br from-gold-50 to-white">
               <CardContent className="p-6 flex flex-col gap-4">
                 <div className="flex items-start gap-4">
@@ -407,11 +439,6 @@ export default async function AbsenceDetailPage({
                   minioUrl={formatMinioUrl(absence.documentMiseEnCongeUrl)}
                   data={titreCongeData}
                 />
-                <p className="text-[11px] text-gold-700/80 leading-snug">
-                  <strong>Serveur</strong> : PDF officiel archivé.{" "}
-                  <strong>Navigateur</strong> : rendu pleine fidélité (dégradés, filigrane, en-tête)
-                  imprimable en PDF.
-                </p>
               </CardContent>
             </Card>
           )}
