@@ -11,8 +11,10 @@ import java.util.UUID;
 public interface DocumentMiseEnCongeRepository extends JpaRepository<DocumentMiseEnConge, UUID> {
 
     boolean existsByDemandeId(UUID demandeId);
+    
+    java.util.List<DocumentMiseEnConge> findByDemandeIdOrderByGenereLeAsc(UUID demandeId);
 
-    Optional<DocumentMiseEnConge> findByDemandeId(UUID demandeId);
+    Optional<DocumentMiseEnConge> findFirstByDemandeIdOrderByGenereLeDesc(UUID demandeId);
 
     java.util.List<DocumentMiseEnConge> findAllByDemandeIdIn(java.util.List<UUID> demandeIds);
 }

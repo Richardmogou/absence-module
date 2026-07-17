@@ -157,6 +157,18 @@ class DecisionDRHTest {
                             Long.class, demandeId);
                     assertThat(count).isEqualTo(1L);
                 });
+
+        // L'API expose la LISTE des documents (un par étape génératrice : instruction puis
+        // DRH — ici la demande entre directement en DRH, donc un seul), en plus de l'URL
+        // legacy qui pointe le plus récent.
+        mockMvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                        .get("/api/v5/demandes/" + demandeId)
+                        .header("Authorization", "Bearer " + tokenDrh))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.documentsMiseEnConge.length()", is(1)))
+                .andExpect(jsonPath("$.documentsMiseEnConge[0].urlDocument").isNotEmpty())
+                .andExpect(jsonPath("$.documentsMiseEnConge[0].numero").isNotEmpty())
+                .andExpect(jsonPath("$.documentMiseEnCongeUrl").isNotEmpty());
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

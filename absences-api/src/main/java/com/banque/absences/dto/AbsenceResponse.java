@@ -53,8 +53,11 @@ public class AbsenceResponse {
     /** Liste des justificatifs déposés pour cette demande. */
     private List<JustificatifDocument> justificatifs;
 
-    /** URL du document de mise en congé généré après validation DRH. */
+    /** URL du document de mise en congé généré après validation DRH (legacy). */
     private String documentMiseEnCongeUrl;
+
+    /** Liste de tous les documents de mise en congé générés. */
+    private List<DocumentMiseEnCongeDto> documentsMiseEnConge;
 
     /** Champs spécifiques aux missions (classique et longue durée) */
     private String objetMission;

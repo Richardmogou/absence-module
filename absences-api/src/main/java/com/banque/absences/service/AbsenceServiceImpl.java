@@ -842,8 +842,14 @@ public class AbsenceServiceImpl implements AbsenceService {
                     .ifPresent(s -> snapCourantByDemande.put(d.getId(), s));
         }
 
-        Map<UUID, String> urlsDoc = documentMiseEnCongeRepository.findAllByDemandeIdIn(ids).stream()
-                .collect(Collectors.toMap(DocumentMiseEnConge::getDemandeId, DocumentMiseEnConge::getUrlDocument, (v1, v2) -> v1));
+        Map<UUID, List<com.banque.absences.dto.DocumentMiseEnCongeDto>> allDocsByDemande = documentMiseEnCongeRepository.findAllByDemandeIdIn(ids).stream()
+                .collect(Collectors.groupingBy(DocumentMiseEnConge::getDemandeId, Collectors.mapping(
+                        doc -> com.banque.absences.dto.DocumentMiseEnCongeDto.builder()
+                                .numero(doc.getNumero())
+                                .urlDocument(doc.getUrlDocument())
+                                .genereLe(doc.getGenereLe())
+                                .build(), Collectors.toList()
+                )));
 
         // Contexte utilisateur récupéré une seule fois — pas de N+1
         String userId = claimReaderService.identifiantUtilisateurCourant();
@@ -853,8 +859,11 @@ public class AbsenceServiceImpl implements AbsenceService {
                 .map(d -> {
                     EtapeDemandeSnapshot snapCourant = snapCourantByDemande.get(d.getId());
                     String libelle = snapCourant != null ? snapCourant.getLibelle() : "";
+                    List<com.banque.absences.dto.DocumentMiseEnCongeDto> docs = new java.util.ArrayList<>(allDocsByDemande.getOrDefault(d.getId(), List.of()));
+                    docs.sort(java.util.Comparator.comparing(com.banque.absences.dto.DocumentMiseEnCongeDto::getGenereLe));
+                    String urlDoc = docs.isEmpty() ? null : docs.get(docs.size() - 1).getUrlDocument();
                     AbsenceResponse resp = buildResponse(
-                            d, byDemande.getOrDefault(d.getId(), List.of()), libelle, urlsDoc.get(d.getId()));
+                            d, byDemande.getOrDefault(d.getId(), List.of()), libelle, urlDoc, docs);
                     if (d.getStatut() == StatutDemande.EN_VALIDATION_ETAPE) {
                         resp.setEstMonTourDeValider(calculerMonTour(snapCourant, userId, roles));
                     }
@@ -871,11 +880,18 @@ public class AbsenceServiceImpl implements AbsenceService {
 
         String libelle = snapCourant.map(EtapeDemandeSnapshot::getLibelle).orElse("");
 
-        String urlDoc = documentMiseEnCongeRepository.findByDemandeId(d.getId())
-                .map(DocumentMiseEnConge::getUrlDocument)
-                .orElse(null);
+        List<com.banque.absences.dto.DocumentMiseEnCongeDto> docs = documentMiseEnCongeRepository.findByDemandeIdOrderByGenereLeAsc(d.getId())
+                .stream()
+                .map(doc -> com.banque.absences.dto.DocumentMiseEnCongeDto.builder()
+                        .numero(doc.getNumero())
+                        .urlDocument(doc.getUrlDocument())
+                        .genereLe(doc.getGenereLe())
+                        .build())
+                .toList();
 
-        AbsenceResponse response = buildResponse(d, justificatifDocumentRepository.findAllByDemandeId(d.getId()), libelle, urlDoc);
+        String urlDoc = docs.isEmpty() ? null : docs.get(docs.size() - 1).getUrlDocument();
+
+        AbsenceResponse response = buildResponse(d, justificatifDocumentRepository.findAllByDemandeId(d.getId()), libelle, urlDoc, docs);
 
         // Nom complet du demandeur (Keycloak)
         try {
@@ -1001,7 +1017,7 @@ public class AbsenceServiceImpl implements AbsenceService {
         return result;
     }
 
-    private AbsenceResponse buildResponse(DemandeAbsence d, List<JustificatifDocument> justificatifs, String etapeCouranteLibelle, String documentMiseEnCongeUrl) {
+    private AbsenceResponse buildResponse(DemandeAbsence d, List<JustificatifDocument> justificatifs, String etapeCouranteLibelle, String documentMiseEnCongeUrl, List<com.banque.absences.dto.DocumentMiseEnCongeDto> documentsMiseEnConge) {
         AbsenceResponse.AbsenceResponseBuilder builder = AbsenceResponse.builder()
                 .id(d.getId())
                 .demandeurIdentifiantExterne(d.getDemandeurIdentifiantExterne())
@@ -1017,7 +1033,8 @@ public class AbsenceServiceImpl implements AbsenceService {
                 .createdAt(d.getCreatedAt())
                 .updatedAt(d.getUpdatedAt())
                 .justificatifs(justificatifs)
-                .documentMiseEnCongeUrl(documentMiseEnCongeUrl);
+                .documentMiseEnCongeUrl(documentMiseEnCongeUrl)
+                .documentsMiseEnConge(documentsMiseEnConge);
 
         if (d instanceof DemandeCongeAnnuel congeAnnuel) {
             builder.numeroFraction(congeAnnuel.getNumeroFraction())
