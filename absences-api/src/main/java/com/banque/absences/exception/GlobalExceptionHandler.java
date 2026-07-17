@@ -200,6 +200,21 @@ public class GlobalExceptionHandler {
                 .body(new ApiError("DEMANDE_INTROUVABLE", e.getMessage()));
     }
 
+    /**
+     * Verrouillage optimiste : deux traitements simultanés sur la même demande — deux
+     * validateurs qui dépilent la même file, scénario nominal en production. Sans ce
+     * handler, l'échec sortait en 500 brut (observé au test de charge du 2026-07-17).
+     * 409 : l'appelant recharge la demande et constate qu'elle a déjà été traitée.
+     */
+    @ExceptionHandler(org.springframework.orm.ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ApiError> handleVerrouillageOptimiste(
+            org.springframework.orm.ObjectOptimisticLockingFailureException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiError("CONFLIT_TRAITEMENT_SIMULTANE",
+                        "La demande a été traitée simultanément par un autre utilisateur — "
+                        + "rechargez-la avant de réessayer."));
+    }
+
     public record ApiError(String code, String message) {
     }
 }
